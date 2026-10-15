@@ -66,3 +66,16 @@ Desktop.ini
 # Third-party JSON implementation stays local; restore with original metadata.
 /Assets/Scripts/Json/LitJson/
 /Assets/Scripts/Json/LitJson.meta
+
+# Authored dialogue test fixture only; other StreamingAssets remain local.
+!/Assets/StreamingAssets/
+!/Assets/StreamingAssets.meta
+/Assets/StreamingAssets/*
+!/Assets/StreamingAssets/Dialogue/
+!/Assets/StreamingAssets/Dialogue.meta
+/Assets/StreamingAssets/Dialogue/*
+!/Assets/StreamingAssets/Dialogue/Test/
+!/Assets/StreamingAssets/Dialogue/Test.meta
+/Assets/StreamingAssets/Dialogue/Test/*
+!/Assets/StreamingAssets/Dialogue/Test/Test1_1.json
+!/Assets/StreamingAssets/Dialogue/Test/Test1_1.json.meta
