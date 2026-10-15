@@ -23,6 +23,7 @@ public abstract class BasePanel : MonoBehaviour
 
     private void Update()
     {
+        UpdateDoSomething();
         if (isShow && canvasGroup.alpha < 1)
         {
             canvasGroup.alpha += fadeSpeed * Time.deltaTime;
@@ -39,6 +40,11 @@ public abstract class BasePanel : MonoBehaviour
                 callback?.Invoke();
             }
         }
+    }
+
+    public virtual void UpdateDoSomething()
+    {
+        
     }
     public virtual void ShowMe()
     {

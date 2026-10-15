@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -6,7 +6,6 @@ public class UIManager
 {
     public static UIManager instance { get; } = new UIManager();
     private Transform canvas;
-
     private UIManager()
     {
         GameObject canvasObj = GameObject.Instantiate(Resources.Load<GameObject>("UI/Canvas"));
@@ -23,12 +22,13 @@ public class UIManager
             return panels[name] as T;
         }
         GameObject panel = GameObject.Instantiate(Resources.Load<GameObject>($"UI/{name}"));
-        panel.transform.SetParent(canvas);
+        panel.transform.SetParent(canvas,false);
         T panelScript = panel.GetComponent<T>();
+        panels.Add(name,panelScript);
         panelScript.ShowMe();
         return panelScript;
     }
-    public void HidePanel<T>(bool isFade) where T : BasePanel
+    public void HidePanel<T>(bool isFade = true) where T : BasePanel
     {
         string name = typeof(T).Name;
         if (panels.ContainsKey(name))
