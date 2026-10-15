@@ -110,13 +110,55 @@
   {
     "source": "工作记录/移动转向与冲刺衔接_20261015/问题原因与修改过程.md",
     "destination": "Development/records/09-movement-and-dash-transitions.md",
-    "original_sha256": "54b490150d726c8053ead3c6195c5bd64b131338779e542ab8732a4f159ad914",
-    "processing": "正文保留；补充仓库适用范围说明"
+    "original_sha256": "2cf4392dbdd95b428ae4c9c77fc831c37d0ebf59d8c0cdb6e48b0e8a84a36fd3",
+    "processing": "保留各历史阶段；补充最新实施入口；调整仓库相对链接"
   },
   {
     "source": "工作记录/移动转向与冲刺衔接_20261015/静态检查.json",
     "destination": "Development/evidence/movement-dash-static-check.json",
     "original_sha256": "6ff950e18dd99d21271baa70eb4ce3abea1491b764c9146af9e7aff221dc35ed",
     "processing": "原样保留静态检查证据"
+  },
+  {
+    "source": "工作记录/移动转向与冲刺衔接_20261015/设计思路与实施确认.md",
+    "destination": "Development/records/10-user-design-and-implementation.md",
+    "original_sha256": "da5ed0f07ace2e28fc91e11cd81a84f5b96eefba929d9cdeaecc5242f4dc2f98",
+    "processing": "明确用户思路、辅助建议与实际采纳；保留静态核验结果"
+  },
+  {
+    "source": "工作记录/移动转向与冲刺衔接_20261015/用户实施核对.json",
+    "destination": "Development/evidence/movement-dash-user-implementation.json",
+    "original_sha256": "ac879403b04b92095ea35395177fb1167df81bdbfea19abd1ed9fbfedabebb88",
+    "processing": "明确用户思路、辅助建议与实际采纳；保留静态核验结果"
+  },
+  {
+    "source": "工作记录/剑模型挂点与原预制件复用_20261015/问题处理与用户确认.md",
+    "destination": "Development/records/11-weapon-prefab-and-hand-socket.md",
+    "original_sha256": "6007fc00919905a94e11e7cf18904bbc92844e82da80c11583b40197ae057882",
+    "processing": "保留用户思路、辅助建议、实施与验证边界；调整证据相对链接"
+  },
+  {
+    "source": "工作记录/剑模型挂点与原预制件复用_20261015/静态核对与用户确认.json",
+    "destination": "Development/evidence/weapon-hand-socket.json",
+    "original_sha256": "5c66372d4bd63de3d15e2cba852249d9a56a2680ca009a61b9924254ba4d2d3e",
+    "processing": "原样保存只读静态核对与用户反馈；图片仅本地归档"
+  },
+  {
+    "source": "工作记录/阶段整理与分模块推送_20261015/阶段开发总结.md",
+    "destination": "Development/records/12-stage-summary-20261015.md",
+    "original_sha256": "21a65f3536f51bf01f3c5d53938e55db6ec5e63dbb6c37f29a2e142cb2e0a9bc",
+    "processing": "按实际代码与保存配置总结，调整证据链接，不编造运行验收"
+  },
+  {
+    "source": "工作记录/阶段整理与分模块推送_20261015/动画库存_冲刺后摇与测试清理.md",
+    "destination": "Development/records/13-animation-stock-dash-and-cleanup.md",
+    "original_sha256": "1bee1387715e17a72cf411318abb2b77fdebbdfc45454f4ed02eb7a70ce2c47b",
+    "processing": "原样保留用户观察、建议、实际修改与编译依据"
+  },
+  {
+    "source": "工作记录/阶段整理与分模块推送_20261015/阶段静态核对.json",
+    "destination": "Development/evidence/stage-20261015.json",
+    "original_sha256": "918d303cd24a6e740ffa78e4e63062ff5c38309a5de2f7f8da02bf056f49c791",
+    "processing": "原样保存当前静态证据与哈希"
   }
 ]

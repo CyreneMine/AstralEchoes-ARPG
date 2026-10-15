@@ -1,6 +1,9 @@
-> 本地原始记录：`工作记录/移动转向与冲刺衔接_20261015`。本记录区分已经写入的修改与尚待实施、验证的建议。
+> 本地原始记录：`工作记录/移动转向与冲刺衔接_20261015`。历史建议与当前实施状态分别保留。
 
 # 移动换向减速与冲刺收尾提前移动
+
+> 最新状态：用户已实施 MoveWeight 曲线恢复与冲刺转向锁定，已核对保存文件。用户原始思路及采纳过程见 [设计思路与实施确认](10-user-design-and-implementation.md)。本文早期待实施内容属于历史阶段。
+
 
 记录日期：2026-10-15。Unity 6000.4.8f1，Input System 1.19.0。当前代码为 `Assets/Scripts/Object/PlayerObject.cs`，Animator 为 `Assets/Resources/Animator/Cyrene.controller`。
 

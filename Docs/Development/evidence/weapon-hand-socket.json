@@ -1,0 +1,82 @@
+{
+  "date": "2026-10-15",
+  "scope": "保存文件静态检查与当次用户反馈；未由 Codex 进行 Play Mode 或动画采样测试",
+  "user_feedback": {
+    "text": "这下好了",
+    "context": "建议将现有 Hand_R_Socket 移到 Cyrene 的手首.R 下后，用户确认问题解决",
+    "source": "当次聊天"
+  },
+  "saved_configuration": {
+    "right_hand_avatar_mapping": "手首.R",
+    "hand_socket_transform_file_id": "4018374339656228292",
+    "previous_copied_hand_transform_file_id": "499016035340502183",
+    "current_parent_transform_file_id": "4807702949829026997",
+    "moved_out_of_copied_hand": true,
+    "parent_references_cyrene_model": true,
+    "parent_name_verification_limit": "父引用确定属于 Cyrene 模型；stripped Transform 未直接存骨骼名，手首.R 的实施名称依据 Avatar 映射与当次用户确认，不声称已用 Unity API 解析 fileID 到名称",
+    "socket_transform_yaml": "Transform:\n  m_ObjectHideFlags: 0\n  m_CorrespondingSourceObject: {fileID: 0}\n  m_PrefabInstance: {fileID: 0}\n  m_PrefabAsset: {fileID: 0}\n  m_GameObject: {fileID: 8568874914005407023}\n  serializedVersion: 2\n  m_LocalRotation: {x: 0.5281839, y: -0.5487689, z: -0.4657914, w: 0.45045856}\n  m_LocalPosition: {x: 0.00011497331, y: 0.0003338226, z: 0.000026702695}\n  m_LocalScale: {x: 0.010000005, y: 0.009999991, z: 0.010000006}\n  m_ConstrainProportionsScale: 0\n  m_Children: []\n  m_Father: {fileID: 4807702949829026997}\n  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}\n",
+    "socket_parent_yaml": "Transform:\n  m_CorrespondingSourceObject: {fileID: -8000180672587207411, guid: 8a20f58c2d3f4ef46b0e6140851c62db, type: 3}\n  m_PrefabInstance: {fileID: 5927232220184332728}\n  m_PrefabAsset: {fileID: 0}\n",
+    "weapon_controller_on_saved_prefab": false,
+    "weapon_controller_on_saved_scene": false,
+    "player_switch_socket_body": "// print(socketName);"
+  },
+  "files": [
+    {
+      "path": "Assets/Resources/Prefab/Cyrene_Blender4.2.prefab",
+      "sha256": "d14b565215d932f534d6a597235352c44b9f9641a40de8671b8dc7d2a46f32dc"
+    },
+    {
+      "path": "Assets/ArtRes/Character/Cyrene/Cyrene_Blender4.2.fbx.meta",
+      "sha256": "8439fd5af4a43d80941c8eb27ae63c2fdb98c3b3aee4269bdc218b856669d678"
+    },
+    {
+      "path": "Assets/CombatGirlsCharacterPack/Sword_Girl/Prefab/Parts/Weapon_Sword.prefab",
+      "sha256": "26a3bced03cffdb9fd06746063fa700c2adbfc757c7b3c03d2082cb1c48e2ff9"
+    },
+    {
+      "path": "Assets/CombatGirlsCharacterPack/Biperworks_Tools/CombatGirls_Weapon_Control/Character_Weapon_Controller.cs",
+      "sha256": "85acfa8d53c3273c3184883b26d74e54e00e41910b65cf173e445362bcdbb60e"
+    },
+    {
+      "path": "Assets/Scripts/Object/PlayerObject.cs",
+      "sha256": "bc1137c58f37a250315860cb557c97857ab73c5bb1c46f8e01e8aafbbfb57d8e"
+    },
+    {
+      "path": "Assets/Resources/Animation/Charecter/Normal/S_Take.fbx.meta",
+      "sha256": "143770cc87bd029ecd72162de12f9c7a624769a67de782a0daf0bfa51fb9ad0d"
+    },
+    {
+      "path": "Assets/Scenes/SampleScene.unity",
+      "sha256": "c2028e1889e05c6460be6c948d913d643792aed9d18c68c0e152258422e5c4a2"
+    }
+  ],
+  "remaining": [
+    "收剑挂点绑定到 Cyrene 的实际躯干骨骼",
+    "原武器控制器或事件转发接通",
+    "拔剑/收剑辅助节点轨迹、坐标比例与切换跳变验证",
+    "连续攻击与衣物碰撞验证"
+  ],
+  "screenshots": [
+    {
+      "source_filename": "codex-clipboard-ae80884a-438c-42c1-a6e1-d4dae7f848b7.png",
+      "local_destination": "截图/01-原素材骨架与辅助节点.png",
+      "available": true,
+      "scope": "用户在修正挂点前提供；不是修正后的测试截图",
+      "sha256": "bff39ba45e2f5d62bfc817044fe969e9170abca4533990b726c7c0441a82d9c0"
+    },
+    {
+      "source_filename": "codex-clipboard-f5d20320-bdd7-49b3-909b-72742c409e1e.png",
+      "local_destination": "截图/02-外层武器与约束.png",
+      "available": true,
+      "scope": "用户在修正挂点前提供；不是修正后的测试截图",
+      "sha256": "0548c0d35d10cff449caf6c0a897ee19438519617334d70e7e57c751588b8b90"
+    },
+    {
+      "source_filename": "codex-clipboard-e8cef054-970c-478e-8cf1-c32d4d60c887.png",
+      "local_destination": "截图/03-新剑作为子物体.png",
+      "available": true,
+      "scope": "用户在修正挂点前提供；不是修正后的测试截图",
+      "sha256": "da12268f108f83a811e2951ffe73a90c12f0072fc67883061f5300447504f3a3"
+    }
+  ]
+}

@@ -1,0 +1,70 @@
+{
+  "date": "2026-10-15",
+  "captured_at_local": "2026-10-15T21:10:02",
+  "scope": "文件静态核对与近期 Unity 编译日志；不等同于 Play Mode 或构建验收",
+  "scene": {
+    "path": "Assets/Scenes/GMScene.unity",
+    "guid": "99c9720ab356a0642a771bea13969a05",
+    "previous_path": "Assets/Scenes/SampleScene.unity",
+    "guid_preserved": true
+  },
+  "dash": {
+    "exit_time": 0.3,
+    "transition_duration": 0.31690288,
+    "fixed_duration": true,
+    "end_quick_import_event_time_raw": 0.42003903,
+    "event_time_note": "记录 FBX meta 原始 time；未将其直接换算为秒",
+    "move_weight": "冲刺曲线为0，普通片段侧使用参数默认1",
+    "runtime_tested_by_codex_this_round": false
+  },
+  "cleanup": {
+    "testing_script_exists": false,
+    "old_editor_tool_exists": false,
+    "original_error": "CS0246 at CyreneMovementTestSetup.cs lines 85 and 86 after the runtime test type was deleted",
+    "latest_compile_observation": "日志最近出现 ExitCode: 0 与程序集重载完成；Assembly-CSharp.dll 时间为 2026-10-15 20:59:15，晚于当时最后自编脚本保存时间 20:59:10。不是本轮执行了新构建或运行测试。"
+  },
+  "animation_inventory": {
+    "SwordGirl_noncombat_locomotion_found": false,
+    "weapon_in_hand_events": [
+      "S_Idle",
+      "S_Walk",
+      "S_Run",
+      "S_Sprint",
+      "S_Sp_Idle",
+      "S_SP_Walk",
+      "S_SP_Run"
+    ],
+    "original_package_default_state": "S_Idle",
+    "current_user_controller_base_default_state": "S_Take",
+    "noncombat_candidates": [
+      "@KA_Idle01_breathing.FBX",
+      "@KA_Walk01.FBX",
+      "@KA_Run01.FBX"
+    ],
+    "candidates_previewed": false
+  },
+  "dependency_policy": {
+    "local_only": [
+      "Assets/Scripts/Json/LitJson",
+      "Assets/Resources/UI",
+      "Assets/Resources/Prefab",
+      "Assets/Resources/Animation",
+      "Assets/ArtRes",
+      "Assets/CombatGirlsCharacterPack",
+      "Assets/KAWAII_ANIMATIOMS_100",
+      "Assets/MagicaCloth2",
+      "Assets/Shader"
+    ],
+    "note": "LitJson 代码声明第三方来源，但本地目录未发现独立许可文件；不纳入本次源码公开提交，不推断无许可。"
+  },
+  "hashes": {
+    "Assets/Resources/Animator/Cyrene.controller": "530ef0a2781f4a1089cca5fe5375e9051867c64a4678f8962a34f0ac6c54a190",
+    "Assets/Resources/Animation/Charecter/Special/S_QuickShift_F.fbx.meta": "73ad6cc776e06441a07d7adaf8971d10a48c668d22351a206f464c878ebfb4a5",
+    "Assets/Scripts/Object/Player/PlayerObject.cs": "bb3f0c37d21c9c160eb5f6627246ea33d0c543e19edadcf65360e17f2f1b83ee",
+    "Assets/Scripts/Object/Player/PlayerCombat.cs": "d035b7b26119a19ff71294596aa06e782fb064517983e568b0fe1c4130c8b1d0",
+    "Assets/Scripts/Managers/UIManager.cs": "7990424386a265adc856366d2efbe73b5fc0e3996c55b6a5c06389dd8b43a5e1",
+    "Assets/Scripts/Json/JsonMgr.cs": "14ac6d6a6faa45c74a287e20ae2de0e5dd431a174945d975aed1806195ed8d5f",
+    "Assets/Scenes/GMScene.unity": "6140573cf146386868eb17a5873a7c3427418b2ca8e4ee2bbde5685f8856015a",
+    "ProjectSettings/EditorBuildSettings.asset": "cee12e9927972d82e0ff1515cc8f70fd665ad2a72ade5f90e87054934b1f874f"
+  }
+}

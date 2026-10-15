@@ -1,0 +1,76 @@
+{
+  "date": "2026-10-15",
+  "basis": "本次用户完成声明及磁盘文件静态检查；未进行运行验证",
+  "user_reported_completed": true,
+  "user_added_rotation_lock": true,
+  "code_has_rotation_lock": true,
+  "code_reads_weight": [
+    "MoveWeight"
+  ],
+  "normal_move_multiplies_weight": true,
+  "animator_saved_parameters": [
+    "Velocity",
+    "XSpeed",
+    "YSpeed",
+    "Quick",
+    "MoveWeight"
+  ],
+  "saved_blend_type": 0,
+  "curves": [
+    {
+      "file": "Assets/Resources/Animation/Charecter/Special/S_QuickShift_F.fbx.meta",
+      "curve_names": [
+        "MoveWeight"
+      ],
+      "key_times": [
+        "0",
+        "1"
+      ],
+      "key_values": [
+        "0",
+        "0"
+      ],
+      "sha256": "ee72e51fe742d0b785b84b20a67feb34d4938687ad33495e047b6216acaf3e38"
+    },
+    {
+      "file": "Assets/Resources/Animation/Charecter/Normal/S_Idle.fbx.meta",
+      "curve_names": [],
+      "key_times": [],
+      "key_values": [],
+      "sha256": "2b33c9a9f7c5000cc956a6c0825028f7bde4d86be4816ddee2a7c9d77d3fe759"
+    },
+    {
+      "file": "Assets/Resources/Animation/Charecter/Normal/S_Walk.fbx.meta",
+      "curve_names": [],
+      "key_times": [],
+      "key_values": [],
+      "sha256": "81c813f94f6ebf85b1a947502ccd342428530610c921270e8c73c3af43dbe970"
+    },
+    {
+      "file": "Assets/Resources/Animation/Charecter/Normal/S_Run.fbx.meta",
+      "curve_names": [],
+      "key_times": [],
+      "key_values": [],
+      "sha256": "d3efee22548de9a164d197b2dd08f45fe6dc219830fa520811d6a110287c4d0a"
+    }
+  ],
+  "script_sha256": "bc1137c58f37a250315860cb557c97857ab73c5bb1c46f8e01e8aafbbfb57d8e",
+  "controller_sha256": "c306aec238db216422e44e386fe794da9e90b48dbcfa1001deb4d1ea77c03c46",
+  "saved_blend_parameter": "Velocity",
+  "saved_motion_thresholds": [
+    {
+      "motion": "S_Idle",
+      "threshold": 0.0
+    },
+    {
+      "motion": "S_Walk",
+      "threshold": 0.5
+    },
+    {
+      "motion": "S_Run",
+      "threshold": 1.0
+    }
+  ],
+  "move_weight_default": 1,
+  "normal_clips_use_default_instead_of_explicit_curve": true
+}
