@@ -62,3 +62,7 @@ Desktop.ini
 *.pfx
 *.p12
 /ProjectSettings/UnityConnectSettings.asset
+
+# Third-party JSON implementation stays local; restore with original metadata.
+/Assets/Scripts/Json/LitJson/
+/Assets/Scripts/Json/LitJson.meta
