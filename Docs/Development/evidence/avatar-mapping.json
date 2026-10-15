@@ -1,0 +1,13 @@
+{
+  "Target": "Assets\\ArtRes\\Character\\Cyrene\\Cyrene_Blender4.2.fbx.meta",
+  "RemovedMappings": [
+    "LeftEye -> 刘海1.L",
+    "RightEye -> 刘海1-2.R",
+    "Jaw -> 中刘海1-1"
+  ],
+  "RemovedHumanBoneEntries": 3,
+  "OtherMetaContentUnchanged": true,
+  "ModelSHA256Unchanged": true,
+  "Backup": "<LocalGraduation>/工作记录\\Cyrene_Avatar映射修正_20261014_235215",
+  "RuntimeValidation": "尚未在 Unity 播放验证"
+}

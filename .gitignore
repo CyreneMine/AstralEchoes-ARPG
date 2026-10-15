@@ -1,0 +1,64 @@
+# Unity generated caches and local settings
+/[Ll]ibrary/
+/[Tt]emp/
+/[Oo]bj/
+/[Ll]ogs/
+/[Uu]ser[Ss]ettings/
+/[Bb]uild/
+/[Bb]uilds/
+/[Mm]emoryCaptures/
+/[Rr]ecordings/
+
+# IDE generated files
+/.vs/
+/.idea/
+*.csproj
+*.sln
+*.slnx
+*.suo
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+*.pdb
+*.mdb
+
+# OS generated files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Local secrets
+.env
+.env.*
+!.env.example
+
+# Source/configuration snapshot only: third-party and art assets stay local.
+/Assets/*
+!/Assets/Scripts/
+!/Assets/Scripts.meta
+!/Assets/Editor/
+!/Assets/Editor.meta
+!/Assets/Scenes/
+!/Assets/Scenes.meta
+!/Assets/Settings/
+!/Assets/Settings.meta
+!/Assets/Resources/
+!/Assets/Resources.meta
+!/Assets/InputSystem_Actions.cs
+!/Assets/InputSystem_Actions.cs.meta
+!/Assets/InputSystem_Actions.inputactions
+!/Assets/InputSystem_Actions.inputactions.meta
+/Assets/Resources/*
+!/Assets/Resources/Animator/
+!/Assets/Resources/Animator.meta
+
+# Private backups, local service state and signing secrets
+/Backups/
+/.secrets/
+*.keystore
+*.jks
+*.pfx
+*.p12
+/ProjectSettings/UnityConnectSettings.asset

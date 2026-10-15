@@ -1,0 +1,89 @@
+{
+  "model": "Assets/ArtRes/Character/Cyrene/untitled.fbx",
+  "prefab": "Assets/ArtRes/Character/Cyrene/Physics/Cyrene_BoneCloth.prefab",
+  "height": 1.475242257118225,
+  "colliders": 11,
+  "simulatedBones": 240,
+  "groups": [
+    {
+      "name": "01_Skirt",
+      "roots": [
+        "裙_0_4",
+        "裙_0_5",
+        "裙_0_6",
+        "裙_0_7",
+        "裙_0_8",
+        "裙_0_9",
+        "裙_0_10",
+        "裙_0_11",
+        "裙_0_0",
+        "裙_0_1",
+        "裙_0_2",
+        "裙_0_3"
+      ],
+      "bones": 143,
+      "gravity": 0.6000000238418579,
+      "maxDistance": 0.214580699801445,
+      "connection": "SequentialLoopMesh"
+    },
+    {
+      "name": "02_BackSkirt",
+      "roots": [
+        "BackMiddle裙1_1"
+      ],
+      "bones": 8,
+      "gravity": 0.800000011920929,
+      "maxDistance": 0.312930166721344,
+      "connection": "Line"
+    },
+    {
+      "name": "03_BackVeil",
+      "roots": [
+        "Back紗"
+      ],
+      "bones": 37,
+      "gravity": 0.800000011920929,
+      "maxDistance": 0.40233880281448364,
+      "connection": "Line"
+    },
+    {
+      "name": "04_Sleeve_L",
+      "roots": [
+        "LowerSleeve1_1_L",
+        "LowerSleeve2_1_L",
+        "LowerSleeve3_1_L",
+        "LowerSleeve4_1_L"
+      ],
+      "bones": 8,
+      "gravity": 0.6000000238418579,
+      "maxDistance": 0.214580699801445,
+      "connection": "Line"
+    },
+    {
+      "name": "04_Sleeve_R",
+      "roots": [
+        "LowerSleeve1_1_R",
+        "LowerSleeve2_1_R",
+        "LowerSleeve3_1_R",
+        "LowerSleeve4_1_R"
+      ],
+      "bones": 8,
+      "gravity": 0.6000000238418579,
+      "maxDistance": 0.214580699801445,
+      "connection": "Line"
+    },
+    {
+      "name": "05_HeadVeil",
+      "roots": [
+        "短头纱_L",
+        "短头纱_R",
+        "长头纱1_L",
+        "长头纱1_R"
+      ],
+      "bones": 36,
+      "gravity": 0.5,
+      "maxDistance": 0.2503441572189331,
+      "connection": "Line"
+    }
+  ]
+}

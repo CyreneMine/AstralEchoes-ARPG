@@ -1,0 +1,111 @@
+{
+  "passed": true,
+  "error": "",
+  "samples": [
+    {
+      "input": "Idle",
+      "delta": {
+        "x": 0.0,
+        "y": 0.016648709774017334,
+        "z": 0.0
+      },
+      "distance": 0.0,
+      "speed": 0.0,
+      "horizontal": 0.0,
+      "vertical": 0.0,
+      "idle": true,
+      "grounded": true,
+      "passed": true
+    },
+    {
+      "input": "W",
+      "delta": {
+        "x": 0.0,
+        "y": 1.7881393432617188e-07,
+        "z": 3.017723560333252
+      },
+      "distance": 3.017723560333252,
+      "speed": 0.9999869465827942,
+      "horizontal": 0.0,
+      "vertical": 0.9999869465827942,
+      "idle": false,
+      "grounded": true,
+      "passed": true
+    },
+    {
+      "input": "S",
+      "delta": {
+        "x": 0.0,
+        "y": -5.960464477539063e-08,
+        "z": -3.0040221214294434
+      },
+      "distance": 3.0040221214294434,
+      "speed": 0.9999998807907104,
+      "horizontal": 0.0,
+      "vertical": -0.9999725818634033,
+      "idle": false,
+      "grounded": true,
+      "passed": true
+    },
+    {
+      "input": "A",
+      "delta": {
+        "x": -3.0201661586761475,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "distance": 3.0201661586761475,
+      "speed": 0.9999998807907104,
+      "horizontal": -0.9999873042106628,
+      "vertical": -1.2698630598606542e-05,
+      "idle": false,
+      "grounded": true,
+      "passed": true
+    },
+    {
+      "input": "D",
+      "delta": {
+        "x": 3.0148844718933105,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "distance": 3.0148844718933105,
+      "speed": 0.9999998807907104,
+      "horizontal": 0.9999736547470093,
+      "vertical": -1.6723696039111502e-10,
+      "idle": false,
+      "grounded": true,
+      "passed": true
+    },
+    {
+      "input": "WD",
+      "delta": {
+        "x": 2.1167185306549072,
+        "y": 0.0,
+        "z": 2.1167185306549072
+      },
+      "distance": 2.9934921264648438,
+      "speed": 1.0,
+      "horizontal": 0.7071108818054199,
+      "vertical": 0.7070969939231873,
+      "idle": false,
+      "grounded": true,
+      "passed": true
+    },
+    {
+      "input": "Released",
+      "delta": {
+        "x": 0.0,
+        "y": -5.960464477539063e-08,
+        "z": 0.0
+      },
+      "distance": 0.0,
+      "speed": 1.051293293130584e-05,
+      "horizontal": 7.4338126978545915e-06,
+      "vertical": 7.4336649049655534e-06,
+      "idle": true,
+      "grounded": true,
+      "passed": true
+    }
+  ]
+}

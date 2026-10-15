@@ -1,0 +1,14 @@
+{
+  "Project": "<UnityProject>",
+  "Backup": "<LocalGraduation>/工作记录\\插件移除_20261014_230200",
+  "RemovedDependency": "com.autodesk.fbx@5.1.3",
+  "ArchivedResiduals": [
+    "PMX2FBX_InstallerChecked.txt",
+    "PMX2FBX.Editor.Installer.csproj"
+  ],
+  "PMX2FBXFolderAbsent": true,
+  "ManifestEntryAbsent": true,
+  "LockEntryAbsent": true,
+  "CheckedAssetFileCount": 218,
+  "ChangedAssetFiles": []
+}

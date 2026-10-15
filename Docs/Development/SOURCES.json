@@ -1,0 +1,86 @@
+[
+  {
+    "source": "工作记录/Cyrene_Avatar映射修正_20261014_235215/修正结果.json",
+    "destination": "Development/evidence/avatar-mapping.json",
+    "original_sha256": "05a0fcf11bcb4ff4bd57d929b4ed90729bb7be219fbadab3ca64b5fba1cea55d",
+    "processing": "JSON格式化；本机绝对路径替换为项目相对路径或本地目录占位符；测试数值不变"
+  },
+  {
+    "source": "工作记录/WASD移动测试_20261015/PlayMode移动测试结果.json",
+    "destination": "Development/evidence/wasd-playmode.json",
+    "original_sha256": "dd12b950592e5c5ef5a7e1ebe21c36682149f00580a3a7d1b4e09c2db3597b05",
+    "processing": "JSON格式化；本机绝对路径替换为项目相对路径或本地目录占位符；测试数值不变"
+  },
+  {
+    "source": "工作记录/WASD移动测试_20261015/动画身体偏移_修正前.json",
+    "destination": "Development/evidence/motion-before.json",
+    "original_sha256": "c29fc4ffc5a16209cd2046b119909a713747b56bfcf3cde42f3913bff35175cb",
+    "processing": "JSON格式化；本机绝对路径替换为项目相对路径或本地目录占位符；测试数值不变"
+  },
+  {
+    "source": "工作记录/WASD移动测试_20261015/动画身体偏移_修正后.json",
+    "destination": "Development/evidence/motion-after.json",
+    "original_sha256": "dbd59bdf677647199b20f1a1b1e6f491f6b04f968a4ea9ec30c78f35bca5d169",
+    "processing": "JSON格式化；本机绝对路径替换为项目相对路径或本地目录占位符；测试数值不变"
+  },
+  {
+    "source": "工作记录/Cyrene_BoneCloth配置_20261015/配置结果.json",
+    "destination": "Development/evidence/bonecloth-setup.json",
+    "original_sha256": "da99e7acdc405484f5068f22b742a0dd0c0dd509661014eb504195d28902b51f",
+    "processing": "JSON格式化；本机绝对路径替换为项目相对路径或本地目录占位符；测试数值不变"
+  },
+  {
+    "source": "工作记录/Cyrene_BoneCloth配置_20261015/PlayMode验证.json",
+    "destination": "Development/evidence/bonecloth-playmode.json",
+    "original_sha256": "1a8eae9a96e15aed49df72193f62e55865158d47b36f9a1cc62d22cc8c88ad5b",
+    "processing": "JSON格式化；本机绝对路径替换为项目相对路径或本地目录占位符；测试数值不变"
+  },
+  {
+    "source": "工作记录/插件移除_20261014_230200/移除结果.json",
+    "destination": "Development/evidence/plugin-cleanup.json",
+    "original_sha256": "8fae7937ae6388c8e81358cccbc486a30ca0e36a515155e3f4cc318311cf4a05",
+    "processing": "JSON格式化；本机绝对路径替换为项目相对路径或本地目录占位符；测试数值不变"
+  },
+  {
+    "source": "工作记录/StarRailNPRShader测试_20261014/撤销结果.json",
+    "destination": "Development/evidence/starrail-rollback.json",
+    "original_sha256": "8fa50e4cdcf6b00dd159f712598849908f080a6d376014c02405071f74fa60c7",
+    "processing": "JSON格式化；本机绝对路径替换为项目相对路径或本地目录占位符；测试数值不变"
+  },
+  {
+    "source": "工作记录/工程搬迁_20261014/工程搬迁说明.md",
+    "destination": "Development/records/01-project-path.md",
+    "original_sha256": "fc1019f1e5e2ac133a5350130dddce42285d89e8304ddb4c2808f0c88deeb350",
+    "processing": "保留正文；补充当前适用范围；本地链接调整为仓库链接或未上传标记"
+  },
+  {
+    "source": "工作记录/工程搬迁_20261014/用户启动验收_20261014.md",
+    "destination": "Development/records/02-project-path-acceptance.md",
+    "original_sha256": "6f17e2adcf031da26877bd8a51eb3591e0b6459b079f95423bd868370c1f826c",
+    "processing": "保留正文；补充当前适用范围；本地链接调整为仓库链接或未上传标记"
+  },
+  {
+    "source": "工作记录/Cyrene材质修复/Cyrene模型导入与透明材质问题处理记录_20261014.md",
+    "destination": "Development/records/03-legacy-pmx-materials.md",
+    "original_sha256": "15937d6b6da0bb74bd3e2f0295905e92ea6c9ce3bfc0369f5b94c598bedb1ef1",
+    "processing": "保留正文；补充当前适用范围；本地链接调整为仓库链接或未上传标记"
+  },
+  {
+    "source": "工作记录/WASD移动测试_20261015/实现与验证记录.md",
+    "destination": "Development/records/05-wasd-and-root-motion.md",
+    "original_sha256": "4a513cf522925c1b7aeccc48a7775cf69679b2789cf526f43dcd640022250fcb",
+    "processing": "保留正文；补充当前适用范围；本地链接调整为仓库链接或未上传标记"
+  },
+  {
+    "source": "工作记录/Cyrene_BoneCloth配置_20261015/配置与验证记录.md",
+    "destination": "Development/records/06-bonecloth.md",
+    "original_sha256": "bb973afe4bfb08be1e6f41425b6f2bdd1a736fa46ebad725ea97196fc383be76",
+    "processing": "保留正文；补充当前适用范围；本地链接调整为仓库链接或未上传标记"
+  },
+  {
+    "source": "工作记录/Cyrene面部黑块诊断_20261015/诊断与修复记录.md",
+    "destination": "Development/records/07-face-overlay.md",
+    "original_sha256": "73e6c16b6aba026932e2518d30aa2ec23561294ac64144714a2fadeeb1a43e07",
+    "processing": "保留正文；补充当前适用范围；本地链接调整为仓库链接或未上传标记"
+  }
+]

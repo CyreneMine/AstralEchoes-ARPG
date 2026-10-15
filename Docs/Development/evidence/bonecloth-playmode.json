@@ -1,0 +1,53 @@
+{
+  "passed": true,
+  "error": "",
+  "finite": true,
+  "samples": 537,
+  "maxLocalPositionChange": 0.0739356055855751,
+  "maxLocalRotationChange": 38.36256408691406,
+  "maxPinnedDrift": 0.0,
+  "teams": [
+    {
+      "name": "01_Skirt",
+      "valid": true,
+      "running": true,
+      "team": 6,
+      "result": "MagicaCloth2.ResultCode"
+    },
+    {
+      "name": "02_BackSkirt",
+      "valid": true,
+      "running": true,
+      "team": 3,
+      "result": "MagicaCloth2.ResultCode"
+    },
+    {
+      "name": "03_BackVeil",
+      "valid": true,
+      "running": true,
+      "team": 4,
+      "result": "MagicaCloth2.ResultCode"
+    },
+    {
+      "name": "04_Sleeve_L",
+      "valid": true,
+      "running": true,
+      "team": 5,
+      "result": "MagicaCloth2.ResultCode"
+    },
+    {
+      "name": "04_Sleeve_R",
+      "valid": true,
+      "running": true,
+      "team": 1,
+      "result": "MagicaCloth2.ResultCode"
+    },
+    {
+      "name": "05_HeadVeil",
+      "valid": true,
+      "running": true,
+      "team": 2,
+      "result": "MagicaCloth2.ResultCode"
+    }
+  ]
+}
