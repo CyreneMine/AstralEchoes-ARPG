@@ -9,7 +9,7 @@
 - `Assets/MagicaCloth2`：本地插件源码与资源。
 - `Assets/Shader`：本地导入的第三方 Nilo 示例 Shader。
 - `Assets/Resources/Animation`：FBX 动作、动作副本及测试材质。
-- `Assets/Resources/Prefab`、`Assets/Resources/UI`：角色/剑和 UI 预制件；当前本地 UI/Canvas.prefab 的引用需补回。
+- `Assets/Resources/Prefab`、`Assets/Resources/UI`：角色/剑和 UI 预制件；本轮 UI/Canvas.prefab、DialoguePanel.prefab、OptionsPanel.prefab、Option.prefab 及其原 meta 需补回。
 - `Assets/Scripts/Json/LitJson` 与原目录 meta：本地第三方 JSON 库；自编 JsonMgr 默认使用它，单独克隆缺少库会编译失败，需按原来源合法补回。
 - 模板 TutorialInfo、截图、音视频、备份、编译产物与 Unity 缓存。
 
@@ -22,3 +22,7 @@
 5. 当前面部修复保存在本地 `Mat_Cats/顏2+.mat`，未随资源上传。恢复旧备份时需参照 [面部覆盖层记录](Development/records/07-face-overlay.md)核对。
 
 仓库是源码与配置快照，单独克隆不保证场景完整显示或运行；这不等于项目源代码缺失。素材及插件的使用与再分发要求以各自实际许可为准，本记录不宣称已取得额外授权。
+
+## 2026-10-16 对话测试补充
+
+自编 `Assets/StreamingAssets/Dialogue/Test/Test1_1.json` 及必要目录/文件 meta 已纳入本轮提交，其余 StreamingAssets 仍默认留本地。测试入口按 F 调用 ShowPanel<DialoguePanel>() 和 StartDialogue("Test/Test1_1")；需先补回上述本地 UI 预制件、字体等依赖，并保留原 GUID，才能复现完整画面。本轮本地 UI 快照保存在毕业设计工作记录的“对话系统实现与收工归档_20261016/本地资源快照”中，不向仓库上传。

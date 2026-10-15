@@ -2,7 +2,7 @@
 
 本目录将历史过程、当前状态和测试证据分别列出，原始文件及撤销备份继续保存在本地。
 
-先读 [当前开发状态](STATUS.md)与 [本阶段总结](records/12-stage-summary-20261015.md)，再按问题查阅记录。
+先读 [当前开发状态](STATUS.md)与 [对话实现和测试确认](records/14-dialogue-system-implementation.md)，再按问题查阅记录。此前 [阶段总结](records/12-stage-summary-20261015.md)保留为历史入口。
 
 | 主题 | 记录 | 适用范围 |
 |---|---|---|
@@ -17,6 +17,7 @@
 | 重启后面部黑块 | [覆盖层修复](records/07-face-overlay.md) | 当前 Nilo 示例 Shader 的腮红覆盖材质 |
 | 武器预制件复用与剑不跟随 | [挂点适配与用户确认](records/11-weapon-prefab-and-hand-socket.md) | 保留外层约束，重新绑定 Cyrene 右手挂点；用户确认随手移动恢复，收放剑切换待验 |
 | 动画库存、后摇与编译清理 | [补充记录](records/13-animation-stock-dash-and-cleanup.md) | 空手动作候选、用户实际后摇参数、Testing/Editor 依赖故障 |
+| 基础对话与动态选项 | [实现与测试确认](records/14-dialogue-system-implementation.md)、[开发日志](logs/2026-10-16-dialogue.md) | 用户测试确认本轮流程完成，剩余小漏洞次日处理 |
 
 [文本证据目录](evidence/)保留实际测试数据。[来源清单](SOURCES.json)记录原始文档路径与 SHA256。公开副本只调整文档链接与本机路径表达，不改测试数值。
 
@@ -25,3 +26,5 @@
 后续问题记录使用 [记录模板](ISSUE_TEMPLATE.md)，保留用户想法、辅助建议、实际采纳和验证来源。
 
 本轮版本整理见 [分模块交付清单](deliveries/2026-10-15.md)。
+
+本轮收工见 [2026-10-16 分模块交付清单](deliveries/2026-10-16.md)。

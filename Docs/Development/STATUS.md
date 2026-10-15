@@ -1,15 +1,15 @@
 # 当前开发状态
 
-核验日期：2026-10-15。正式题目：基于Unity3D的ARPG游戏《星渊回响》设计与实现。
+核验日期：2026-10-16。正式题目：基于Unity3D的ARPG游戏《星渊回响》设计与实现。
 
 ## 当前基线（本轮整理核对）
 
 - 本地工程：`E:\UnityProjects\AstralEchoes`；Unity 6000.4.8f1 / URP 17.4.0 / Input System 1.19.0 / Cinemachine 3.1.7。
 - 当前场景为 `Assets/Scenes/GMScene.unity`，从 SampleScene 重命名且 GUID 保留；构建入口已同步。
 - 当前角色使用本地 Cyrene_Blender4.2 预制件；控制脚本位于 `Assets/Scripts/Object/Player/`，控制器为 Cyrene.controller。
-- 已有移动/冲刺代码、攻击输入与动画接口、UI/对话/JSON 基础代码；对话、生命值、主入口等仍含空壳，未完成全部玩法验收。
+- 已有移动/冲刺与攻击原型；本轮基础对话流程已由用户运行测试确认完成，剩余小漏洞留待下一工作日。任务接取、实际分支路由、生命值和游戏主入口仍未完成，不扩大本轮完成范围。
 - 旧 Testing 和对应 Editor 工具已移除。文中早期“尚未迁移”“尚未提交”等说明只代表各记录当时状态，不是最新基线。
-- [本阶段总结](records/12-stage-summary-20261015.md)说明实际保存值、用户贡献、验证范围和待办；本轮分模块提交结果在后续交付清单记录。
+- 最新入口：[对话实现与测试确认](records/14-dialogue-system-implementation.md)、[本轮开发日志](logs/2026-10-16-dialogue.md)。此前 [阶段总结](records/12-stage-summary-20261015.md)保留为当时快照。
 
 ## 历史实现与证据（按原阶段保留）
 
@@ -52,3 +52,7 @@
 ## 本轮整理：攻击原型、UI/对话骨架与清理
 
 详情见 [阶段总结](records/12-stage-summary-20261015.md)与 [动画/后摇/编译清理](records/13-animation-stock-dash-and-cleanup.md)。最新冲刺 Exit Time=0.3，EndQuick 导入事件已前移，过渡时长仍约0.317秒；不宣称手感已验收。角色脚本、场景入口与历史基线的差异已更新。第三方 LitJson 与所有素材继续只留本地，恢复说明已补充。
+
+## 2026-10-16 收工：对话测试确认
+
+用户确认本轮对话功能测试完成，剩余小漏洞暂未具体列出，计划下一工作日处理。已保存 ShowMe 登记、列表加载、动态选项、同帧输入保护、索引/判空/末尾保护、SetParent(canvas,false) 与 F 键测试入口。本轮收工只归档和 Git 操作，没有再修改玩法或重复运行测试。指定 Test1_1.json 作为自编测试数据提交，UI 预制件、模型与第三方插件继续本地保留。

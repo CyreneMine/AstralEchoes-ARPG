@@ -160,5 +160,23 @@
     "destination": "Development/evidence/stage-20261015.json",
     "original_sha256": "918d303cd24a6e740ffa78e4e63062ff5c38309a5de2f7f8da02bf056f49c791",
     "processing": "原样保存当前静态证据与哈希"
+  },
+  {
+    "source": "工作记录/对话系统实现与收工归档_20261016/对话系统实现与测试记录.md",
+    "destination": "Development/records/14-dialogue-system-implementation.md",
+    "original_sha256": "e5b5299199e173bfcf695a64798ef3dd9cedc21bdfd60d925765c56ef250de0c",
+    "processing": "保留用户思路、辅助建议、实际修正与整体测试确认；调整相对链接"
+  },
+  {
+    "source": "工作记录/对话系统实现与收工归档_20261016/开发日志.md",
+    "destination": "Development/logs/2026-10-16-dialogue.md",
+    "original_sha256": "ebc04906c1b3b00415aac5bc5f4ff72e3bc00b56a4413030bccf4550a451336f",
+    "processing": "按实际讨论阶段整理，不补造时间和逐项测试数据；调整相对链接"
+  },
+  {
+    "source": "工作记录/对话系统实现与收工归档_20261016/静态核对与用户验收.json",
+    "destination": "Development/evidence/dialogue-20261016.json",
+    "original_sha256": "81daa3d570fe5a5f2558d223c04b1c28b0cec018b979dc6679e51416c8a85987",
+    "processing": "原样保留保存文件核验与用户验收来源"
   }
 ]

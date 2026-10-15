@@ -10,7 +10,8 @@
 - 当前场景：`Assets/Scenes/GMScene.unity`。
 - 当前控制代码：`Assets/Scripts/Object/Player/PlayerObject.cs`；当前 Animator：`Assets/Resources/Animator/Cyrene.controller`。
 - 旧 Testing 与配套 Editor 测试工具已清理；历史测试证据保留在开发文档，不能代替当前玩法验收。
-- 新增 UI、对话和 JSON 基础代码包含未完成接口；详见 [本阶段总结](Docs/Development/records/12-stage-summary-20261015.md)。
+- 基础对话流程已由用户测试确认完成，剩余小漏洞待后续处理；任务接取与分支路由仍待实现。详见 [对话实现与测试记录](Docs/Development/records/14-dialogue-system-implementation.md)。
+- F 键测试入口使用 `Dialogue/Test/Test1_1.json`；源码与指定测试数据已归档，UI 预制件仍需从本地恢复。
 
 ## 文档
 
