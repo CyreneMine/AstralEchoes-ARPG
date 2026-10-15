@@ -1,0 +1,107 @@
+{
+    "model": "Assets/ArtRes/Character/Cyrene/Cyrene_Blender4.2.fbx",
+    "prefab": "Assets/ArtRes/Character/Cyrene/Physics/Cyrene_Blender42_BoneCloth.prefab",
+    "height": 1.475242018699646,
+    "colliders": 11,
+    "simulatedBones": 296,
+    "groups": [
+        {
+            "name": "01_Skirt",
+            "roots": [
+                "裙_0_3",
+                "裙_0_2",
+                "裙_0_1",
+                "裙_0_0",
+                "裙_0_11",
+                "裙_0_10",
+                "裙_0_9",
+                "裙_0_8",
+                "裙_0_7",
+                "裙_0_6",
+                "裙_0_5",
+                "裙_0_4"
+            ],
+            "bones": 161,
+            "gravity": 0.6000000238418579,
+            "maxDistance": 0.21458065509796143,
+            "connection": "SequentialLoopMesh"
+        },
+        {
+            "name": "02_BackSkirt",
+            "roots": [
+                "後中裙1-1"
+            ],
+            "bones": 8,
+            "gravity": 0.800000011920929,
+            "maxDistance": 0.3129301071166992,
+            "connection": "Line"
+        },
+        {
+            "name": "03_BackVeil",
+            "roots": [
+                "後紗"
+            ],
+            "bones": 51,
+            "gravity": 0.800000011920929,
+            "maxDistance": 0.4023387134075165,
+            "connection": "Line"
+        },
+        {
+            "name": "04_Sleeve_L",
+            "roots": [
+                "下袖1-1.L",
+                "下袖2-1.L",
+                "下袖3-1.L",
+                "下袖4-1.L"
+            ],
+            "bones": 8,
+            "gravity": 0.6000000238418579,
+            "maxDistance": 0.21458065509796143,
+            "connection": "Line"
+        },
+        {
+            "name": "04_Sleeve_R",
+            "roots": [
+                "下袖1-1.R",
+                "下袖2-1.R",
+                "下袖3-1.R",
+                "下袖4-1.R"
+            ],
+            "bones": 8,
+            "gravity": 0.6000000238418579,
+            "maxDistance": 0.21458065509796143,
+            "connection": "Line"
+        },
+        {
+            "name": "05_HeadVeil_Short",
+            "roots": [
+                "短头纱.L",
+                "短头纱.R"
+            ],
+            "bones": 10,
+            "gravity": 0.5,
+            "maxDistance": 0.17881721258163453,
+            "connection": "Line"
+        },
+        {
+            "name": "06_HeadVeil_Long_L",
+            "roots": [
+                "长头纱1.L"
+            ],
+            "bones": 25,
+            "gravity": 0.5,
+            "maxDistance": 0.25034409761428835,
+            "connection": "Line"
+        },
+        {
+            "name": "06_HeadVeil_Long_R",
+            "roots": [
+                "长头纱1.R"
+            ],
+            "bones": 25,
+            "gravity": 0.5,
+            "maxDistance": 0.25034409761428835,
+            "connection": "Line"
+        }
+    ]
+}

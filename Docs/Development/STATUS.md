@@ -23,6 +23,10 @@
 | 衣物物理 | 六组 BoneCloth，240 根衣物骨骼，11 个碰撞体 | 配置时 Play Mode 537 次采样，六组有效且运行，固定根漂移为 0；复杂动作穿插和性能待验证 |
 | 面部黑块 | `Mat_Cats/顏2+` 恢复默认 Alpha=0，启用 `_UseAlphaClipping` 属性及关键字 | Unity 重导入后现场观察黑块消失；未重新关闭启动验证；资源文件本次不上传 |
 
+## 2026-10-15 后续：Cyrene_Blender4.2 可切换配饰版本
+
+已为场景中的 Cyrene_Blender4.2 配置独立 BoneCloth 预制体，8 组、296 根衣物骨骼、11 个碰撞体，保留 64 个独立网格。396 次实际 Play Mode 采样通过，配饰开关通过，原始资源哈希与结构签名一致。详见 [配置记录](records/08-blender42-bonecloth.md)。该模型尚未绑定运行控制器；PlayerObject 和相机控制仍在 CATS 模型，本次没有迁移。此补充尚未 Git 提交或推送。
+
 ## 待完成或待验证
 
 - 当前角色移动、摄像机与闪避的完整人工试玩和回归记录。整理期间用户仍在编辑 PlayerObject 的摄像机方向计算；本提交是保存时的开发中快照，不声明镜头相对移动已完成。
@@ -31,3 +35,7 @@
 - 最终发布构建与功能测试。不能以素材导入、代码存在或历史测试代替最终版本验收。
 
 游戏范围为单一剧情探索模式，仅部分战斗节点加入三选一临时 Buff，不扩展为独立 Roguelite 模式。
+
+## 2026-10-15 后续：移动与冲刺衔接排查
+
+最新保存代码已采用 currentSpeed 标量并沿角色朝向移动，Animator 参数更新为 Velocity。磁盘 Cyrene.controller 仍为 XSpeed/YSpeed 二维混合树，需核对用户未保存的 Inspector 修改。冲刺位移计时结束后仍恢复普通移动，已提出以 isQuicking 锁住整个冲刺状态，并在 OnStateExit 解锁的方案；本次未修改玩法代码、Animator 或动作资源，也未运行验证。详见 [处理过程](records/09-movement-and-dash-transitions.md)。当前已保存场景显示 PlayerObject 绑定 Cyrene_Blender4.2，旧“控制仍在 CATS”说明只对应前一阶段。

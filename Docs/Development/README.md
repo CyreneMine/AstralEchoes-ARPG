@@ -11,6 +11,8 @@
 | Avatar、插件与 Shader | [映射和插件处理](records/04-avatar-and-plugins.md) | 旧 FBX 映射、插件清理及方案撤销 |
 | WASD 与身体大幅偏移 | [实现和修正](records/05-wasd-and-root-motion.md) | 旧临时控制器与动作副本 |
 | 裙摆、袖摆及头纱物理 | [BoneCloth 配置](records/06-bonecloth.md) | 当前 CATS 模型；名称沿革见文首 |
+| 可逐个开关配饰的旧模型衣物 | [Cyrene_Blender4.2 配置](records/08-blender42-bonecloth.md) | 8 组布料、64 个独立网格；运行验证通过 |
+| 换向减速与冲刺衔接 | [原因与修改过程](records/09-movement-and-dash-transitions.md) | 速度标量代码已写入；混合树保存、冲刺锁定与试玩仍待确认 |
 | 重启后面部黑块 | [覆盖层修复](records/07-face-overlay.md) | 当前 Nilo 示例 Shader 的腮红覆盖材质 |
 
 [文本证据目录](evidence/)保留实际测试数据。[来源清单](SOURCES.json)记录原始文档路径与 SHA256。公开副本只调整文档链接与本机路径表达，不改测试数值。

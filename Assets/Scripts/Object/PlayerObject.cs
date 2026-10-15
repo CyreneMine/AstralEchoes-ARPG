@@ -1,4 +1,5 @@
 using System;
+using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -14,12 +15,14 @@ public class PlayerObject : MonoBehaviour
     [SerializeField] private float deceleration = 45f; // 减速度
     private float vSpeed;
     public float gravity = -9.81f;
-    private Vector2 currentInput;
+    // private Vector2 currentInput;
+    private float currentSpeed;
     [SerializeField] private float dashSpeed = 10f;
     [SerializeField] private float dashDuration = 0.2f;
     [SerializeField] private float rotationSpeed = 720f;
     private float dashTimer;       // 剩余冲刺时间
     private Vector3 dashDirection; // 冲刺方向
+    private float moveWeight;
     private void Awake()
     {
         inputActions = new InputSystem_Actions();
@@ -27,6 +30,7 @@ public class PlayerObject : MonoBehaviour
             animator = GetComponent<Animator>();
         if (controller == null)
             controller = GetComponent<CharacterController>();
+        moveWeight = animator.GetFloat("MoveWeight");
     }
 
     private void Update()
@@ -37,8 +41,59 @@ public class PlayerObject : MonoBehaviour
             Quick();
         }
     }
-
     private void HandleMovement()
+    {
+        Vector2 input = inputActions.Player.Move.ReadValue<Vector2>();
+        input = Vector2.ClampMagnitude(input, 1f);
+
+        bool hasInput = input.sqrMagnitude > 0.01f;
+        bool isRunning = Keyboard.current != null
+                         && Keyboard.current.leftShiftKey.isPressed;
+        float targetSpeed = hasInput
+            ? input.magnitude * (isRunning ? runSpeed : walkSpeed)
+            : 0f;
+        float changeSpeed = hasInput ? acceleration : deceleration;
+        currentSpeed = Mathf.MoveTowards(
+            currentSpeed,
+            targetSpeed,
+            changeSpeed * Time.deltaTime
+        );
+        Transform camTrans = Camera.main.transform;
+        Vector3 forward = Vector3.ProjectOnPlane(camTrans.forward, Vector3.up).normalized;
+        Vector3 right = Vector3.Cross(Vector3.up, forward);
+        Vector3 desiredDirection = right * input.x + forward * input.y;
+        
+        if (dashTimer <= 0f && hasInput)
+        {
+            Quaternion targetRotation = Quaternion.LookRotation(desiredDirection);
+            transform.rotation = Quaternion.RotateTowards(
+                transform.rotation,
+                targetRotation,
+                rotationSpeed * Time.deltaTime
+            );
+        }
+        Vector3 move = transform.forward * currentSpeed;
+        if (dashTimer > 0f)
+        {
+            move = dashDirection * dashSpeed;
+            dashTimer -= Time.deltaTime;
+        }
+
+        animator.SetFloat(
+            "Velocity",
+            Mathf.Clamp01(currentSpeed / runSpeed)
+        );
+
+        if (controller.isGrounded && vSpeed < 0f)
+            vSpeed = -2f;
+
+        vSpeed += gravity * Time.deltaTime;
+
+        Vector3 velocity = move;
+        velocity.y = vSpeed;
+        controller.Move(velocity * Time.deltaTime);
+    }
+    /*private void HandleMovement()
     {
         Vector2 input = inputActions.Player.Move.ReadValue<Vector2>();
         input = Vector2.ClampMagnitude(input, 1f);
@@ -54,32 +109,34 @@ public class PlayerObject : MonoBehaviour
             targetVelocity,
             changeSpeed * Time.deltaTime
         );
-        Vector3 move = new Vector3(currentInput.x, 0, currentInput.y);
+        
+        Transform camTrans = Camera.main.transform;
+        Vector3 forward = Vector3.ProjectOnPlane(camTrans.forward, Vector3.up).normalized;
+        Vector3 right = Vector3.ProjectOnPlane(camTrans.right, Vector3.up).normalized;
+        
+        Vector3 move = right * currentInput.x + forward * currentInput.y;
         if (dashTimer > 0f)
         {
             move = dashDirection * dashSpeed;
             dashTimer -= Time.deltaTime;
+        }else if (input.sqrMagnitude > 0.01f)
+        {
+            Vector3 moveDir = forward*input.y + right*input.x;
+            moveDir = Vector3.ClampMagnitude(moveDir, 1f);
+            Quaternion targetRot = Quaternion.LookRotation(moveDir);
+            transform.rotation = Quaternion.RotateTowards(transform.rotation,targetRot,rotationSpeed*Time.deltaTime);
         }
-        animator.SetFloat("XSpeed", Mathf.Clamp(currentInput.x/runSpeed,-1,1));
-        animator.SetFloat("YSpeed",Mathf.Clamp(currentInput.y/runSpeed,-1,1));
+        // animator.SetFloat("XSpeed", Mathf.Clamp(currentInput.x/runSpeed,-1,1));
+        // animator.SetFloat("YSpeed",Mathf.Clamp(currentInput.y/runSpeed,-1,1));
+        animator.SetFloat("Velocity", move.magnitude/runSpeed);
         if (controller.isGrounded && vSpeed < 0)
             vSpeed = -2f;
         vSpeed += gravity * Time.deltaTime;
         // Vector3 velocity = move * moveSpeed;
         Vector3 velocity = move;
         velocity.y = vSpeed;
-        
-        if (input.sqrMagnitude < 0.01f)
-            return;
-        Transform camTrans = Camera.main.transform;
-        Vector3 forward = Vector3.ProjectOnPlane(camTrans.forward, camTrans.up).normalized;
-        Vector3 right = Vector3.ProjectOnPlane(camTrans.right, camTrans.up).normalized;
-        
-        Vector3 moveDir = forward*input.y + right*input.x;
-        moveDir = Vector3.ClampMagnitude(moveDir, 1f);
-        
         controller.Move(velocity * Time.deltaTime);
-    }
+    }*/
     private void OnEnable()
     {
         inputActions.Enable();

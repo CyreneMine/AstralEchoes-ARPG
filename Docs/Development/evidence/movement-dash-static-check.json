@@ -1,0 +1,22 @@
+{
+  "date": "2026-10-15",
+  "kind": "静态检查与修改建议；本次未修改玩法代码或 Animator，未进行 Play Mode 验收",
+  "source_sha256": {
+    "Assets\\Scripts\\Object\\PlayerObject.cs": "5655b955ba1d8ba269d1da9c794d3b588c15250f410cfad505cd1cef283ffd6c",
+    "Assets\\Resources\\Animator\\Cyrene.controller": "5392d84e2b2a960d04314133912aaf967c39ef81b0854f90b4a0085b2964d853",
+    "Assets\\Resources\\Animation\\Charecter\\Special\\S_QuickShift_F.fbx.meta": "0855e97457c50d5cb42e8fa20685f62c217141ca16f31bbaa680cb628345b152"
+  },
+  "observed": {
+    "scalarSpeedImplemented": true,
+    "animationParameter": "Velocity",
+    "animatorBlendType": 2,
+    "animatorBlendParameter": "XSpeed",
+    "dashDurationSeconds": 0.2,
+    "dashEnterTransitionSeconds": 0.25,
+    "dashExitTransitionSeconds": 0.31690288,
+    "dashExitTimeNormalized": 0.59473103,
+    "startQuickEventPresent": true,
+    "endQuickEventRawTime": 0.7924528,
+    "normalMovementNotLockedByIsQuicking": true
+  }
+}

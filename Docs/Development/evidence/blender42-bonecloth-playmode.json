@@ -1,0 +1,69 @@
+{
+    "passed": true,
+    "accessoryTogglePassed": true,
+    "rendererCount": 64,
+    "error": "",
+    "finite": true,
+    "samples": 396,
+    "maxLocalPositionChange": 0.00040705184801481664,
+    "maxLocalRotationChange": 45.928165435791019,
+    "maxPinnedDrift": 0.0,
+    "teams": [
+        {
+            "name": "01_Skirt",
+            "valid": true,
+            "running": true,
+            "team": 14,
+            "result": "MagicaCloth2.ResultCode"
+        },
+        {
+            "name": "02_BackSkirt",
+            "valid": true,
+            "running": true,
+            "team": 2,
+            "result": "MagicaCloth2.ResultCode"
+        },
+        {
+            "name": "03_BackVeil",
+            "valid": true,
+            "running": true,
+            "team": 8,
+            "result": "MagicaCloth2.ResultCode"
+        },
+        {
+            "name": "04_Sleeve_L",
+            "valid": true,
+            "running": true,
+            "team": 1,
+            "result": "MagicaCloth2.ResultCode"
+        },
+        {
+            "name": "04_Sleeve_R",
+            "valid": true,
+            "running": true,
+            "team": 11,
+            "result": "MagicaCloth2.ResultCode"
+        },
+        {
+            "name": "05_HeadVeil_Short",
+            "valid": true,
+            "running": true,
+            "team": 9,
+            "result": "MagicaCloth2.ResultCode"
+        },
+        {
+            "name": "06_HeadVeil_Long_L",
+            "valid": true,
+            "running": true,
+            "team": 12,
+            "result": "MagicaCloth2.ResultCode"
+        },
+        {
+            "name": "06_HeadVeil_Long_R",
+            "valid": true,
+            "running": true,
+            "team": 10,
+            "result": "MagicaCloth2.ResultCode"
+        }
+    ]
+}

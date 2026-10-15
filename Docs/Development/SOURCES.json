@@ -82,5 +82,41 @@
     "destination": "Development/records/07-face-overlay.md",
     "original_sha256": "73e6c16b6aba026932e2518d30aa2ec23561294ac64144714a2fadeeb1a43e07",
     "processing": "保留正文；补充当前适用范围；本地链接调整为仓库链接或未上传标记"
+  },
+  {
+    "source": "工作记录/Cyrene_Blender42_BoneCloth_20261015/配置与验证记录.md",
+    "destination": "Development/records/08-blender42-bonecloth.md",
+    "original_sha256": "baf81e05c32fccfb154c436bd02852d38592d5258af897ef375b151c38fe829f",
+    "processing": "补充仓库阅读说明；保留原文与验证边界"
+  },
+  {
+    "source": "工作记录/Cyrene_Blender42_BoneCloth_20261015/PlayMode验证.json",
+    "destination": "Development/evidence/blender42-bonecloth-playmode.json",
+    "original_sha256": "e21b0d43aea916d6d4572e1f115ba9cb6381e11b714e44a9801be5bddfac5bda",
+    "processing": "原样保留文本验证结果"
+  },
+  {
+    "source": "工作记录/Cyrene_Blender42_BoneCloth_20261015/配置结果.json",
+    "destination": "Development/evidence/blender42-bonecloth-setup.json",
+    "original_sha256": "11e9df31e69b83c7702bc1caee2a2b09ea219b402540419390a6e317cbcce53f",
+    "processing": "原样保留文本验证结果"
+  },
+  {
+    "source": "工作记录/Cyrene_Blender42_BoneCloth_20261015/资源与结构核对.json",
+    "destination": "Development/evidence/blender42-structure-check.json",
+    "original_sha256": "e7b5d578bc1beba57816c3623c6daa9c7f76d7467f0c92a3fcee5a31ba62eb3e",
+    "processing": "原样保留文本验证结果"
+  },
+  {
+    "source": "工作记录/移动转向与冲刺衔接_20261015/问题原因与修改过程.md",
+    "destination": "Development/records/09-movement-and-dash-transitions.md",
+    "original_sha256": "54b490150d726c8053ead3c6195c5bd64b131338779e542ab8732a4f159ad914",
+    "processing": "正文保留；补充仓库适用范围说明"
+  },
+  {
+    "source": "工作记录/移动转向与冲刺衔接_20261015/静态检查.json",
+    "destination": "Development/evidence/movement-dash-static-check.json",
+    "original_sha256": "6ff950e18dd99d21271baa70eb4ce3abea1491b764c9146af9e7aff221dc35ed",
+    "processing": "原样保留静态检查证据"
   }
 ]
