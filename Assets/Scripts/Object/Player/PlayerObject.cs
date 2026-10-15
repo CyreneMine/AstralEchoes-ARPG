@@ -23,8 +23,10 @@ public class PlayerObject : MonoBehaviour
     private float dashTimer;       // 剩余冲刺时间
     private Vector3 dashDirection; // 冲刺方向
     private float moveWeight;
+    private bool isAttacking = false;
     private void Awake()
     {
+        PlayerMgr.instance.InitPlayer(this);
         inputActions = new InputSystem_Actions();
         if (animator == null)
             animator = GetComponent<Animator>();
@@ -32,8 +34,14 @@ public class PlayerObject : MonoBehaviour
             controller = GetComponent<CharacterController>();
     }
 
+    public void SetIsAttacking(bool isAttacking)
+    {
+        this.isAttacking = isAttacking;
+    }
     private void Update()
     {
+        if (isAttacking)
+            return;
         HandleMovement();
         if (Keyboard.current.leftShiftKey.wasPressedThisFrame)
         {
@@ -88,7 +96,6 @@ public class PlayerObject : MonoBehaviour
             vSpeed = -2f;
 
         vSpeed += gravity * Time.deltaTime;
-
         Vector3 velocity = move;
         velocity.y = vSpeed;
         controller.Move(velocity * Time.deltaTime);
@@ -141,7 +148,6 @@ public class PlayerObject : MonoBehaviour
     {
         inputActions.Enable();
     }
-
     private void OnDisable()
     {
         inputActions.Disable();
