@@ -30,7 +30,6 @@ public class PlayerObject : MonoBehaviour
             animator = GetComponent<Animator>();
         if (controller == null)
             controller = GetComponent<CharacterController>();
-        moveWeight = animator.GetFloat("MoveWeight");
     }
 
     private void Update()
@@ -63,7 +62,7 @@ public class PlayerObject : MonoBehaviour
         Vector3 right = Vector3.Cross(Vector3.up, forward);
         Vector3 desiredDirection = right * input.x + forward * input.y;
         
-        if (dashTimer <= 0f && hasInput)
+        if (dashTimer <= 0f && hasInput &&!isQuicking)
         {
             Quaternion targetRotation = Quaternion.LookRotation(desiredDirection);
             transform.rotation = Quaternion.RotateTowards(
@@ -72,13 +71,14 @@ public class PlayerObject : MonoBehaviour
                 rotationSpeed * Time.deltaTime
             );
         }
-        Vector3 move = transform.forward * currentSpeed;
+        moveWeight = Mathf.Clamp01(animator.GetFloat("MoveWeight"));
+        Vector3 move = transform.forward * currentSpeed*moveWeight;
+        
         if (dashTimer > 0f)
         {
             move = dashDirection * dashSpeed;
             dashTimer -= Time.deltaTime;
         }
-
         animator.SetFloat(
             "Velocity",
             Mathf.Clamp01(currentSpeed / runSpeed)
