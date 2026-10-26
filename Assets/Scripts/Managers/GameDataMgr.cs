@@ -1,9 +1,7 @@
 using UnityEngine;
 
-public class GameDataMgr
+public class GameDataMgr :BaseManager<GameDataMgr>
 {
-    public static GameDataMgr instance { get; }=new GameDataMgr();
-    
     private GameDataMgr()
     {
         

@@ -1,15 +1,13 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class DialogueMgr
+public class DialogueMgr :BaseManager<DialogueMgr>
 {
-    public static DialogueMgr instance { get; }=new DialogueMgr();
     public DialoguePanel dialoguePanel;
     public List<DialogueData> dialogueDatas;
     public int nowDialogueIndex = 0;
     private DialogueMgr()
     {
-        
     }
     private string currentDialogue;
     public void StartDialogue(string dialogue)
@@ -19,7 +17,7 @@ public class DialogueMgr
     }
     public void SelectOptions(int dialogue = 1)
     {
-        DialoguePanel dialoguePanel = UIManager.instance.GetPanel<DialoguePanel>();
+        DialoguePanel dialoguePanel = UIManager.Instance.GetPanel<DialoguePanel>();
         if (dialogue == 0)
         {
             dialoguePanel.AcceptMission();

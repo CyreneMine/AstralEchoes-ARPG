@@ -3,6 +3,7 @@ using UnityEngine.InputSystem;
 
 public class TestDialogue : MonoBehaviour
 {
+    private bool canOverlap = true;
     void Start()
     {
         
@@ -10,10 +11,44 @@ public class TestDialogue : MonoBehaviour
     
     void Update()
     {
-        if (Keyboard.current.fKey.wasPressedThisFrame)
+        if (UIManager.Instance.GetPanel<DialoguePanel>() != null)
+            return;
+
+        // GamePanel gamePanel = UIManager.instance.GetPanel<GamePanel>();
+        // if (gamePanel == null)
+        //     return;
+
+        Collider[] colliders = Physics.OverlapSphere(transform.position, 5f,
+            1 << LayerMask.NameToLayer("Player"));
+        // 持续检查距离，离开范围时关闭提示并允许下次重新显示。
+        if (colliders == null || colliders.Length == 0)
         {
-            UIManager.instance.ShowPanel<DialoguePanel>();
-            DialogueMgr.instance.StartDialogue("Test/Test1_1");
+            if (UIManager.Instance.GetPanel<InteractPanel>() != null)
+                UIManager.Instance.GetPanel<GamePanel>().CloseInteractPanel();
+            ReStartOverlap();
+            return;
         }
+
+        // 只限制重复打开提示，不停止上面的距离检测。
+        if (!canOverlap)
+            return;
+
+        UIManager.Instance.GetPanel<GamePanel>().OpenInteractPanel();
+        InteractPanel interactPanel = UIManager.Instance.GetPanel<InteractPanel>();
+        if (interactPanel == null)
+            return;
+        interactPanel.SetOtherObj(gameObject);
+        canOverlap = false;
+    }
+
+    public void StartDialogue()
+    {
+        
+        UIManager.Instance.ShowPanel<DialoguePanel>();
+        DialogueMgr.Instance.StartDialogue("Test/Test1_1");
+    }
+    public void ReStartOverlap()
+    {
+        canOverlap = true;
     }
 }

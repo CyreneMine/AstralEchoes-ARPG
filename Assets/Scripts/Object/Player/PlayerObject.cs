@@ -8,7 +8,6 @@ public class PlayerObject : MonoBehaviour
     private bool isQuicking;
     public Animator animator;
     public CharacterController controller;
-    public InputSystem_Actions inputActions;
     [SerializeField] private float walkSpeed = 2.5f;
     [SerializeField] private float runSpeed = 5f;
     [SerializeField] private float acceleration = 30f; // 加速度
@@ -26,8 +25,7 @@ public class PlayerObject : MonoBehaviour
     private bool isAttacking = false;
     private void Awake()
     {
-        PlayerMgr.instance.InitPlayer(this);
-        inputActions = new InputSystem_Actions();
+        PlayerMgr.Instance.InitPlayer(this);
         if (animator == null)
             animator = GetComponent<Animator>();
         if (controller == null)
@@ -43,19 +41,18 @@ public class PlayerObject : MonoBehaviour
         if (isAttacking)
             return;
         HandleMovement();
-        if (Keyboard.current.leftShiftKey.wasPressedThisFrame)
+        if (PlayerMgr.Instance.inputActions.Player.Sprint.WasPressedThisFrame())
         {
             Quick();
         }
     }
     private void HandleMovement()
     {
-        Vector2 input = inputActions.Player.Move.ReadValue<Vector2>();
+        Vector2 input = PlayerMgr.Instance.inputActions.Player.Move.ReadValue<Vector2>();
         input = Vector2.ClampMagnitude(input, 1f);
 
         bool hasInput = input.sqrMagnitude > 0.01f;
-        bool isRunning = Keyboard.current != null
-                         && Keyboard.current.leftShiftKey.isPressed;
+        bool isRunning = PlayerMgr.Instance.inputActions.Player.Sprint.IsPressed();
         float targetSpeed = hasInput
             ? input.magnitude * (isRunning ? runSpeed : walkSpeed)
             : 0f;
@@ -144,14 +141,6 @@ public class PlayerObject : MonoBehaviour
         velocity.y = vSpeed;
         controller.Move(velocity * Time.deltaTime);
     }*/
-    private void OnEnable()
-    {
-        inputActions.Enable();
-    }
-    private void OnDisable()
-    {
-        inputActions.Disable();
-    }
 
     private void Quick()
     {

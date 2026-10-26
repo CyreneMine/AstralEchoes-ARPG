@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.InputSystem;
 
 public class DialoguePanel : BasePanel
@@ -49,14 +50,19 @@ public class DialoguePanel : BasePanel
     public override void ShowMe()
     {
         base.ShowMe();
-        DialogueMgr.instance.dialoguePanel = this;
+        DialogueMgr.Instance.dialoguePanel = this;
+    }
+
+    public override void HideMe(UnityAction callback = null)
+    {
+        base.HideMe(callback);
+        PlayerMgr.Instance.OpenInput();
     }
 
     public override void Init()
     {
         
-        OptionsPanelObj.SetActive(false);
-        optionsPanel = OptionsPanelObj.GetComponent<OptionsPanel>();
+        
     }
     //依照规则命名的对话 "对话类型(Main、NPC、Test)/JSON文件名"
     public void InitData(List<DialogueData> data)
@@ -66,6 +72,7 @@ public class DialoguePanel : BasePanel
             EndDialogue();
             return;
         }
+        PlayerMgr.Instance.CloseInput();
         dialogueData = data;
         currentIndex = 0;
         if (data.Count == 0)
@@ -87,14 +94,14 @@ public class DialoguePanel : BasePanel
         txtSpeakContext.text = dialogueData[currentIndex].context;
         if (dialogueData[currentIndex].options!=null && dialogueData[currentIndex].options.Length > 0 )
         {
-            optionsPanel = UIManager.instance.ShowPanel<OptionsPanel>();
+            optionsPanel = UIManager.Instance.ShowPanel<OptionsPanel>();
             // optionsPanel.ShowOptions();
             waitChoiceDialogue = true;
             canOnClick = false;
         }
         int tempIndex = currentIndex;
         currentIndex++;
-        DialogueMgr.instance.nowDialogueIndex = tempIndex;
+        DialogueMgr.Instance.nowDialogueIndex = tempIndex;
     }
 
     public void AcceptMission()
@@ -107,8 +114,8 @@ public class DialoguePanel : BasePanel
         {
             //TODO 处理接受任务逻辑 后续任务管理器完善后填充
         }
-        UIManager.instance.HidePanel<DialoguePanel>();
-        UIManager.instance.HidePanel<OptionsPanel>();
+        UIManager.Instance.HidePanel<DialoguePanel>();
+        UIManager.Instance.HidePanel<OptionsPanel>();
     }
 
     public void MakeChoice()

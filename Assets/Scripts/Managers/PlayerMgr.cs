@@ -1,12 +1,32 @@
-﻿public class PlayerMgr
+﻿public class PlayerMgr :BaseManager<PlayerMgr>
 {
-    public static PlayerMgr instance { get; } = new PlayerMgr();
     public PlayerObject player;
+    public InputSystem_Actions inputActions;
+
     private PlayerMgr()
-    {}
+    {
+        inputActions = new InputSystem_Actions();
+        inputActions.Enable();
+    }
 
     public void InitPlayer(PlayerObject player)
     {
         this.player = player;
+    }
+
+    public void CloseInput()
+    {
+        inputActions.Disable();
+    }
+
+    public void OpenInput()
+    {
+        inputActions.Enable();
+    }
+    public void ClearPlayerMgr()
+    {
+        //TODO 游戏结束时候调用函数来释放
+        player = null;
+        inputActions.Disable();
     }
 }

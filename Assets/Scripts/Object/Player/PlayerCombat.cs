@@ -5,6 +5,7 @@ using UnityEngine.InputSystem;
 public class PlayerCombat : MonoBehaviour
 {
     private Animator animator;
+    //TODO 后续补全攻击的连贯 设置预输入阈值
     private void Awake()
     {
         animator = GetComponent<Animator>();
@@ -12,7 +13,7 @@ public class PlayerCombat : MonoBehaviour
 
     private void Update()
     {
-        if (Mouse.current.leftButton.wasPressedThisFrame)
+        if (PlayerMgr.Instance.inputActions.Player.Attack.WasPressedThisFrame())
         {
             Attack();
         }
@@ -20,14 +21,14 @@ public class PlayerCombat : MonoBehaviour
 
     public void Attack()
     {
-        PlayerMgr.instance.player.SetIsAttacking(true);
+        PlayerMgr.Instance.player.SetIsAttacking(true);
         animator.SetTrigger("Atk");
         animator.SetBool("Attacking",true);
     }
 
     public void AttackEnd()
     {
-        PlayerMgr.instance.player.SetIsAttacking(false);
+        PlayerMgr.Instance.player.SetIsAttacking(false);
         animator.SetBool("Attacking",false);
     }
 }

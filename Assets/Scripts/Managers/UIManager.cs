@@ -2,9 +2,8 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class UIManager
+public class UIManager:BaseManager<UIManager>
 {
-    public static UIManager instance { get; } = new UIManager();
     private Transform canvas;
     private UIManager()
     {
