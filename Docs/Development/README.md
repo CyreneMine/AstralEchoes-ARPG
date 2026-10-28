@@ -28,3 +28,11 @@
 本轮版本整理见 [分模块交付清单](deliveries/2026-10-15.md)。
 
 本轮收工见 [2026-10-16 分模块交付清单](deliveries/2026-10-16.md)。
+
+## 2026-10-28 最新过程记录
+
+- [管理器基类与NPC距离交互](records/15-manager-and-npc-interaction.md)：补记用户管理器重构、提示恢复、离开范围与F键交互。
+- [对象池、朝向脚本与世界空间UI](records/16-pool-billboard-and-world-ui.md)：保留用户暂不改ClearPool、Pivot自查和布局保留决定。
+- [角色配置、生命值与血条排查](records/17-character-config-health-and-hit.md)：分SO表、下标ID、枚举预加载、初始化与NaN/Infinity证据。
+- [动画锁定与恢复](records/18-animation-lock-and-recovery.md)：区分动画事件、状态退出和MoveWeight。
+- [开发日志](logs/2026-10-28-config-health.md) · [交付清单](deliveries/2026-10-28.md)。

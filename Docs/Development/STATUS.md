@@ -56,3 +56,13 @@
 ## 2026-10-16 收工：对话测试确认
 
 用户确认本轮对话功能测试完成，剩余小漏洞暂未具体列出，计划下一工作日处理。已保存 ShowMe 登记、列表加载、动态选项、同帧输入保护、索引/判空/末尾保护、SetParent(canvas,false) 与 F 键测试入口。本轮收工只归档和 Git 操作，没有再修改玩法或重复运行测试。指定 Test1_1.json 作为自编测试数据提交，UI 预制件、模型与第三方插件继续本地保留。
+
+## 2026-10-28 当前补充：配置管理、命中与敌人血条
+
+本节优先于上文历史快照。玩家/敌人配置已改成各一份 CharacterConfig SO，内部使用 List<CharacterData>，以表内下标作为当前角色ID；ConfigMgr 根据 Player/Enemy 枚举预加载并保存引用。最新玩家与敌人 Awake 在 base.Awake 后调用 Init(0,type)，生命组件由该方法初始化，敌人初始及受伤后刷新血条。
+
+OnAttackCheck 已有球形命中查询与伤害传递，Enemy Layer 与 World Space Canvas 引用已保存。这仍是基础原型：无本次修复后运行验收，没有据此宣称完整战斗、动态生成器、NPC AI、Buff或任务闭环完成。当前角色数据为玩家2攻击/3防御/100生命，敌人1攻击/1防御/10生命；历史NaN/Infinity已定位到当时未调用初始化，最新代码已接入，恢复效果待验证。
+
+对象池空栈/路径修正已在已有提交保存；ClearPool仍按用户决定仅清字典。世界空间血条采用Filled Image，LookMe朝向摄像机。当前布局按用户决定保留。本次补记管理器与NPC、对象池/UI、配置与血条、动画恢复四份过程记录，并保存静态证据。没有额外修改玩法代码或模型资源。
+
+[配置与生命值记录](records/17-character-config-health-and-hit.md) · [本轮日志](logs/2026-10-28-config-health.md) · [交付清单](deliveries/2026-10-28.md)

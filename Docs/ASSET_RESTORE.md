@@ -26,3 +26,10 @@
 ## 2026-10-16 对话测试补充
 
 自编 `Assets/StreamingAssets/Dialogue/Test/Test1_1.json` 及必要目录/文件 meta 已纳入本轮提交，其余 StreamingAssets 仍默认留本地。测试入口按 F 调用 ShowPanel<DialoguePanel>() 和 StartDialogue("Test/Test1_1")；需先补回上述本地 UI 预制件、字体等依赖，并保留原 GUID，才能复现完整画面。本轮本地 UI 快照保存在毕业设计工作记录的“对话系统实现与收工归档_20261016/本地资源快照”中，不向仓库上传。
+
+## 2026-10-28 配置表与血条补充
+
+- 自编 PlayerConfig.asset、EnemyConfig.asset 及原meta已加入窄范围白名单，替代旧Enemy_Test测试配置；这是作者编写的数值配置，不包括美术素材。不要恢复成旧单条SO字段结构，当前类包含 characterDatas 列表。
+- World Space Canvas、HealthBar、BK、Fill、HealthBarController 与 LookMe 引用保存在 GMScene 中。场景引用的血条Sprite仍是本地资源，需连同原meta恢复；参考本轮静态证据中的GUID，不重新生成素材GUID。
+- 当前F键入口在 InteractPanel 中，仅靠近NPC提示时触发；旧“直接F键开始对话”说明属于历史阶段。
+- 运行前补回模型、动作动画事件、Shader、MagicaCloth2、UI预制件与LitJson。本轮没有重新发布或上传这些资源，也没有发布可独立运行构建。
