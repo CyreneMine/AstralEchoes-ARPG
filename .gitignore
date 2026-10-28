@@ -79,3 +79,13 @@ Desktop.ini
 /Assets/StreamingAssets/Dialogue/Test/*
 !/Assets/StreamingAssets/Dialogue/Test/Test1_1.json
 !/Assets/StreamingAssets/Dialogue/Test/Test1_1.json.meta
+
+# Authored character SO test configuration only.
+!/Assets/Resources/GameData/
+!/Assets/Resources/GameData.meta
+/Assets/Resources/GameData/*
+!/Assets/Resources/GameData/Character/
+!/Assets/Resources/GameData/Character.meta
+/Assets/Resources/GameData/Character/*
+!/Assets/Resources/GameData/Character/Enemy_Test.asset
+!/Assets/Resources/GameData/Character/Enemy_Test.asset.meta
