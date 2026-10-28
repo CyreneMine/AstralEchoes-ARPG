@@ -24,9 +24,7 @@ public class BaseManager<T> where T:class
                     instance = info.Invoke(null) as T;
                 else
                     Debug.Log("没有对应的无参私有构造函数");
-
             }
-                
             return instance;
         }
     }
