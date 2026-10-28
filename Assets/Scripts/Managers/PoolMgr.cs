@@ -9,14 +9,14 @@ public class PoolMgr : BaseManager<PoolMgr>
     public GameObject GetObj(string poolName)
     {
         GameObject obj;
-        if (poolDic.ContainsKey(poolName))
+        if (poolDic.ContainsKey(poolName) && poolDic[poolName].Count > 0)
         {
             obj = poolDic[poolName].Pop();
             obj.gameObject.SetActive(true);
         }
         else
         {
-            obj = GameObject.Instantiate(Resources.Load("PoolPrefabs"+poolName)) as GameObject;
+            obj = GameObject.Instantiate(Resources.Load("PoolPrefabs/"+poolName)) as GameObject;
             obj.name = poolName;
         }
         return obj;
