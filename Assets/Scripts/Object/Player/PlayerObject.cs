@@ -3,7 +3,7 @@ using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-public class PlayerObject : MonoBehaviour
+public class PlayerObject : CharacterObject
 {
     private bool isQuicking;
     public Animator animator;
@@ -20,11 +20,12 @@ public class PlayerObject : MonoBehaviour
     [SerializeField] private float dashDuration = 0.2f;
     [SerializeField] private float rotationSpeed = 720f;
     private float dashTimer;       // 剩余冲刺时间
-    private Vector3 dashDirection; // 冲刺方向
+    private Vector3 dashDirection; 
     private float moveWeight;
     private bool isAttacking = false;
-    private void Awake()
+    protected override void Awake()
     {
+        base.Awake();
         PlayerMgr.Instance.InitPlayer(this);
         if (animator == null)
             animator = GetComponent<Animator>();
