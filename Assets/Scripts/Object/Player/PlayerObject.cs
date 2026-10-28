@@ -31,6 +31,8 @@ public class PlayerObject : CharacterObject
             animator = GetComponent<Animator>();
         if (controller == null)
             controller = GetComponent<CharacterController>();
+        //TODO 测试写死 后续动态更新
+        Init(0,CharacterConfig.CharacterType.Player);
     }
 
     public void SetIsAttacking(bool isAttacking)

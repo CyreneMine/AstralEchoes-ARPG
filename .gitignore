@@ -87,5 +87,7 @@ Desktop.ini
 !/Assets/Resources/GameData/Character/
 !/Assets/Resources/GameData/Character.meta
 /Assets/Resources/GameData/Character/*
-!/Assets/Resources/GameData/Character/Enemy_Test.asset
-!/Assets/Resources/GameData/Character/Enemy_Test.asset.meta
+!/Assets/Resources/GameData/Character/PlayerConfig.asset
+!/Assets/Resources/GameData/Character/PlayerConfig.asset.meta
+!/Assets/Resources/GameData/Character/EnemyConfig.asset
+!/Assets/Resources/GameData/Character/EnemyConfig.asset.meta
