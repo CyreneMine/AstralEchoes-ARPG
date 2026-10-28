@@ -2,7 +2,8 @@
 {
     public PlayerObject player;
     public InputSystem_Actions inputActions;
-
+    //0为目前测试的单手剑
+    public int currentWeaponType = 0;
     private PlayerMgr()
     {
         inputActions = new InputSystem_Actions();

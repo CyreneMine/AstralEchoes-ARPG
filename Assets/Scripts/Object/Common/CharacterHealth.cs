@@ -4,6 +4,8 @@ public class CharacterHealth :MonoBehaviour
 {
     [SerializeField]private int currentHp;
     private int maxHp,def;
+    public int CurrentHp => currentHp;
+    public int MaxHp => maxHp;
     public bool isDead;
     public void Init(int maxHp,int def)
     {
@@ -23,6 +25,7 @@ public class CharacterHealth :MonoBehaviour
             currentHp = 0;
             isDead = true;
         }
+        print($"Current HP: {currentHp},Damage: {damage},maxHp: {maxHp}");
     }
 
     private int CalculateDamage(int damage)

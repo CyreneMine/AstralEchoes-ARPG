@@ -19,6 +19,21 @@ public class PlayerCombat : MonoBehaviour
         }
     }
 
+    public void OnAttackCheck()
+    {
+        switch (PlayerMgr.Instance.currentWeaponType)
+        {
+            case 0:
+                Collider[] colliders = Physics.OverlapSphere(transform.position + transform.forward, 2, 1 << LayerMask.NameToLayer("Enemy"));
+                foreach (Collider other in colliders)
+                {
+                    EnemyObject enemyObject = other.GetComponent<EnemyObject>();
+                    
+                    enemyObject.TakeDamage(PlayerMgr.Instance.player.Config.atk);
+                }
+                break;
+        }
+    }
     public void Attack()
     {
         PlayerMgr.Instance.player.SetIsAttacking(true);
