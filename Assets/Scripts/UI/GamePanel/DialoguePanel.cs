@@ -51,12 +51,14 @@ public class DialoguePanel : BasePanel
     {
         base.ShowMe();
         DialogueMgr.Instance.dialoguePanel = this;
+        Cursor.lockState = CursorLockMode.None;
     }
 
     public override void HideMe(UnityAction callback = null)
     {
         base.HideMe(callback);
         PlayerMgr.Instance.OpenInput();
+        Cursor.lockState = CursorLockMode.Locked;
     }
 
     public override void Init()
@@ -124,4 +126,5 @@ public class DialoguePanel : BasePanel
         waitChoiceDialogue = false;
         canOnClick = true;
     }
+    
 }

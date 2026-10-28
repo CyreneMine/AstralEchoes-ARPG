@@ -1,11 +1,25 @@
 using TMPro;
 using UnityEngine;
+using UnityEngine.Events;
+using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
 public class InteractPanel : BasePanel
 {
     public Button[] buttonObjs;
     public GameObject otherObj;
+
+    protected override void Update()
+    {
+        base.Update();
+        if (gameObject.activeSelf)
+        {
+            if (Keyboard.current.fKey.wasPressedThisFrame)
+            {
+                ClickDialogue();
+            }
+        }
+    }
 
     public void SetOtherObj(GameObject obj)
     {
@@ -22,16 +36,7 @@ public class InteractPanel : BasePanel
                 Button button = buttonObj;
                 if (button.GetComponentInChildren<TMP_Text>().text.Equals("对话"))
                 {
-                    button.onClick.AddListener(() =>
-                    {
-                        //如果触发按钮显示 必定存在GamePanel
-                        if (otherObj.GetComponent<TestDialogue>() !=null)
-                        {
-                            otherObj.GetComponent<TestDialogue>().StartDialogue();
-                        }
-                        UIManager.Instance.GetPanel<GamePanel>().CloseInteractPanel();
-                        otherObj.GetComponent<TestDialogue>().ReStartOverlap();
-                    });
+                    button.onClick.AddListener(ClickDialogue);
                 }
                 else
                 {
@@ -40,5 +45,26 @@ public class InteractPanel : BasePanel
                 
             }
         }
+    }
+    public void ClickDialogue()
+    {
+        Cursor.lockState = CursorLockMode.None;
+        //如果触发按钮显示 必定存在GamePanel
+        if (otherObj.GetComponent<TestDialogue>() !=null)
+        {
+            otherObj.GetComponent<TestDialogue>().StartDialogue();
+        }
+        UIManager.Instance.GetPanel<GamePanel>().CloseInteractPanel();
+        otherObj.GetComponent<TestDialogue>().ReStartOverlap();
+    }
+
+    public override void ShowMe()
+    {
+        base.ShowMe();
+    }
+
+    public override void HideMe(UnityAction callback = null)
+    {
+        base.HideMe(callback);
     }
 }
