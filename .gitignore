@@ -91,3 +91,10 @@ Desktop.ini
 !/Assets/Resources/GameData/Character/PlayerConfig.asset.meta
 !/Assets/Resources/GameData/Character/EnemyConfig.asset
 !/Assets/Resources/GameData/Character/EnemyConfig.asset.meta
+
+# Authored mission test definition only; runtime progress and UI/art remain local.
+!/Assets/Resources/GameData/Mission/
+!/Assets/Resources/GameData/Mission.meta
+/Assets/Resources/GameData/Mission/*
+!/Assets/Resources/GameData/Mission/MissionConfig.asset
+!/Assets/Resources/GameData/Mission/MissionConfig.asset.meta

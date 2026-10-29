@@ -115,6 +115,7 @@ public class DialoguePanel : BasePanel
         if (accept)
         {
             //TODO 处理接受任务逻辑 后续任务管理器完善后填充
+            MissionMgr.Instance.AcceptMission(0);
         }
         UIManager.Instance.HidePanel<DialoguePanel>();
         UIManager.Instance.HidePanel<OptionsPanel>();
