@@ -19,7 +19,7 @@
 2. 从用户本地备份恢复上述资源目录，连同原 `.meta` 文件一起恢复。不要重新生成 GUID，否则场景、Animator 和渲染配置的引用可能丢失。
 3. 当前角色为 `Cyrene_Blender4.2.fbx`，GUID 为 `8a20f58c2d3f4ef46b0e6140851c62db`；场景使用本地角色预制件，当前 Animator 为 `Cyrene.controller`。旧 Cyrene_cats 属历史版本，不能靠同名模型代替当前引用。
 4. 本地 Magica Cloth 2 配置时版本为 2.18.4；当前场景包含该插件组件。补回插件与素材后再打开 GMScene 检查 Missing 引用、材质和动画事件。
-5. 当前面部修复保存在本地 `Mat_Cats/顏2+.mat`，未随资源上传。恢复旧备份时需参照 [面部覆盖层记录](Development/records/07-face-overlay.md)核对。
+5. 旧CATS面部修复在 `Mat_Cats/顏2+.mat`；当前Blender4.2另使用 `Materials/顏+.mat`、`Materials/顏2+.mat`，两者都要保持Alpha=0并启用裁剪属性及关键字。材质未上传，参照 [当前覆盖层修复](Development/records/21-face-overlay-material-set.md)核对。
 
 仓库是源码与配置快照，单独克隆不保证场景完整显示或运行；这不等于项目源代码缺失。素材及插件的使用与再分发要求以各自实际许可为准，本记录不宣称已取得额外授权。
 
@@ -33,3 +33,12 @@
 - World Space Canvas、HealthBar、BK、Fill、HealthBarController 与 LookMe 引用保存在 GMScene 中。场景引用的血条Sprite仍是本地资源，需连同原meta恢复；参考本轮静态证据中的GUID，不重新生成素材GUID。
 - 当前F键入口在 InteractPanel 中，仅靠近NPC提示时触发；旧“直接F键开始对话”说明属于历史阶段。
 - 运行前补回模型、动作动画事件、Shader、MagicaCloth2、UI预制件与LitJson。本轮没有重新发布或上传这些资源，也没有发布可独立运行构建。
+
+## 2026-10-30 任务、HUD与控制台补充
+
+- 自编 `Assets/Resources/GameData/Mission/MissionConfig.asset`、文件meta和Mission目录meta随任务模块提交。当前只有任务0的一段战斗目标和物品0数量100的测试奖励，不能当作完整任务内容包。
+- 任务运行依赖本地 `Resources/UI/GamePanel.prefab`、`MissionPanel.prefab`、`MissionItem.prefab`、`RewardSlot.prefab` 及原meta。任务面板持有右侧目标/简介/奖励/Content/关闭按钮引用，条目仅保存自己的标题/地点/按钮，外部详情引用由Init传入；奖励槽须绑定两个文本字段。
+- 恢复 `Resources/UI/Canvas.prefab`（包含DevConsole）、`Resources/DevConsole/DevConsoleFont.asset`、工程中文字体源及原meta。场景Canvas当前可处于用户设置的关闭状态，UIManager会在缺少活动场景Canvas时加载Resources版本；不要为修复引用随意重建GUID或替换布局。
+- 清空按钮通过JsonMgr写入 `Application.persistentDataPath/MissionData.json` 并同步内存；这个文件是玩家存档，不上传，不应作为SO配置恢复。历史 `Mission/MissionData` 子路径错误不代表当前仍使用子目录。
+- Editor搭建工具仅生成界面框架/控制台，拒绝覆盖已有MissionPanel子对象；不会重建用户已接线的完整任务UI。当前报告写到工程 `Temp/DevConsoleReports` 或 `Temp/MissionPanelReports`，旧本机历史报告另保留本地。
+- 本轮界面与材质的修改前快照保留在毕业设计工作记录目录。仓库仍是需要补回本地资源的开发快照，未提供独立发布构建。

@@ -36,3 +36,15 @@
 - [角色配置、生命值与血条排查](records/17-character-config-health-and-hit.md)：分SO表、下标ID、枚举预加载、初始化与NaN/Infinity证据。
 - [动画锁定与恢复](records/18-animation-lock-and-recovery.md)：区分动画事件、状态退出和MoveWeight。
 - [开发日志](logs/2026-10-28-config-health.md) · [交付清单](deliveries/2026-10-28.md)。
+
+## 2026-10-29 任务界面框架
+
+- [任务面板 UI 框架](records/19-mission-panel-ui.md)：按用户参考搭建主线/支线、列表、详情、奖励占位和追踪按钮；仅完成场景 UI，任务逻辑由用户后续实现。
+
+## 2026-10-30 任务系统与其他优化
+
+- [基础任务设计与用户实现](records/22-mission-system-design-and-prototype.md)：SO/JSON、顺序阶段、用户性能疑问与out复用、动态条目依赖、存档/奖励排查及未完成边界。
+- [控制台与玩家HUD](records/23-dev-console-and-player-hud.md)：运行时副本、生命事件、历史Play Mode范围和用户独立修改。
+- [首次提示预热](records/24-first-interaction-ui-warmup.md)：用户提出并实现启动Show/Hide，用户确认与未测指标分开记录。
+- [清空任务存档](records/20-devconsole-mission-reset.md) · [当前模型面部覆盖层](records/21-face-overlay-material-set.md)。
+- [本轮日志](logs/2026-10-30-mission-and-ui.md) · [交付清单](deliveries/2026-10-30.md)。

@@ -1,8 +1,19 @@
 # 当前开发状态
 
-核验日期：2026-10-16。正式题目：基于Unity3D的ARPG游戏《星渊回响》设计与实现。
+核验日期：2026-10-30。正式题目：基于Unity3D的ARPG游戏《星渊回响》设计与实现。
 
-## 当前基线（本轮整理核对）
+## 2026-10-30 当前状态（优先于下方历史快照）
+
+- 用户编写的基础任务原型已保存：SO定义/顺序阶段/奖励、独立玩家进度、MissionMgr读写根目录MissionData、对话接受后固定任务0、动态任务列表/详情/奖励预览及面板开关。
+- 当前测试配置为任务0、一个战斗阶段、数量1、金币显示数量100。主线/支线只有界面页签，数据分类和筛选未实现；任务完成、目标事件累计、推进后保存和实际发奖待接入。NPC SO传任务ID是用户提出的后续方案。
+- 玩家HUD订阅生命事件；角色运行时属性从共享SO复制；DevConsole提供生命/属性操作和清空任务存档。旧20按钮10项Play Mode检查曾通过，键鼠操作及新清空按钮未完成实际执行验证。
+- 用户在NPC Start里Show/Hide交互提示预热，并确认首次卡顿改善，未取得新的性能对照数据。敌人血条重复日志已移除。
+- Blender4.2面部两个覆盖材质已开启裁剪，Scene观察黑块消失；与旧Mat_Cats材质分开记录，素材修复保留本地。
+- 本次收尾仅静态核对与Git交付，不新增Play Mode、构建或任务闭环验收。五批提交及远端核验以交付记录为准。
+
+[任务过程](records/22-mission-system-design-and-prototype.md) · [生命/HUD与控制台](records/23-dev-console-and-player-hud.md) · [启动预热](records/24-first-interaction-ui-warmup.md) · [本轮交付](deliveries/2026-10-30.md)
+
+## 历史基线（2026-10-16整理）
 
 - 本地工程：`E:\UnityProjects\AstralEchoes`；Unity 6000.4.8f1 / URP 17.4.0 / Input System 1.19.0 / Cinemachine 3.1.7。
 - 当前场景为 `Assets/Scenes/GMScene.unity`，从 SampleScene 重命名且 GUID 保留；构建入口已同步。
@@ -66,3 +77,7 @@ OnAttackCheck 已有球形命中查询与伤害传递，Enemy Layer 与 World Sp
 对象池空栈/路径修正已在已有提交保存；ClearPool仍按用户决定仅清字典。世界空间血条采用Filled Image，LookMe朝向摄像机。当前布局按用户决定保留。本次补记管理器与NPC、对象池/UI、配置与血条、动画恢复四份过程记录，并保存静态证据。没有额外修改玩法代码或模型资源。
 
 [配置与生命值记录](records/17-character-config-health-and-hit.md) · [本轮日志](logs/2026-10-28-config-health.md) · [交付清单](deliveries/2026-10-28.md)
+
+## 2026-10-29 当前补充：任务面板 UI
+
+GMScene 的 Canvas/MissionPanel 已搭建静态 UI：主线/支线页签、8条任务示例、右侧详情、3个奖励占位和1个追踪按钮。所有按钮 OnClick 留空，没有新增任务运行逻辑；用户计划自行实现。Unity 编辑器编译、结构检查及 1920×1080 Game 视图外观核对完成，未进入 Play Mode，不视为任务流程验收。详见 [任务界面记录](records/19-mission-panel-ui.md)。本轮未提交或推送。

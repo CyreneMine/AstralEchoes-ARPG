@@ -1,0 +1,1 @@
+{"passed":true,"runtime":true,"checks":["damage","heal","kill","revive","attributes","defense","hud","reset","shared-config-isolation","close-input-restore"],"note":"Buttons invoked through serialized UnityEvents in actual Play Mode; pointer and keyboard require separate UI verification."}

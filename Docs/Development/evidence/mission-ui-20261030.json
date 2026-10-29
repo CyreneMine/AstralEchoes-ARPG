@@ -1,0 +1,147 @@
+{
+  "date": "2026-10-30",
+  "unity": "6000.4.8f1",
+  "scene": "Assets/Scenes/GMScene.unity",
+  "evidenceType": "static snapshot plus explicitly dated prior evidence",
+  "currentMission": {
+    "id": 0,
+    "name": "测试任务",
+    "stages": [
+      {
+        "type": "Battle",
+        "targetId": 0,
+        "targetCount": 1
+      }
+    ],
+    "rewards": [
+      {
+        "itemId": 0,
+        "count": 100
+      }
+    ]
+  },
+  "save": {
+    "fileName": "MissionData",
+    "persistentPath": "Application.persistentDataPath/MissionData.json",
+    "saveNewAcceptance": true,
+    "saveAfterStageAdvance": false,
+    "createsSubdirectories": false
+  },
+  "implementedSource": [
+    "separate mission config and progress",
+    "accepted mission creation",
+    "JSON loading and acceptance save",
+    "fixed mission 0 dialogue hook",
+    "dynamic UI list and reward preview"
+  ],
+  "pending": [
+    "objective event counting",
+    "completion state and actual rewards",
+    "stage advance persistence",
+    "NPC mission context",
+    "main/side classification and filtering",
+    "tracking"
+  ],
+  "prefabAssignedFileIds": {
+    "MissionPanel": {
+      "txtTarget": "3047476812800974016",
+      "txtDescription": "6858208826188141516",
+      "reward": "5418722978116728115",
+      "missionListContent": "989104339963131705",
+      "closeBtn": "291541379143021443"
+    },
+    "MissionItem": {
+      "txtTitle": "6581595688039906263",
+      "txtLocation": "7845110125553574878",
+      "txtTarget": "0",
+      "txtDescription": "0",
+      "reward": "0",
+      "btnThis": "7186910331153904023"
+    },
+    "RewardSlot": {
+      "txtName": "3658137474839073696",
+      "txtAmount": "7014565863445172038"
+    },
+    "GamePanel": {
+      "btnMission": "6375806952041311314"
+    }
+  },
+  "localPrefabGuids": {
+    "MissionPanel": "9c3d11d8aa4072a45baa8c003336fa74",
+    "MissionItem": "1cbad2f68cde37448a2c9ee6f746e585",
+    "RewardSlot": "fd7b68d6d71fc8e45882c6ae475e0e77",
+    "GamePanel": "bf96d8f87971366439b2a86bc11c4359"
+  },
+  "validation": {
+    "newPlayModeRun": false,
+    "newBuild": false,
+    "newUnityCompilation": false,
+    "currentFullMissionAcceptance": false,
+    "npcWarmup": "user confirmed improvement; no fresh benchmark",
+    "devConsole": "2026-10-29 ten checks passed by serialized UnityEvents; native keyboard and pointer incomplete",
+    "clearMissionSave": "button compilation and binding checked 2026-10-30; actual clearing not executed",
+    "face": "2026-10-30 Scene observation after refresh; no restart test"
+  },
+  "face": {
+    "materials": [
+      {
+        "path": "Assets\\ArtRes\\Character\\Cyrene\\Materials\\顏+.mat",
+        "before": "58fa62592fda6bef18f0e609215d9aaf7137c9eacfe3587e269f859654e80c11",
+        "after": "8158bb10ec581bdae0f7e2e63e8cb4f99a82913129e00aa5da6bc1dacb23afca",
+        "baseColorAlpha": 0,
+        "alphaClipBefore": 0,
+        "alphaClipAfter": 1,
+        "keyword": "_UseAlphaClipping"
+      },
+      {
+        "path": "Assets\\ArtRes\\Character\\Cyrene\\Materials\\顏2+.mat",
+        "before": "71ee36a750bb30a29b61ef51c81ae8bf78bb7e687b606d69fa34af15b3282cc8",
+        "after": "c89f9f4dffc236bff30c48534de0ab3b891d098de1bb94a472017335f0dc6936",
+        "baseColorAlpha": 0,
+        "alphaClipBefore": 0,
+        "alphaClipAfter": 1,
+        "keyword": "_UseAlphaClipping"
+      }
+    ],
+    "afterUnityRefresh": {
+      "Assets\\ArtRes\\Character\\Cyrene\\Materials\\顏+.mat": {
+        "alphaZero": true,
+        "alphaClippingEnabled": true,
+        "keywordEnabled": true
+      },
+      "Assets\\ArtRes\\Character\\Cyrene\\Materials\\顏2+.mat": {
+        "alphaZero": true,
+        "alphaClippingEnabled": true,
+        "keywordEnabled": true
+      }
+    },
+    "protectedUnchanged": true
+  },
+  "sourceConversation": {
+    "title": "设计星渊回响程序架构",
+    "threadId": "01a18038-d34d-7243-8b43-ea4c9cd788fa",
+    "boundedTurnsRead": 40
+  },
+  "notes": [
+    "MissionItem external detail refs intentionally zero in prefab; injected at Init",
+    "runtime save and local art/UI resources excluded from Git",
+    "no performance improvement percentage claimed"
+  ],
+  "archiveVerification": {
+    "markdownFilesChecked": 12,
+    "missingLinks": [],
+    "scriptMetaMissing": [],
+    "protectedFiles": 322,
+    "unchangedFiles": 320,
+    "intentionalChanges": [
+      "Assets/Editor/DevConsoleSetup.cs",
+      "Assets/Editor/MissionPanelSetup.cs"
+    ],
+    "onlyEditorReportPathsChanged": true,
+    "noPendingEditorRequests": true,
+    "newPlayMode": false,
+    "newUnityCompile": false,
+    "newBuild": false,
+    "excludedResourcesTracked": false
+  }
+}
