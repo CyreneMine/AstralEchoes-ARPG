@@ -9,6 +9,5 @@ public class HealthBarController : MonoBehaviour
     {
         float currentHp = ((float)hp / (float)maxHp);
         imgFill.fillAmount = currentHp;
-        print($"当前剩余血量{currentHp}");
     }
 }

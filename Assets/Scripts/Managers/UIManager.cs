@@ -7,9 +7,17 @@ public class UIManager:BaseManager<UIManager>
     private Transform canvas;
     private UIManager()
     {
-        GameObject canvasObj = GameObject.Instantiate(Resources.Load<GameObject>("UI/Canvas"));
-        canvas = canvasObj.transform;
-        GameObject.DontDestroyOnLoad(canvasObj);
+        foreach (Canvas existing in GameObject.FindObjectsByType<Canvas>(FindObjectsSortMode.None))
+        {
+            if (existing.isRootCanvas && existing.renderMode == RenderMode.ScreenSpaceOverlay)
+            {
+                canvas = existing.transform;
+                break;
+            }
+        }
+        if (canvas == null)
+            canvas = GameObject.Instantiate(Resources.Load<GameObject>("UI/Canvas")).transform;
+        GameObject.DontDestroyOnLoad(canvas.gameObject);
     }
     private Dictionary<string, BasePanel> panels = new Dictionary<string, BasePanel>();
     
@@ -19,6 +27,15 @@ public class UIManager:BaseManager<UIManager>
         if (panels.ContainsKey(name))
         {
             return panels[name] as T;
+        }
+        // 接管场景中已搭建的面板，保留其UI引用和布局。
+        T scenePanel = canvas.GetComponentInChildren<T>(true);
+        if (scenePanel != null)
+        {
+            scenePanel.gameObject.SetActive(true);
+            panels.Add(name, scenePanel);
+            scenePanel.ShowMe();
+            return scenePanel;
         }
         GameObject panel = GameObject.Instantiate(Resources.Load<GameObject>($"UI/{name}"));
         panel.transform.SetParent(canvas,false);

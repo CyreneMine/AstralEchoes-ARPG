@@ -20,6 +20,5 @@ public class EnemyObject : CharacterObject
     {
         base.TakeDamage(damage);
         UpdateHealthBar();
-        print($"受伤更新血条");
     }
 }

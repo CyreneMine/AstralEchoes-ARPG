@@ -3,10 +3,13 @@ using UnityEngine.InputSystem;
 
 public class TestDialogue : MonoBehaviour
 {
+    private InteractPanel interactPanel;
     private bool canOverlap = true;
     void Start()
     {
-        
+        //预热面板 避免卡顿
+        UIManager.Instance.ShowPanel<InteractPanel>();
+        UIManager.Instance.HidePanel<InteractPanel>();
     }
     
     void Update()
@@ -32,9 +35,8 @@ public class TestDialogue : MonoBehaviour
         // 只限制重复打开提示，不停止上面的距离检测。
         if (!canOverlap)
             return;
-
         UIManager.Instance.GetPanel<GamePanel>().OpenInteractPanel();
-        InteractPanel interactPanel = UIManager.Instance.GetPanel<InteractPanel>();
+        interactPanel = UIManager.Instance.GetPanel<InteractPanel>();
         if (interactPanel == null)
             return;
         interactPanel.SetOtherObj(gameObject);
@@ -43,7 +45,6 @@ public class TestDialogue : MonoBehaviour
 
     public void StartDialogue()
     {
-        
         UIManager.Instance.ShowPanel<DialoguePanel>();
         DialogueMgr.Instance.StartDialogue("Test/Test1_1");
     }
