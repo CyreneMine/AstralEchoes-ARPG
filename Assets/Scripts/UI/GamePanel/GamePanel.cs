@@ -28,15 +28,12 @@ public class GamePanel : BasePanel
     protected override void Update()
     {
         base.Update();
+        if (UIManager.Instance.GetPanel<MissionPanel>() != null)
+            return;
         if (Keyboard.current.leftAltKey.wasPressedThisFrame)
-        {
             Cursor.lockState = CursorLockMode.None;
-        }
-
         if (Keyboard.current.leftAltKey.wasReleasedThisFrame)
-        {
             Cursor.lockState = CursorLockMode.Locked;
-        }
     }
 
     public override void ShowMe()
