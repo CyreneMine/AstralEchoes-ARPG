@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CharacterConfig
   characterDatas:
   - id: 0
-    atk: 2
+    atk: 5
     def: 3
     maxHp: 100
     type: 0

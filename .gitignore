@@ -98,3 +98,10 @@ Desktop.ini
 /Assets/Resources/GameData/Mission/*
 !/Assets/Resources/GameData/Mission/MissionConfig.asset
 !/Assets/Resources/GameData/Mission/MissionConfig.asset.meta
+
+# Authored enemy AI parameters.
+!/Assets/Resources/GameData/Enemy/
+!/Assets/Resources/GameData/Enemy.meta
+/Assets/Resources/GameData/Enemy/*
+!/Assets/Resources/GameData/Enemy/EnemyAIConfig.asset
+!/Assets/Resources/GameData/Enemy/EnemyAIConfig.asset.meta

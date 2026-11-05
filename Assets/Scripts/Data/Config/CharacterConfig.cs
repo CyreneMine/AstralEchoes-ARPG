@@ -14,6 +14,7 @@ public class CharacterConfig : ScriptableObject
     public class CharacterData
     {
         public int id, atk, def, maxHp;
+        public float atkCooldown,atkRange;
         public CharacterType type;
     }
 }

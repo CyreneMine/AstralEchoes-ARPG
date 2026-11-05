@@ -13,6 +13,7 @@ public class CharacterHealth : MonoBehaviour
 
     public void Init(int maxHp, int def)
     {
+        isDead = false;
         this.maxHp = Mathf.Max(1, maxHp);
         this.def = Mathf.Max(0, def);
         SetCurrentHealth(this.maxHp);
@@ -24,8 +25,16 @@ public class CharacterHealth : MonoBehaviour
             return;
         DamageDirect(CalculateDamage(damage));
         Debug.Log($"Current HP: {currentHp},Damage: {damage},maxHp: {maxHp}");
+        if (currentHp <= 0)
+        {
+            Dead();
+        }
     }
 
+    public virtual void Dead()
+    {
+        isDead = true;
+    }
     // 管理员扣血等直接生命操作，不经过防御计算。
     public void DamageDirect(int amount)
     {
