@@ -42,3 +42,9 @@
 - 清空按钮通过JsonMgr写入 `Application.persistentDataPath/MissionData.json` 并同步内存；这个文件是玩家存档，不上传，不应作为SO配置恢复。历史 `Mission/MissionData` 子路径错误不代表当前仍使用子目录。
 - Editor搭建工具仅生成界面框架/控制台，拒绝覆盖已有MissionPanel子对象；不会重建用户已接线的完整任务UI。当前报告写到工程 `Temp/DevConsoleReports` 或 `Temp/MissionPanelReports`，旧本机历史报告另保留本地。
 - 本轮界面与材质的修改前快照保留在毕业设计工作记录目录。仓库仍是需要补回本地资源的开发快照，未提供独立发布构建。
+
+## 2026-11-05 敌人原型
+
+- 恢复本地 `Assets/Resources/Prefab/EnemyObj.prefab` 及原 `.meta`，GUID 为 `0d0b28005492b914989176f4beaec0ea`。GMScene 的两个敌人实例依赖该预制件，保留其中的 EnemyObject、EnemyHealth、EnemyAI、EnemyCombat、NavMeshAgent、Animator 和血条引用。
+- 场景中的 EnemyAI 实例覆盖了四个巡逻点，另一个 EnemyObj 实例关闭了 EnemyAI。还原预制件后检查这些场景覆盖。
+- 仓库包含自编 EnemyAIConfig 数值表、EnemyAnimator 控制器、仅承载攻击事件的 TestAtk 测试片段和 GMScene 的 NavMesh 烘焙数据。测试片段没有动作曲线。

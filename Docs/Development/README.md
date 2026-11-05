@@ -48,3 +48,7 @@
 - [首次提示预热](records/24-first-interaction-ui-warmup.md)：用户提出并实现启动Show/Hide，用户确认与未测指标分开记录。
 - [清空任务存档](records/20-devconsole-mission-reset.md) · [当前模型面部覆盖层](records/21-face-overlay-material-set.md)。
 - [本轮日志](logs/2026-10-30-mission-and-ui.md) · [交付清单](deliveries/2026-10-30.md)。
+
+## 2026-11-05 敌人系统
+
+- [敌人导航、攻击与死亡原型](records/25-enemy-ai-and-combat.md)记录用户实现、巡逻下标越界排查、场景配置和已有运行证据。

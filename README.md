@@ -33,3 +33,9 @@
 本轮保存任务 SO 定义、独立玩家进度、按 ID 接取及 JSON 保存/恢复入口、任务列表/详情/奖励预览、生命事件与玩家 HUD、启动预热和管理员控制台。任务展示与奖励预览不等于目标判定、完成和发奖闭环；最新验证范围见日志。
 
 [任务设计与用户思路](Docs/Development/records/22-mission-system-design-and-prototype.md) · [本轮日志](Docs/Development/logs/2026-10-30-mission-and-ui.md) · [交付清单](Docs/Development/deliveries/2026-10-30.md)
+
+## 2026-11-05 敌人原型快照
+
+GMScene 已配置 NavMesh 和四个巡逻点。敌人脚本已接入巡逻、追击、脱战返回、攻击冷却和死亡停机。现有日志记录了双方命中与敌人血量归零。巡逻边界和完整脱战流程仍待专项回归。
+
+[敌人原型与排错记录](Docs/Development/records/25-enemy-ai-and-combat.md)
