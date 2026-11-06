@@ -1,4 +1,6 @@
-﻿public class MissionMgr:BaseManager<MissionMgr>
+﻿using System;
+
+public class MissionMgr:BaseManager<MissionMgr>
 {
     public MissionProgressData playerMissionProgress;
 
@@ -6,18 +8,97 @@
     {
         playerMissionProgress = JsonMgr.Instance.LoadData<MissionProgressData>("MissionData");
     }
+
     public int GetStageIndex(int missionId)
     {
         foreach (MissionSaveData data in playerMissionProgress.missions)
         {
-            if (data.missionId==missionId)
+            if (data.missionId == missionId)
             {
                 return data.currentStageIndex;
             }
         }
+
         return 0;
     }
-
+    /// <summary>
+    /// 检查是否完成了任务
+    /// </summary>
+    /// <param name="missionType"></param>
+    /// <param name="targetId"></param>
+    /// <param name="amount"></param>
+    public void CheckFinishMission(MissionType missionType,int targetId,int amount = 1)
+    {
+        switch (missionType)
+        {
+            case MissionType.Battle:
+                foreach (MissionSaveData data in playerMissionProgress.missions)
+                {
+                    MissionData missionData = ConfigMgr.Instance.GetMissionData(data.missionId);
+                    if (missionData.stages[data.currentStageIndex].targetId == targetId
+                        &&ConfigMgr.Instance.GetMissionData(data.missionId)
+                            .stages[MissionMgr.Instance.GetMissionSaveData(data.missionId).currentStageIndex]
+                            .missionType == MissionType.Battle)
+                    {
+                        if (data.status)
+                            continue;
+                        data.currentCount += amount;
+                        if (data.currentCount >= missionData.stages[data.currentStageIndex].targetCount)
+                        {
+                            data.status = true;
+                        }
+                        if (data.status&&missionData.stages.Count-1 == data.currentStageIndex)
+                        {
+                            FinishMission(data.missionId);
+                        }
+                    }
+                    if (data.status && data.status&&missionData.stages.Count-1 > data.currentStageIndex)
+                    {
+                        UpdateStage(data,missionData);
+                    }
+                }
+                JsonMgr.Instance.SaveData(playerMissionProgress,"MissionData");
+                break;
+            case MissionType.Dialogue:
+                foreach (MissionSaveData data in playerMissionProgress.missions)
+                {
+                    MissionData missionData = ConfigMgr.Instance.GetMissionData(data.missionId);
+                    if (targetId == missionData.stages[data.currentStageIndex].targetId)
+                    {
+                        data.status = true;
+                        if (data.status&&missionData.stages.Count-1 == data.currentStageIndex)
+                        {
+                            FinishMission(data.missionId);
+                        }
+                    }
+                }
+                JsonMgr.Instance.SaveData(playerMissionProgress,"MissionData");
+                break;
+            case MissionType.Interaction:
+                
+                break;
+        }
+    }
+    /// <summary>
+    /// 结算任务
+    /// </summary>
+    /// <param name="missionId"></param>
+    public void FinishMission(int missionId)
+    {
+        foreach (MissionSaveData data in playerMissionProgress.missions)
+        {
+            if (data.missionId == missionId)
+            {
+                if (!data.isFinished)
+                {
+                    //TODO 后续加经验 金币等内容
+                    
+                    data.isFinished = true;
+                }
+            }
+        }
+       
+    }
     public MissionSaveData GetMissionSaveData(int missionId)
     {
         foreach (MissionSaveData data in playerMissionProgress.missions)
@@ -89,6 +170,7 @@
         {
             missionSaveData.currentStageIndex++;
             missionSaveData.currentCount = 0;
+            missionSaveData.status = false;
         }
     }
 }

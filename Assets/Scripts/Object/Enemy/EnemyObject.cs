@@ -3,12 +3,14 @@ using UnityEngine;
 
 public class EnemyObject : CharacterObject
 {
+    [SerializeField] private int enemyId;
+    public int EnemyId => enemyId;
     public HealthBarController hpController;
     protected override void Awake()
     {
         base.Awake();
         //TODO 测试使用 先写死后续动态更新
-        Init(0,CharacterConfig.CharacterType.Enemy);
+        Init(enemyId,CharacterConfig.CharacterType.Enemy);
         UpdateHealthBar();
     }
 

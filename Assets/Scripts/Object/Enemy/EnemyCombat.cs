@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class EnemyCombat : MonoBehaviour
 {
-    [SerializeField]private int enemyId;
+    
     private Animator animator;
     private CharacterConfig.CharacterData config;
     private CharacterHealth health;
@@ -13,7 +13,7 @@ public class EnemyCombat : MonoBehaviour
     {
         enemyObject = GetComponent<EnemyObject>();
         animator = GetComponent<Animator>();
-        config = ConfigMgr.Instance.GetCharacterData(CharacterConfig.CharacterType.Enemy, enemyId);
+        config = ConfigMgr.Instance.GetCharacterData(CharacterConfig.CharacterType.Enemy, enemyObject.EnemyId);
         health = GetComponent<CharacterHealth>();
     }
     public void TryAttack()

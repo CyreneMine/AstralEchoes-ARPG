@@ -20,6 +20,9 @@ MonoBehaviour:
     - missionType: 0
       targetCount: 1
       targetId: 0
+    - missionType: 1
+      targetCount: 1
+      targetId: 0
     itemRewards:
     - itemId: 0
       count: 100
