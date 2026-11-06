@@ -48,3 +48,10 @@
 - 恢复本地 `Assets/Resources/Prefab/EnemyObj.prefab` 及原 `.meta`，GUID 为 `0d0b28005492b914989176f4beaec0ea`。GMScene 的两个敌人实例依赖该预制件，保留其中的 EnemyObject、EnemyHealth、EnemyAI、EnemyCombat、NavMeshAgent、Animator 和血条引用。
 - 场景中的 EnemyAI 实例覆盖了四个巡逻点，另一个 EnemyObj 实例关闭了 EnemyAI。还原预制件后检查这些场景覆盖。
 - 仓库包含自编 EnemyAIConfig 数值表、EnemyAnimator 控制器、仅承载攻击事件的 TestAtk 测试片段和 GMScene 的 NavMesh 烘焙数据。测试片段没有动作曲线。
+
+## 2026-11-06 NPC 对话与任务补充
+
+- 恢复本地 `Assets/Resources/GameData/Npc/NpcConfig.asset` 和原 `.meta`。`ConfigMgr` 从 `GameData/Npc/NpcConfig` 加载该资产。测试 NPC `0` 的 `missionIds` 含任务 `0`。
+- 恢复 `Assets/StreamingAssets/Dialogue/Npc/0/` 下的 `Mission_0_Accept.json`、`Mission_0_InProgress.json`、`Mission_0_Stage_1.json` 及必要的 `.meta`。这些文件当前由 `.gitignore` 排除。目录名 `Npc` 与加载路径一致。
+- `MissionConfig.asset` 中任务 `0` 当前有两段，先击败一只 `0` 号怪，再和 `0` 号 NPC 对话。对白 UI 继续依赖本地预制件、TMP 字体资产和原始字体。复现时使用自己的测试存档，原有玩家存档保留在本地。
+- 恢复本地 `Assets/Resources/UI/MissionPanel.prefab` 后，检查 `MissionPanel.txtTitleName` 是否指向详情区域的标题文本。当前本地预制件已保存该引用，旧版预制件需要补绑。

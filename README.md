@@ -2,7 +2,7 @@
 
 基于Unity3D的ARPG游戏《星渊回响》设计与实现。Unity 6 / C#，二次元风格第三人称 ARPG 毕业设计原型。
 
-当前已有移动/冲刺、攻击原型、基础对话、任务接取/存档与任务面板原型，以及玩家HUD和调试控制台。任务目标计数、完成/发奖等闭环仍待接入。游戏范围为单一剧情探索模式，部分战斗节点加入三选一临时 Buff。
+当前已有移动与冲刺、基础对话、敌人战斗原型、任务面板、玩家 HUD 和调试控制台。测试任务已接入击杀计数、返回 NPC 交付和结算状态存档，实际发奖待接入。游戏范围为单一剧情探索模式，部分战斗节点加入三选一临时 Buff。
 
 ## 开发环境与入口
 
@@ -10,8 +10,7 @@
 - 当前场景：`Assets/Scenes/GMScene.unity`。
 - 当前控制代码：`Assets/Scripts/Object/Player/PlayerObject.cs`；当前 Animator：`Assets/Resources/Animator/Cyrene.controller`。
 - 旧 Testing 与配套 Editor 测试工具已清理；历史测试证据保留在开发文档，不能代替当前玩法验收。
-- 基础对话流程已由用户测试确认完成，剩余小漏洞待后续处理；当前已接上固定任务ID的接取/存档原型，完整目标推进与分支路由待实现。详见 [对话实现与测试记录](Docs/Development/records/14-dialogue-system-implementation.md)。
-- 当前靠近 NPC 后通过提示按钮或 F 键开始 `Dialogue/Test/Test1_1.json` 对话；UI 预制件仍需从本地恢复。
+- 靠近测试 NPC 后可通过交互提示按钮或 F 键开始对话。当前测试 NPC 通过配置取得任务 ID，按进度播放接取、进行中或交付对白。换工作区运行时需要恢复本地 NPC 配置、对白和 UI 资源，见 [资源补回说明](Docs/ASSET_RESTORE.md)。
 
 ## 文档
 
@@ -39,3 +38,9 @@
 GMScene 已配置 NavMesh 和四个巡逻点。敌人脚本已接入巡逻、追击、脱战返回、攻击冷却和死亡停机。现有日志记录了双方命中与敌人血量归零。巡逻边界和完整脱战流程仍待专项回归。
 
 [敌人原型与排错记录](Docs/Development/records/25-enemy-ai-and-combat.md)
+
+## 2026-11-06 NPC 对话与任务结算快照
+
+任务 `0` 配有击杀 `0` 号怪和与 `0` 号 NPC 对话两个阶段。源码已接入击杀推进、交付对白及结算存档，本机已有 `isFinished = true` 的存档。当前验证范围为源码、资源、存档快照和用户的字体显示反馈，完整流程复测与实际发奖待补。
+
+[NPC 对话与两阶段任务记录](Docs/Development/records/26-npc-dialogue-and-mission-turn-in.md)
