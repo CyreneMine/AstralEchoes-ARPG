@@ -5,11 +5,14 @@ public class TestDialogue : MonoBehaviour
 {
     private InteractPanel interactPanel;
     private bool canOverlap = true;
+    private NpcData npcData;
+    [SerializeField] private int npcId; 
     void Start()
     {
         //预热面板 避免卡顿
         UIManager.Instance.ShowPanel<InteractPanel>();
         UIManager.Instance.HidePanel<InteractPanel>();
+        npcData = ConfigMgr.Instance.GetNpcConfig(npcId);
     }
     
     void Update()
@@ -46,7 +49,9 @@ public class TestDialogue : MonoBehaviour
     public void StartDialogue()
     {
         UIManager.Instance.ShowPanel<DialoguePanel>();
-        DialogueMgr.Instance.StartDialogue("Test/Test1_1");
+        //暂时写死 0号任务
+        string path = $"Npc/{npcId}/Mission_{npcData.missionIds[0]}_Accept";
+        DialogueMgr.Instance.StartDialogue(path,npcData.missionIds[0],npcId);
     }
     public void ReStartOverlap()
     {

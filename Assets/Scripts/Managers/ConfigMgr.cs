@@ -6,6 +6,7 @@ public class ConfigMgr:BaseManager<ConfigMgr>
 {
     public Dictionary<CharacterConfig.CharacterType,CharacterConfig> characterConfigs = new Dictionary<CharacterConfig.CharacterType, CharacterConfig>();
     public MissionConfig missionConfig;
+    public NpcConfig npcConfig;
     private ConfigMgr()
     {
         foreach (CharacterConfig.CharacterType value in Enum.GetValues(typeof(CharacterConfig.CharacterType)))
@@ -14,6 +15,19 @@ public class ConfigMgr:BaseManager<ConfigMgr>
             characterConfigs.Add(value, config);
         }
         missionConfig = Resources.Load<MissionConfig>("GameData/Mission/MissionConfig");
+        npcConfig = Resources.Load<NpcConfig>("GameData/Npc/NpcConfig");
+    }
+
+    public NpcData GetNpcConfig(int npcId)
+    {
+        foreach (NpcData data in npcConfig.npcConfigs)
+        {
+            if (data.id == npcId)
+            {
+                return data;
+            }
+        }
+        return null;
     }
     public CharacterConfig.CharacterData GetCharacterData(CharacterConfig.CharacterType type,int id)
     {

@@ -15,6 +15,7 @@ public class DialoguePanel : BasePanel
     private bool accept = false;
     public bool canOnClick = true;
     private int lastChoiceFrame = -1;
+    private int currentMissionId;
     public override void UpdateDoSomething()
     {
         base.UpdateDoSomething();
@@ -67,8 +68,9 @@ public class DialoguePanel : BasePanel
         
     }
     //依照规则命名的对话 "对话类型(Main、NPC、Test)/JSON文件名"
-    public void InitData(List<DialogueData> data)
+    public void InitData(List<DialogueData> data,int missionId)
     {
+        this.currentMissionId = missionId;
         if (data == null)
         {
             EndDialogue();
@@ -115,7 +117,7 @@ public class DialoguePanel : BasePanel
         if (accept)
         {
             //TODO 处理接受任务逻辑 后续任务管理器完善后填充
-            MissionMgr.Instance.AcceptMission(0);
+            MissionMgr.Instance.AcceptMission(currentMissionId);
         }
         UIManager.Instance.HidePanel<DialoguePanel>();
         UIManager.Instance.HidePanel<OptionsPanel>();
