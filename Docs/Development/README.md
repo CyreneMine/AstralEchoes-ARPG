@@ -56,3 +56,7 @@
 ## 2026-11-06 NPC 对话与两阶段任务
 
 - [NPC 对话与任务结算](records/26-npc-dialogue-and-mission-turn-in.md)记录击杀进度、按阶段播放对白、交付时机、字体缺字排查及本机存档证据。
+
+## 2026-11-08 缓存池优化
+
+- [缓存池数量上限与使用约定](records/27-pool-capacity-and-usage-contract.md)记录用户实现的容量控制、满额轮换、调试层级，以及生命周期职责和延期边界。
