@@ -17,6 +17,7 @@
 - [文档总入口](Docs/README.md)
 - [当前开发状态](Docs/Development/STATUS.md)
 - [问题处理与验证记录](Docs/Development/README.md)
+- [世界观与主线剧情 V1 草案](Docs/Design/世界观与主线剧情-V1.md)
 - [资源补回说明](Docs/ASSET_RESTORE.md)
 
 本仓库不包含角色、贴图、动作素材和第三方插件。完整运行需补回本地资源及其原 `.meta`；仅克隆仓库不是完整可玩成品。历史测试不自动代表最新代码已经验收。
@@ -44,3 +45,9 @@ GMScene 已配置 NavMesh 和四个巡逻点。敌人脚本已接入巡逻、追
 任务 `0` 配有击杀 `0` 号怪和与 `0` 号 NPC 对话两个阶段。源码已接入击杀推进、交付对白及结算存档，本机已有 `isFinished = true` 的存档。当前验证范围为源码、资源、存档快照和用户的字体显示反馈，完整流程复测与实际发奖待补。
 
 [NPC 对话与两阶段任务记录](Docs/Development/records/26-npc-dialogue-and-mission-turn-in.md)
+
+## 2026-11-08 缓存池与剧情文档归档
+
+缓存池已保存容量配置、空闲对象复用和满额轮换实现，当前完成静态检查，实际对象接入和运行验证待补。世界观与短主线 V1 草案已归档，包含失忆主角、回响现象和观星塔故事；关卡、首领战及约 20 分钟的流程时长仍为制作设想。
+
+[缓存池设计与使用约定](Docs/Development/records/27-pool-capacity-and-usage-contract.md) · [世界观与主线剧情草案](Docs/Design/世界观与主线剧情-V1.md)
