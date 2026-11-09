@@ -51,15 +51,21 @@ public class DialoguePanel : BasePanel
     public override void ShowMe()
     {
         base.ShowMe();
+        PlayerMgr.Instance.CloseInput();
         DialogueMgr.Instance.dialoguePanel = this;
         Cursor.lockState = CursorLockMode.None;
+        PlayerMgr.Instance.canInput = false;
     }
 
     public override void HideMe(UnityAction callback = null)
     {
+        callback += () =>
+        {
+            PlayerMgr.Instance.canInput = true;
+            PlayerMgr.Instance.OpenInput();
+            Cursor.lockState = CursorLockMode.Locked;
+        };
         base.HideMe(callback);
-        PlayerMgr.Instance.OpenInput();
-        Cursor.lockState = CursorLockMode.Locked;
     }
 
     public override void Init()
@@ -76,7 +82,7 @@ public class DialoguePanel : BasePanel
             EndDialogue();
             return;
         }
-        PlayerMgr.Instance.CloseInput();
+        
         dialogueData = data;
         currentIndex = 0;
         if (data.Count == 0)
@@ -129,5 +135,4 @@ public class DialoguePanel : BasePanel
         waitChoiceDialogue = false;
         canOnClick = true;
     }
-    
 }

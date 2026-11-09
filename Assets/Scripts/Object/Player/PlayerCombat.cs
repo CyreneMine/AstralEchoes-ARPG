@@ -13,6 +13,8 @@ public class PlayerCombat : MonoBehaviour
 
     private void Update()
     {
+        if (!PlayerMgr.Instance.canInput)
+            return;
         PlayerObject player = PlayerMgr.Instance.player;
         if (player == null || (player.Health != null && player.Health.isDead))
             return;

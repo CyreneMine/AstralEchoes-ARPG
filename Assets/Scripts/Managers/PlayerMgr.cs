@@ -1,6 +1,7 @@
 ﻿public class PlayerMgr :BaseManager<PlayerMgr>
 {
     public PlayerObject player;
+    public bool canInput = true;
     public InputSystem_Actions inputActions;
     //0为目前测试的单手剑
     public int currentWeaponType = 0;
