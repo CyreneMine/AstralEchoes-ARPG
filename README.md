@@ -51,3 +51,9 @@ GMScene 已配置 NavMesh 和四个巡逻点。敌人脚本已接入巡逻、追
 缓存池已保存容量配置、空闲对象复用和满额轮换实现，当前完成静态检查，实际对象接入和运行验证待补。世界观与短主线 V1 草案已归档，包含失忆主角、回响现象和观星塔故事；关卡、首领战及约 20 分钟的流程时长仍为制作设想。
 
 [缓存池设计与使用约定](Docs/Development/records/27-pool-capacity-and-usage-contract.md) · [世界观与主线剧情草案](Docs/Design/世界观与主线剧情-V1.md)
+
+## 2026-11-09 对话输入与完成后对白
+
+对话显示和淡出时接入 `canInput` 与 InputAction 开关，保留面板关闭清理回调。任务完成后对白已新增，相关路径按 NPC 和任务 ID 拼接。当前已完成源码与 JSON 核对，额外挥刀修复效果、结束后移动及重复交互仍待运行验证。
+
+[用户调整与验证范围](Docs/Development/records/28-dialogue-input-and-finished-dialogue.md)

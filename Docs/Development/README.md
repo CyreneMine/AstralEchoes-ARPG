@@ -60,3 +60,7 @@
 ## 2026-11-08 缓存池优化
 
 - [缓存池数量上限与使用约定](records/27-pool-capacity-and-usage-contract.md)记录用户实现的容量控制、满额轮换、调试层级，以及生命周期职责和延期边界。
+
+## 2026-11-09 对话输入与完成后对白
+
+- [输入权限、淡出回调与完成后对白](records/28-dialogue-input-and-finished-dialogue.md)记录用户为修复额外挥刀引入 `canInput` 的思路、回调覆盖问题，以及新增对白与实际代码依据。

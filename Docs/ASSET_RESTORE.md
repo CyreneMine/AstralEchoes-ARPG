@@ -55,3 +55,8 @@
 - 恢复 `Assets/StreamingAssets/Dialogue/Npc/0/` 下的 `Mission_0_Accept.json`、`Mission_0_InProgress.json`、`Mission_0_Stage_1.json` 及必要的 `.meta`。这些文件当前由 `.gitignore` 排除。目录名 `Npc` 与加载路径一致。
 - `MissionConfig.asset` 中任务 `0` 当前有两段，先击败一只 `0` 号怪，再和 `0` 号 NPC 对话。对白 UI 继续依赖本地预制件、TMP 字体资产和原始字体。复现时使用自己的测试存档，原有玩家存档保留在本地。
 - 恢复本地 `Assets/Resources/UI/MissionPanel.prefab` 后，检查 `MissionPanel.txtTitleName` 是否指向详情区域的标题文本。当前本地预制件已保存该引用，旧版预制件需要补绑。
+
+## 2026-11-09 完成后对白
+
+- 任务完成后再次互动依赖 `Assets/StreamingAssets/Dialogue/Npc/0/Mission_0_Finished.json` 和对应 `.meta`。该文件当前受 StreamingAssets 的忽略规则影响，恢复本地对白时一并补回。正文为测试引导员的一句感谢，无选项。
+- 当前对白仍按 `Npc/{npcId}/Mission_{missionId}_Accept`、`InProgress`、`Stage_1` 和 `Finished` 命名。交付文件名中的阶段数字暂为 `1`，新增其他阶段的任务时需核对选择规则。
