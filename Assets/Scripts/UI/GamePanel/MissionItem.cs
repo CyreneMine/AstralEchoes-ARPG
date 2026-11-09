@@ -47,7 +47,6 @@ public class MissionItem : MonoBehaviour
                 txtTarget.text =$"击败{txtTarget.text = nowMS.ToString()}:({MissionMgr.Instance.GetMissionSaveData(missionId).currentCount}/{nowMS.targetCount})";
                 break;
             case MissionType.Dialogue:
-                //TODO 后续根据传入id动态获取名字 目前先写死
                 txtTarget.text = $"与{ConfigMgr.Instance.npcConfig.npcConfigs[nowMS.targetId].displayName}对话";
                 break;
             case MissionType.Interaction:

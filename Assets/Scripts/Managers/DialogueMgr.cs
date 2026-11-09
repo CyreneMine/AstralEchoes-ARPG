@@ -21,7 +21,6 @@ public class DialogueMgr :BaseManager<DialogueMgr>
         }
         else
         {
-            //TODO 暂时写死后续更改
             if (!currentMissionData.status
                 &&!currentMissionData.isFinished
                 &&ConfigMgr.Instance.GetMissionData(missionId)
@@ -37,7 +36,7 @@ public class DialogueMgr :BaseManager<DialogueMgr>
                      &&
                      !currentMissionData.status)
             {
-                dialogueDatas = JsonMgr.Instance.LoadData<List<DialogueData>>($"Dialogue/Npc/{npcId}/Mission_{missionId}_Stage_1");
+                dialogueDatas = JsonMgr.Instance.LoadData<List<DialogueData>>($"Dialogue/Npc/{npcId}/Mission_{missionId}_Stage_{currentMissionData.currentStageIndex}");
                 dialoguePanel.InitData(dialogueDatas,missionId);
                 MissionMgr.Instance.CheckFinishMission(MissionType.Dialogue,npcId);
             }
