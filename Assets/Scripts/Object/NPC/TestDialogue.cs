@@ -7,6 +7,7 @@ public class TestDialogue : MonoBehaviour
     private bool canOverlap = true;
     private NpcData npcData;
     [SerializeField] private int npcId; 
+    [SerializeField] private int currenMissionId;
     void Start()
     {
         //预热面板 避免卡顿
@@ -19,11 +20,6 @@ public class TestDialogue : MonoBehaviour
     {
         if (UIManager.Instance.GetPanel<DialoguePanel>() != null)
             return;
-
-        // GamePanel gamePanel = UIManager.instance.GetPanel<GamePanel>();
-        // if (gamePanel == null)
-        //     return;
-
         Collider[] colliders = Physics.OverlapSphere(transform.position, 5f,
             1 << LayerMask.NameToLayer("Player"));
         // 持续检查距离，离开范围时关闭提示并允许下次重新显示。
@@ -34,7 +30,6 @@ public class TestDialogue : MonoBehaviour
             ReStartOverlap();
             return;
         }
-
         // 只限制重复打开提示，不停止上面的距离检测。
         if (!canOverlap)
             return;
@@ -45,13 +40,13 @@ public class TestDialogue : MonoBehaviour
         interactPanel.SetOtherObj(gameObject);
         canOverlap = false;
     }
-
     public void StartDialogue()
     {
         UIManager.Instance.ShowPanel<DialoguePanel>();
         //暂时写死 0号任务
-        string path = $"Npc/{npcId}/Mission_{npcData.missionIds[0]}_Accept";
-        DialogueMgr.Instance.StartDialogue(path,npcData.missionIds[0],npcId);
+        string path = $"Npc/{npcId}/Mission_{npcData.missionIds[currenMissionId]}_Accept";
+        DialogueMgr.Instance.StartDialogue(path,npcData.missionIds[currenMissionId],npcId);
+        Debug.Log($"开始对话");
     }
     public void ReStartOverlap()
     {

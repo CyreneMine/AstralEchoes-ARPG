@@ -12,33 +12,40 @@ public class DialogueMgr :BaseManager<DialogueMgr>
     private string currentDialogue;
     public void StartDialogue(string dialogue,int missionId,int npcId)
     {
-        if (MissionMgr.Instance.GetMissionSaveData(missionId) == null)
+        MissionSaveData currentMissionData = MissionMgr.Instance.GetMissionSaveData(missionId);
+        if (currentMissionData == null)
         {
+            Debug.Log("玩家未接取任务");
             dialogueDatas = JsonMgr.Instance.LoadData<List<DialogueData>>("Dialogue/" + dialogue);
             dialoguePanel.InitData(dialogueDatas,missionId);
         }
         else
         {
             //TODO 暂时写死后续更改
-            
-            if (!MissionMgr.Instance.GetMissionSaveData(missionId).status
-                &&!MissionMgr.Instance.GetMissionSaveData(missionId).isFinished
+            if (!currentMissionData.status
+                &&!currentMissionData.isFinished
                 &&ConfigMgr.Instance.GetMissionData(missionId)
-                    .stages[MissionMgr.Instance.GetMissionSaveData(missionId).currentStageIndex]
+                    .stages[currentMissionData.currentStageIndex]
                     .missionType == MissionType.Battle)
             {
-                dialogueDatas = JsonMgr.Instance.LoadData<List<DialogueData>>("Dialogue/Npc/0/Mission_0_InProgress");
+                dialogueDatas = JsonMgr.Instance.LoadData<List<DialogueData>>($"Dialogue/Npc/{npcId}/Mission_{missionId}_InProgress");
                 dialoguePanel.InitData(dialogueDatas,missionId);
             }
             else if (ConfigMgr.Instance.GetMissionData(missionId)
-                         .stages[MissionMgr.Instance.GetMissionSaveData(missionId).currentStageIndex]
+                         .stages[currentMissionData.currentStageIndex]
                          .missionType == MissionType.Dialogue 
                      &&
-                     !MissionMgr.Instance.GetMissionSaveData(missionId).status)
+                     !currentMissionData.status)
             {
-                dialogueDatas = JsonMgr.Instance.LoadData<List<DialogueData>>("Dialogue/Npc/0/Mission_0_Stage_1");
+                dialogueDatas = JsonMgr.Instance.LoadData<List<DialogueData>>($"Dialogue/Npc/{npcId}/Mission_{missionId}_Stage_1");
                 dialoguePanel.InitData(dialogueDatas,missionId);
                 MissionMgr.Instance.CheckFinishMission(MissionType.Dialogue,npcId);
+            }
+            else if ((currentMissionData.currentStageIndex == ConfigMgr.Instance.GetMissionData(missionId).stages.Count - 1)
+                     &&(currentMissionData.status))
+            {
+                dialogueDatas = JsonMgr.Instance.LoadData<List<DialogueData>>($"Dialogue/Npc/{npcId}/Mission_{missionId}_Finished");
+                dialoguePanel.InitData(dialogueDatas,missionId);
             }
         }
         
