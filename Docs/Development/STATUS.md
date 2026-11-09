@@ -8,6 +8,7 @@
 - 淡出回调曾通过赋值覆盖 UIManager 的面板清理回调，现改用追加回调，保留销毁面板及移除登记的流程。上述修正已核对源码，额外挥刀、恢复移动和再次交互仍待 Play Mode 回归。
 - 按用户指定命名新增 `Mission_0_Finished.json`，用于任务完成后再次互动。DialogueMgr 已按 NPC ID 和任务 ID 拼接进行中、交付及完成后对白路径。当前完成后分支检查末阶段与 `status`，尚待运行验证。
 - `TestDialogue.currenMissionId` 用作 NPC 自身 `missionIds` 列表的选取下标。现阶段通过 Inspector 指定，自动选择后续任务仍待实现。
+- 用户后续将交付对白路径改为 `Stage_{currentStageIndex}`，并移除三条已经过时的 TODO。当前测试阶段索引为 `1`，对应现有 JSON；其他阶段对白的实际加载待后续配置和验证。
 
 [用户思路、回调原因和核验范围](records/28-dialogue-input-and-finished-dialogue.md)
 

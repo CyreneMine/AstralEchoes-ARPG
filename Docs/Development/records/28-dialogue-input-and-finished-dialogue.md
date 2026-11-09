@@ -13,6 +13,7 @@
 - 用户原先把禁用 InputAction 理解为对应脚本也停止处理输入。讨论后改用 `PlayerMgr.canInput` 表达玩家是否允许操作，在攻击脚本入口直接检查。
 - 用户询问对话时如何停止鼠标转动视角。Codex 根据 GMScene 指出 `FreeLook Camera` 上的 `CinemachineInputAxisController` 为输入入口，讨论了禁用该组件再恢复的接法。
 - 用户提出完成后对白命名为 `Mission_0_Finished`，授权 Codex 创建对应 JSON。
+- 用户随后要求检查哪些 TODO 已完成。Codex 根据当前源码指出接取任务和 NPC 名称显示的两条说明已过时，并建议将固定的交付阶段后缀改为当前阶段索引。用户独立完成路径修改后再次要求核对，随后移除这三条 TODO。
 
 ## 辅助分析与建议
 
@@ -29,7 +30,7 @@
 | 打开对话 | `DialoguePanel.ShowMe()` 调用 `CloseInput()`，解锁鼠标并设置 `canInput = false`。关闭输入从原来的数据初始化位置移到面板显示入口。 |
 | 结束对话 | `HideMe()` 用 `callback += ...` 追加操作，淡出完成后设置 `canInput = true`、调用 `OpenInput()`、锁定鼠标。UIManager 原有清理回调得以保留。 |
 | NPC 选择任务 | `TestDialogue` 新增 Inspector 字段 `currenMissionId`，作为 `npcData.missionIds` 的下标，得到实际任务 ID 后拼接接取路径并传入 DialogueMgr。 |
-| 对白选择 | `DialogueMgr` 复用一次取得的 `currentMissionData`，进行中、交付及完成后路径都使用 NPC ID 和任务 ID。交付对白仍固定使用 `Stage_1` 后缀。 |
+| 对白选择 | `DialogueMgr` 复用一次取得的 `currentMissionData`，进行中、交付及完成后路径都使用 NPC ID 和任务 ID。用户后续将交付对白后缀改为 `Stage_{currentMissionData.currentStageIndex}`，按当前阶段索引加载。 |
 | 完成后对白 | 完成后分支在当前为末阶段且 `status = true` 时加载 `Finished`。该分支目前未直接检查 `isFinished`，其表现待完整任务回归核对。 |
 
 Codex 按用户指定名字创建 `Assets/StreamingAssets/Dialogue/Npc/0/Mission_0_Finished.json`。内容为测试引导员确认先前敌人已清理完毕，并感谢玩家。文件包含一条普通对白，`options` 为空。
@@ -43,6 +44,7 @@ Codex 按用户指定名字创建 `Assets/StreamingAssets/Dialogue/Npc/0/Mission
 - **镜头输入讨论**。本轮核对到 Cinemachine 镜头输入组件，但当前玩家与对话脚本未新增该组件引用，关闭镜头输入的实际接线和效果待用户实施验证。
 - **归档与交付**。前一轮讨论只整理文档并保留工作区改动。本轮用户已要求检查文档后推送，按输入控制、任务对白和开发记录拆分提交。源码及文档纳入仓库，完成后对白 JSON 继续遵循现有忽略规则保留本地，恢复要求见资源说明。
 - **本轮复核**。重新核对 ShowMe、HideMe、BasePanel 淡出回调及 PlayerCombat 输入入口，确认上述文件记录与当前磁盘版本一致。当前测试任务的两阶段对白路径有对应本地 JSON，解析与结构检查通过。本轮未进入 Unity Play Mode 或执行构建。
+- **TODO 整理后复核**。当前阶段索引为 `1` 时仍加载已有的 `Mission_0_Stage_1.json`。核对用户已移除接取任务、NPC 名称显示及固定交付路径的三条过时 TODO；前两处只清理注释，运行逻辑保留。其他阶段索引需要准备对应 JSON，尚未新增多阶段对白的运行测试。
 
 ## 文件依据
 

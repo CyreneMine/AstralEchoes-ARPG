@@ -59,4 +59,4 @@
 ## 2026-11-09 完成后对白
 
 - 任务完成后再次互动依赖 `Assets/StreamingAssets/Dialogue/Npc/0/Mission_0_Finished.json` 和对应 `.meta`。该文件当前受 StreamingAssets 的忽略规则影响，恢复本地对白时一并补回。正文为测试引导员的一句感谢，无选项。
-- 当前对白仍按 `Npc/{npcId}/Mission_{missionId}_Accept`、`InProgress`、`Stage_1` 和 `Finished` 命名。交付文件名中的阶段数字暂为 `1`，新增其他阶段的任务时需核对选择规则。
+- 当前对白按 `Npc/{npcId}/Mission_{missionId}_Accept`、`InProgress`、`Stage_{currentStageIndex}` 和 `Finished` 命名。交付文件名使用从 `0` 开始的阶段索引；当前测试任务的交付阶段为 `1`，继续使用 `Mission_0_Stage_1.json`。新增对话阶段时需准备对应索引的 JSON。
