@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using TMPro;
 using UnityEditor;
 using UnityEditor.Events;
@@ -383,9 +384,9 @@ public static class DevConsoleSetup
             {
                 var player = PlayerMgr.Instance.player;
                 var console = UnityEngine.Object.FindFirstObjectByType<DevConsole>();
-                if (player == null || player.Health == null || player.Health.MaxHp <= 0 || console == null || Time.frameCount < 20)
+                CharacterHealth health = player != null ? player.GetComponent<CharacterHealth>() : null;
+                if (player == null || health == null || health.MaxHp <= 0 || console == null || Time.frameCount < 20)
                     return;
-                CharacterHealth health = player.Health;
                 var template = ConfigMgr.Instance.GetCharacterData(player.Config.type, player.Config.id);
                 int templateAttack = template.atk, templateDefense = template.def, templateMax = template.maxHp;
                 console.SetOpen(true);
@@ -397,11 +398,10 @@ public static class DevConsoleSetup
                 Field(console, "DefenseInput").SetTextWithoutNotify("4");
                 Field(console, "MaxHealthInput").SetTextWithoutNotify("80");
                 Click(console, "ApplyAttributes");
-                Require(player.Config.atk == 7 && health.Defense == 4 && health.MaxHp == 80 && health.CurrentHp == 80, "实时属性应用并限制生命上限");
+                int defense = (int)typeof(CharacterHealth).GetField("def", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(health);
+                Require(player.Config.atk == 7 && defense == 4 && health.MaxHp == 80 && health.CurrentHp == 80, "实时属性应用并限制生命上限");
                 Field(console, "AmountInput").SetTextWithoutNotify("14");
                 Click(console, "TestDamage"); Require(health.CurrentHp == 70, "原始伤害14减防御4");
-                PlayerHealthBar bar = UnityEngine.Object.FindObjectsByType<PlayerHealthBar>(FindObjectsSortMode.None).First(b => b.healthBarFill != null && b.txtHp != null);
-                Require(Mathf.Abs(bar.healthBarFill.fillAmount - 0.875f) < 0.001f && bar.txtHp.text == "70/80", "血条和文字事件同步");
                 Field(console, "AmountInput").SetTextWithoutNotify("5");
                 Click(console, "HealCustom"); Require(health.CurrentHp == 75, "自定义回血");
                 Click(console, "ResetAttributes");
@@ -409,7 +409,7 @@ public static class DevConsoleSetup
                 Require(template.atk == templateAttack && template.def == templateDefense && template.maxHp == templateMax, "共享SO数据未被修改");
                 console.Close(); Require(player.enabled && player.GetComponent<PlayerCombat>().enabled, "关闭控制台恢复玩家组件");
                 console.SetOpen(true);
-                resultJson = "{\"passed\":true,\"runtime\":true,\"checks\":[\"damage\",\"heal\",\"kill\",\"revive\",\"attributes\",\"defense\",\"hud\",\"reset\",\"shared-config-isolation\",\"close-input-restore\"],\"note\":\"Buttons invoked through serialized UnityEvents in actual Play Mode; pointer and keyboard require separate UI verification.\"}";
+                resultJson = "{\"passed\":true,\"runtime\":true,\"checks\":[\"damage\",\"heal\",\"kill\",\"revive\",\"attributes\",\"defense\",\"reset\",\"shared-config-isolation\",\"close-input-restore\"],\"note\":\"Buttons invoked through serialized UnityEvents in actual Play Mode; HUD auto-binding was removed and is excluded. Pointer and keyboard require separate UI verification.\"}";
                 ScreenCapture.CaptureScreenshot(ReportDir + "/DevConsole-PlayMode.png");
                 captureFrame = Time.frameCount;
                 SessionState.SetString(StageKey, "Capture");

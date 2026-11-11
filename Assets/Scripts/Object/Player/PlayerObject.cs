@@ -41,8 +41,6 @@ public class PlayerObject : CharacterObject
     }
     private void Update()
     {
-        if (health != null && health.isDead)
-            return;
         if (isAttacking)
             return;
         HandleMovement();

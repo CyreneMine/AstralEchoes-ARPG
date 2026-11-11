@@ -15,9 +15,6 @@ public class PlayerCombat : MonoBehaviour
     {
         if (!PlayerMgr.Instance.canInput)
             return;
-        PlayerObject player = PlayerMgr.Instance.player;
-        if (player == null || (player.Health != null && player.Health.isDead))
-            return;
         if (PlayerMgr.Instance.inputActions.Player.Attack.WasPressedThisFrame())
         {
             Attack();
@@ -33,7 +30,6 @@ public class PlayerCombat : MonoBehaviour
                 foreach (Collider other in colliders)
                 {
                     EnemyObject enemyObject = other.GetComponent<EnemyObject>();
-                    
                     enemyObject.TakeDamage(PlayerMgr.Instance.GetAtkValue());
                 }
                 break;

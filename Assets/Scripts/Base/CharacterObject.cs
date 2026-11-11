@@ -4,7 +4,6 @@ public class CharacterObject : MonoBehaviour
 {
     [SerializeField]private CharacterConfig.CharacterData config;
     public CharacterConfig.CharacterData Config => config;
-    public CharacterHealth Health => health;
     protected CharacterHealth health;
     protected virtual void Awake()
     {
@@ -22,30 +21,9 @@ public class CharacterObject : MonoBehaviour
 
     public void Init(int id,CharacterConfig.CharacterType type)
     {
-        CharacterConfig.CharacterData source = ConfigMgr.Instance.GetCharacterData(type, id);
-        if (source == null)
-        {
-            Debug.LogError($"角色配置不存在：{type}/{id}", this);
-            return;
-        }
-        // SO中的数据由角色共享；运行时调试和属性变化使用独立副本。
-        config = new CharacterConfig.CharacterData
-        {
-            id = source.id, type = source.type, atk = source.atk,
-            def = source.def, maxHp = source.maxHp
-        };
+        config = ConfigMgr.Instance.GetCharacterData(type, id);
         health.Init(config.maxHp,config.def);
     }
-    public void SetRuntimeAttributes(int attack, int defense, int maximumHealth)
-    {
-        if (config == null || health == null)
-            return;
-        config.atk = Mathf.Max(0, attack);
-        config.def = Mathf.Max(0, defense);
-        config.maxHp = Mathf.Max(1, maximumHealth);
-        health.SetStats(config.maxHp, config.def);
-    }
-
     public virtual void TakeDamage(int damage)
     {
         health.TakeDamage(damage);

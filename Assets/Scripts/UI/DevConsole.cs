@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Reflection;
 using TMPro;
 using Unity.Cinemachine;
 using UnityEngine;
@@ -22,6 +23,12 @@ public class DevConsole : MonoBehaviour
     private bool isOpen;
     private float refreshAt;
     private CharacterHealth boundHealth;
+    // 调试读写集中在控制台中，角色与生命脚本使用原有接口。
+    private static readonly FieldInfo ConfigField = typeof(CharacterObject).GetField("config", BindingFlags.Instance | BindingFlags.NonPublic);
+    private static readonly FieldInfo CurrentHealthField = typeof(CharacterHealth).GetField("currentHp", BindingFlags.Instance | BindingFlags.NonPublic);
+    private static readonly FieldInfo MaximumHealthField = typeof(CharacterHealth).GetField("maxHp", BindingFlags.Instance | BindingFlags.NonPublic);
+    private static readonly FieldInfo DefenseField = typeof(CharacterHealth).GetField("def", BindingFlags.Instance | BindingFlags.NonPublic);
+    private int CurrentDefense => (int)DefenseField.GetValue(boundHealth);
     public bool IsOpen => isOpen;
 
     private void Start()
@@ -54,20 +61,31 @@ public class DevConsole : MonoBehaviour
     {
         if (targetPlayer == null)
             targetPlayer = PlayerMgr.Instance.player;
-        CharacterHealth health = targetPlayer != null ? targetPlayer.Health : null;
-        if (health != boundHealth)
-        {
-            if (boundHealth != null)
-                boundHealth.HealthChanged -= OnHealthChanged;
-            boundHealth = health;
-            if (boundHealth != null)
-                boundHealth.HealthChanged += OnHealthChanged;
-        }
+        boundHealth = targetPlayer != null ? targetPlayer.GetComponent<CharacterHealth>() : null;
         return targetPlayer != null && targetPlayer.Config != null && boundHealth != null && boundHealth.MaxHp > 0;
     }
 
-    private void OnHealthChanged(int current, int maximum) => RefreshDisplay();
     private void OnAttributeEndEdit(string _) => ApplyAttributes();
+
+    private void SetConsoleHealth(int value)
+    {
+        CurrentHealthField.SetValue(boundHealth, Mathf.Clamp(value, 0, boundHealth.MaxHp));
+        boundHealth.isDead = boundHealth.CurrentHp == 0;
+        RefreshDisplay();
+    }
+
+    private void ApplyConsoleAttributes(int attack, int defense, int maximumHealth)
+    {
+        // 仅在使用调试按钮时创建副本，保留配置中的成长等全部序列化字段。
+        var runtimeConfig = JsonUtility.FromJson<CharacterConfig.CharacterData>(JsonUtility.ToJson(targetPlayer.Config));
+        runtimeConfig.atk = Mathf.Max(0, attack);
+        runtimeConfig.def = Mathf.Max(0, defense);
+        runtimeConfig.maxHp = Mathf.Max(1, maximumHealth);
+        ConfigField.SetValue(targetPlayer, runtimeConfig);
+        MaximumHealthField.SetValue(boundHealth, runtimeConfig.maxHp);
+        DefenseField.SetValue(boundHealth, runtimeConfig.def);
+        SetConsoleHealth(boundHealth.CurrentHp);
+    }
 
     public void Toggle() => SetOpen(!isOpen);
     public void Close() => SetOpen(false);
@@ -141,9 +159,9 @@ public class DevConsole : MonoBehaviour
             return;
         }
         var data = targetPlayer.Config;
-        statusText.text = $"{targetPlayer.name}\n生命  {boundHealth.CurrentHp} / {boundHealth.MaxHp}    状态  {(boundHealth.isDead ? "死亡" : "存活")}\n攻击  {data.atk}    防御  {boundHealth.Defense}";
+        statusText.text = $"{targetPlayer.name}\n生命  {boundHealth.CurrentHp} / {boundHealth.MaxHp}    状态  {(boundHealth.isDead ? "死亡" : "存活")}\n攻击  {data.atk}    防御  {CurrentDefense}";
         SyncField(attackInput, data.atk);
-        SyncField(defenseInput, boundHealth.Defense);
+        SyncField(defenseInput, CurrentDefense);
         SyncField(maxHealthInput, boundHealth.MaxHp);
     }
 
@@ -168,7 +186,8 @@ public class DevConsole : MonoBehaviour
         if (useDefense)
             targetPlayer.TakeDamage(value);
         else
-            boundHealth.DamageDirect(value);
+            SetConsoleHealth(boundHealth.CurrentHp - value);
+        RefreshDisplay();
         Say(useDefense ? $"已施加 {value} 点原始伤害，经过防御计算。" : $"已直接扣除 {value} 点生命。 ");
     }
 
@@ -176,7 +195,7 @@ public class DevConsole : MonoBehaviour
     {
         if (!Ready()) return;
         if (boundHealth.isDead) { Say("玩家已死亡，请使用“复活并回满”。", true); return; }
-        boundHealth.Heal(value);
+        SetConsoleHealth((int)System.Math.Min((long)boundHealth.MaxHp, (long)boundHealth.CurrentHp + value));
         Say($"已恢复 {value} 点生命，最高不超过最大生命。 ");
     }
 
@@ -196,7 +215,7 @@ public class DevConsole : MonoBehaviour
     public void KillPlayer()
     {
         if (!Ready()) return;
-        boundHealth.SetCurrentHealth(0);
+        SetConsoleHealth(0);
         targetPlayer.SetIsAttacking(false);
         if (targetPlayer.animator != null)
             targetPlayer.animator.SetFloat("Velocity", 0);
@@ -206,7 +225,7 @@ public class DevConsole : MonoBehaviour
     public void RevivePlayer()
     {
         if (!Ready()) return;
-        boundHealth.SetCurrentHealth(boundHealth.MaxHp);
+        SetConsoleHealth(boundHealth.MaxHp);
         targetPlayer.SetIsAttacking(false);
         Say("玩家已复活并恢复满生命。 ");
     }
@@ -221,7 +240,7 @@ public class DevConsole : MonoBehaviour
             Say("攻击/防御为 0～1000000；最大生命为 1～1000000。", true);
             return;
         }
-        targetPlayer.SetRuntimeAttributes(attack, defense, maximum);
+        ApplyConsoleAttributes(attack, defense, maximum);
         Say("运行时属性已应用；当前生命保留并限制在新上限内。 ");
         RefreshDisplay();
     }
@@ -229,9 +248,9 @@ public class DevConsole : MonoBehaviour
     private void Step(int attack, int defense, int maximum)
     {
         if (!Ready()) return;
-        targetPlayer.SetRuntimeAttributes(
+        ApplyConsoleAttributes(
             Mathf.Clamp(targetPlayer.Config.atk + attack, 0, 1000000),
-            Mathf.Clamp(boundHealth.Defense + defense, 0, 1000000),
+            Mathf.Clamp(CurrentDefense + defense, 0, 1000000),
             Mathf.Clamp(boundHealth.MaxHp + maximum, 1, 1000000));
         Say("运行时属性已调整。 ");
         RefreshDisplay();
@@ -277,8 +296,6 @@ public class DevConsole : MonoBehaviour
     {
         if (isOpen)
             SetOpen(false);
-        if (boundHealth != null)
-            boundHealth.HealthChanged -= OnHealthChanged;
         boundHealth = null;
     }
 }
