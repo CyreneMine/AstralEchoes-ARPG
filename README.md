@@ -4,6 +4,10 @@
 
 当前已有移动与冲刺、基础对话、敌人战斗原型、任务面板、玩家 HUD 和调试控制台。测试任务已接入击杀计数、返回 NPC 交付和结算状态存档，实际发奖待接入。游戏范围为单一剧情探索模式，部分战斗节点加入三选一临时 Buff。
 
+2026-11-10 按用户要求撤回控制台对玩法脚本的部分配套实现，玩家 HUD 自动刷新及死亡输入限制待用户接回。当前范围见[撤回与待办清单](Docs/Development/records/29-console-support-code-removal.md)。
+
+2026-11-11 已归档玩家等级、经验、SO 成长参数和存档／属性计算方案。当前已有成长代码与攻击数值入口，完整运行和存档恢复仍待验证；用户优先处理另一边验证中的 Bug。见[玩家成长记录](Docs/Development/records/30-player-growth-and-save-design.md)。
+
 ## 开发环境与入口
 
 - Unity：6000.4.8f1；URP：17.4.0；Input System：1.19.0；Cinemachine：3.1.7。
