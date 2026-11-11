@@ -34,7 +34,7 @@ public class PlayerCombat : MonoBehaviour
                 {
                     EnemyObject enemyObject = other.GetComponent<EnemyObject>();
                     
-                    enemyObject.TakeDamage(PlayerMgr.Instance.player.Config.atk);
+                    enemyObject.TakeDamage(PlayerMgr.Instance.GetAtkValue());
                 }
                 break;
         }
