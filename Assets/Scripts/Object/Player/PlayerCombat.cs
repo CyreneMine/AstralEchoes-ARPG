@@ -13,7 +13,7 @@ public class PlayerCombat : MonoBehaviour
 
     private void Update()
     {
-        if (!PlayerMgr.Instance.canInput)
+        if (!PlayerMgr.Instance.canInput || PlayerMgr.Instance.CurrentIsCursor)
             return;
         if (PlayerMgr.Instance.inputActions.Player.Attack.WasPressedThisFrame())
         {

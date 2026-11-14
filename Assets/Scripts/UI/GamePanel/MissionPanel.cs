@@ -41,10 +41,16 @@ public class MissionPanel : BasePanel
     {
         base.ShowMe();
         UIManager.Instance.HidePanel<GamePanel>();
+        Time.timeScale = 0;
     }
 
     public override void HideMe(UnityAction callback = null)
     {
+        callback += () =>
+        {
+            PlayerMgr.Instance.SetCursorState(false);
+            Time.timeScale = 1;
+        };
         base.HideMe(callback);
         UIManager.Instance.ShowPanel<GamePanel>();
     }

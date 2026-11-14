@@ -4,15 +4,14 @@ using UnityEngine.UI;
 
 public class GamePanel : BasePanel
 {
+    
     [SerializeField] private PlayerHealthBar playerHealthBar;
     [SerializeField] private InteractPanel interactPanel;
     public Button btnMission;
     public override void Init()
     {
-        
         btnMission.onClick.AddListener(() =>
         {
-            Cursor.lockState = CursorLockMode.None;
             UIManager.Instance.ShowPanel<MissionPanel>();
             PlayerMgr.Instance.inputActions.Disable();
         });
@@ -23,11 +22,15 @@ public class GamePanel : BasePanel
         if (UIManager.Instance.GetPanel<MissionPanel>() != null)
             return;
         if (Keyboard.current.leftAltKey.wasPressedThisFrame)
-            Cursor.lockState = CursorLockMode.None;
+            PlayerMgr.Instance.SetCursorState(true);
         if (Keyboard.current.leftAltKey.wasReleasedThisFrame)
-            Cursor.lockState = CursorLockMode.Locked;
+            PlayerMgr.Instance.SetCursorState(false);
     }
 
+    // public void OpenCloseMouseInput(bool state)
+    // {
+    //     
+    // }
     public void UpdateHpBar(int currentHp, int maxHp)
     {
         playerHealthBar.UpdatePlayerHealthBar(currentHp, maxHp);

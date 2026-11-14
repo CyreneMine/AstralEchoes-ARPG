@@ -1,5 +1,12 @@
-﻿public class PlayerMgr :BaseManager<PlayerMgr>
+﻿using UnityEngine;
+using UnityEngine.Events;
+using UnityEngine.InputSystem;
+
+public class PlayerMgr :BaseManager<PlayerMgr>
 {
+    private bool isCursor;
+    public bool CurrentIsCursor => isCursor;
+    public event UnityAction<bool> OnCursorChanged;
     private PlayerGrowth playerGrowth = new PlayerGrowth();
     public PlayerSaveData saveData;
     //后续进入游戏选择角色时候为它赋值
@@ -17,6 +24,15 @@
         inputActions.Enable();
     }
 
+    public void SetCursorState(bool state)
+    {
+        if (state == isCursor)
+            return;
+        isCursor = state;
+        Cursor.lockState = state ? CursorLockMode.None : CursorLockMode.Locked;
+        Cursor.visible = state;
+        OnCursorChanged?.Invoke(state);
+    }
     public int GetAtkValue()
     {
         int atkValue = 0;

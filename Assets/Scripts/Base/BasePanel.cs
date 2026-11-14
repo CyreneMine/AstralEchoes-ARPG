@@ -26,14 +26,14 @@ public abstract class BasePanel : MonoBehaviour
         UpdateDoSomething();
         if (isShow && canvasGroup.alpha < 1)
         {
-            canvasGroup.alpha += fadeSpeed * Time.deltaTime;
+            canvasGroup.alpha += fadeSpeed * Time.unscaledDeltaTime;
             if (canvasGroup.alpha >= 1)
             {
                 canvasGroup.alpha = 1;
             }
         }else if (!isShow && canvasGroup.alpha > 0)
         {
-            canvasGroup.alpha -= fadeSpeed * Time.deltaTime;
+            canvasGroup.alpha -= fadeSpeed * Time.unscaledDeltaTime;
             if (canvasGroup.alpha <= 0)
             {
                 canvasGroup.alpha = 0;

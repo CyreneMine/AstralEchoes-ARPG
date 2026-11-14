@@ -53,7 +53,7 @@ public class DialoguePanel : BasePanel
         base.ShowMe();
         PlayerMgr.Instance.CloseInput();
         DialogueMgr.Instance.dialoguePanel = this;
-        Cursor.lockState = CursorLockMode.None;
+        PlayerMgr.Instance.SetCursorState(true);
         PlayerMgr.Instance.canInput = false;
     }
 
@@ -63,7 +63,7 @@ public class DialoguePanel : BasePanel
         {
             PlayerMgr.Instance.canInput = true;
             PlayerMgr.Instance.OpenInput();
-            Cursor.lockState = CursorLockMode.Locked;
+            PlayerMgr.Instance.SetCursorState(false);
         };
         base.HideMe(callback);
     }
