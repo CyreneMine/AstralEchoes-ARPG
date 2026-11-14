@@ -7,4 +7,20 @@
 *.controller text eol=lf
 *.asset text eol=lf
 *.meta text eol=lf
+*.prefab text eol=lf
+*.mat text eol=lf
+*.anim text eol=lf
+*.overrideController text eol=lf
+
+# Unity YAML 文件合并冲突交给 UnityYAMLMerge（智能合并）。
+# 需要在本机 .git/config 中配置同名驱动，见 Docs/Development/README.md；没有配置的机器会退回普通文本合并。
+*.unity merge=unityyamlmerge
+*.prefab merge=unityyamlmerge
+*.asset merge=unityyamlmerge
+*.controller merge=unityyamlmerge
+*.anim merge=unityyamlmerge
+*.mat merge=unityyamlmerge
+*.overrideController merge=unityyamlmerge
+
+# NavMesh 烘焙数据是二进制，放在最后，覆盖上面 *.asset 的合并设置。
 Assets/Scenes/GMScene/NavMesh-NavSurface.asset binary

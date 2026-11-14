@@ -67,7 +67,8 @@ Desktop.ini
 /Assets/Scripts/Json/LitJson/
 /Assets/Scripts/Json/LitJson.meta
 
-# Authored dialogue test fixture only; other StreamingAssets remain local.
+# Authored dialogue data (test fixture and NPC dialogue); other StreamingAssets remain local.
+# 2026-11-14: switched from per-file whitelist to whole folders so new authored files are tracked automatically.
 !/Assets/StreamingAssets/
 !/Assets/StreamingAssets.meta
 /Assets/StreamingAssets/*
@@ -76,32 +77,10 @@ Desktop.ini
 /Assets/StreamingAssets/Dialogue/*
 !/Assets/StreamingAssets/Dialogue/Test/
 !/Assets/StreamingAssets/Dialogue/Test.meta
-/Assets/StreamingAssets/Dialogue/Test/*
-!/Assets/StreamingAssets/Dialogue/Test/Test1_1.json
-!/Assets/StreamingAssets/Dialogue/Test/Test1_1.json.meta
+!/Assets/StreamingAssets/Dialogue/Npc/
+!/Assets/StreamingAssets/Dialogue/Npc.meta
 
-# Authored character SO test configuration only.
+# Authored SO configuration (character, enemy AI, mission, NPC). Everything under GameData is author-written data, not art.
+# Runtime player saves live in Application.persistentDataPath, not here.
 !/Assets/Resources/GameData/
 !/Assets/Resources/GameData.meta
-/Assets/Resources/GameData/*
-!/Assets/Resources/GameData/Character/
-!/Assets/Resources/GameData/Character.meta
-/Assets/Resources/GameData/Character/*
-!/Assets/Resources/GameData/Character/PlayerConfig.asset
-!/Assets/Resources/GameData/Character/PlayerConfig.asset.meta
-!/Assets/Resources/GameData/Character/EnemyConfig.asset
-!/Assets/Resources/GameData/Character/EnemyConfig.asset.meta
-
-# Authored mission test definition only; runtime progress and UI/art remain local.
-!/Assets/Resources/GameData/Mission/
-!/Assets/Resources/GameData/Mission.meta
-/Assets/Resources/GameData/Mission/*
-!/Assets/Resources/GameData/Mission/MissionConfig.asset
-!/Assets/Resources/GameData/Mission/MissionConfig.asset.meta
-
-# Authored enemy AI parameters.
-!/Assets/Resources/GameData/Enemy/
-!/Assets/Resources/GameData/Enemy.meta
-/Assets/Resources/GameData/Enemy/*
-!/Assets/Resources/GameData/Enemy/EnemyAIConfig.asset
-!/Assets/Resources/GameData/Enemy/EnemyAIConfig.asset.meta
