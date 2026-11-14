@@ -4,10 +4,12 @@ using UnityEngine.UI;
 
 public class GamePanel : BasePanel
 {
+    [SerializeField] private PlayerHealthBar playerHealthBar;
     [SerializeField] private InteractPanel interactPanel;
     public Button btnMission;
     public override void Init()
     {
+        
         btnMission.onClick.AddListener(() =>
         {
             Cursor.lockState = CursorLockMode.None;
@@ -15,16 +17,6 @@ public class GamePanel : BasePanel
             PlayerMgr.Instance.inputActions.Disable();
         });
     }
-    public void OpenInteractPanel()
-    {
-        interactPanel = UIManager.Instance.ShowPanel<InteractPanel>();
-    }
-
-    public void CloseInteractPanel()
-    {
-        UIManager.Instance.HidePanel<InteractPanel>(false);
-    }
-
     protected override void Update()
     {
         base.Update();
@@ -36,6 +28,19 @@ public class GamePanel : BasePanel
             Cursor.lockState = CursorLockMode.Locked;
     }
 
+    public void UpdateHpBar(int currentHp, int maxHp)
+    {
+        playerHealthBar.UpdatePlayerHealthBar(currentHp, maxHp);
+    }
+    public void OpenInteractPanel()
+    {
+        interactPanel = UIManager.Instance.ShowPanel<InteractPanel>();
+    }
+
+    public void CloseInteractPanel()
+    {
+        UIManager.Instance.HidePanel<InteractPanel>(false);
+    }
     public override void ShowMe()
     {
         base.ShowMe();

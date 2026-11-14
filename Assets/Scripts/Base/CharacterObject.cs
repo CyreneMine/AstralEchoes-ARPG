@@ -5,6 +5,7 @@ public class CharacterObject : MonoBehaviour
     [SerializeField]private CharacterConfig.CharacterData config;
     public CharacterConfig.CharacterData Config => config;
     protected CharacterHealth health;
+    public CharacterHealth Health => health;
     protected virtual void Awake()
     {
         health = GetComponent<CharacterHealth>();

@@ -1,7 +1,9 @@
 using UnityEngine;
+using UnityEngine.Events;
 
 public class CharacterHealth : MonoBehaviour
 {
+    public event UnityAction<int,int> OnHealthChange; 
     [SerializeField] private int currentHp;
     private int maxHp, def;
     public int CurrentHp => currentHp;
@@ -31,6 +33,7 @@ public class CharacterHealth : MonoBehaviour
         {
             Dead();
         }
+        OnHealthChange?.Invoke(currentHp, maxHp);
     }
 
     public virtual void Dead()
