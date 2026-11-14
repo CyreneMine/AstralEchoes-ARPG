@@ -655,6 +655,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4e8c3b1f81748e945a3cbf88492d0473, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TestDialogue
+  npcId: 0
+  currenMissionId: 0
 --- !u!1 &410087039
 GameObject:
   m_ObjectHideFlags: 0
@@ -988,6 +990,17 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 7943123550191013258, guid: 62119d23ec92ae24aa54de45ebd57230, type: 3}
   m_PrefabInstance: {fileID: 1697178491256427776}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &809566390 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 3260392970523164649, guid: f615b145d27b65c42a6bf6c94f2fff23, type: 3}
+  m_PrefabInstance: {fileID: 1197649187}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 04bdc87f79d67e34e94f6501c33f0f0f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerHealthBar
 --- !u!1 &820405804
 GameObject:
   m_ObjectHideFlags: 0
@@ -1435,10 +1448,18 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 6777542034669103166, guid: f615b145d27b65c42a6bf6c94f2fff23, type: 3}
+      propertyPath: m_FillAmount
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 7588333254368427713, guid: f615b145d27b65c42a6bf6c94f2fff23, type: 3}
       propertyPath: btnMission
       value: 
       objectReference: {fileID: 221907988}
+    - target: {fileID: 7588333254368427713, guid: f615b145d27b65c42a6bf6c94f2fff23, type: 3}
+      propertyPath: playerHealthBar
+      value: 
+      objectReference: {fileID: 809566390}
     - target: {fileID: 7926315360017021990, guid: f615b145d27b65c42a6bf6c94f2fff23, type: 3}
       propertyPath: targetPlayer
       value: 
@@ -5829,7 +5850,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2334818937224614445, guid: 9c3d11d8aa4072a45baa8c003336fa74, type: 3}
       propertyPath: m_SizeDelta.y
-      value: 120
+      value: 8
       objectReference: {fileID: 0}
     - target: {fileID: 3814735646462798392, guid: 9c3d11d8aa4072a45baa8c003336fa74, type: 3}
       propertyPath: m_Pivot.x
@@ -5914,6 +5935,10 @@ PrefabInstance:
     - target: {fileID: 4032820443622608864, guid: 9c3d11d8aa4072a45baa8c003336fa74, type: 3}
       propertyPath: m_Name
       value: MissionPanel
+      objectReference: {fileID: 0}
+    - target: {fileID: 4032820443622608864, guid: 9c3d11d8aa4072a45baa8c003336fa74, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4165583647638018307, guid: 9c3d11d8aa4072a45baa8c003336fa74, type: 3}
       propertyPath: m_AnchorMax.x
