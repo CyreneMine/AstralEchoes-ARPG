@@ -1,78 +1,63 @@
 # 开发记录索引
 
-本目录将历史过程、当前状态和测试证据分别列出，原始文件及撤销备份继续保存在本地。
+每个问题一份记录，按"用户观察与目标 → 用户提出的想法 → 辅助分析与建议 → 实际采纳与用户调整 → 验证与当前状态"组织，模板见 [ISSUE_TEMPLATE.md](ISSUE_TEMPLATE.md)。当前状态先看 [STATUS.md](STATUS.md)，按日期的变化看 [CHANGELOG](../../CHANGELOG.md)。
 
-先读 [当前开发状态](STATUS.md)与 [对话实现和测试确认](records/14-dialogue-system-implementation.md)，再按问题查阅记录。此前 [阶段总结](records/12-stage-summary-20261015.md)保留为历史入口。
+记录写的是当时的过程，事后发现的更正以"补充"的形式追加在原记录末尾，不改写原文。
 
-| 主题 | 记录 | 适用范围 |
+## 目录结构
+
+| 目录 | 内容 | 维护状态 |
 |---|---|---|
-| 工程路径与启动异常 | [搬迁说明](records/01-project-path.md)、[用户启动验收](records/02-project-path-acceptance.md) | 当前英文路径工程的来源 |
-| 白色颗粒与透明叠层 | [PMX 材质记录](records/03-legacy-pmx-materials.md) | 已删除旧工程的历史案例 |
-| Avatar、插件与 Shader | [映射和插件处理](records/04-avatar-and-plugins.md) | 旧 FBX 映射、插件清理及方案撤销 |
-| WASD 与身体大幅偏移 | [实现和修正](records/05-wasd-and-root-motion.md) | 旧临时控制器与动作副本 |
-| 裙摆、袖摆及头纱物理 | [BoneCloth 配置](records/06-bonecloth.md) | 当前 CATS 模型；名称沿革见文首 |
-| 可逐个开关配饰的旧模型衣物 | [Cyrene_Blender4.2 配置](records/08-blender42-bonecloth.md) | 8 组布料、64 个独立网格；运行验证通过 |
-| 用户设计思路与实际采纳 | [讨论与实施确认](records/10-user-design-and-implementation.md) | 用户提出保持速度、过渡同步及补充转向锁定；建议与采纳分别归档 |
-| 换向减速与冲刺衔接 | [原因与修改过程](records/09-movement-and-dash-transitions.md) | 1D/Velocity、MoveWeight 与冲刺转向条件已保存；运行验收待补充 |
-| 重启后面部黑块 | [覆盖层修复](records/07-face-overlay.md) | 当前 Nilo 示例 Shader 的腮红覆盖材质 |
-| 武器预制件复用与剑不跟随 | [挂点适配与用户确认](records/11-weapon-prefab-and-hand-socket.md) | 保留外层约束，重新绑定 Cyrene 右手挂点；用户确认随手移动恢复，收放剑切换待验 |
-| 动画库存、后摇与编译清理 | [补充记录](records/13-animation-stock-dash-and-cleanup.md) | 空手动作候选、用户实际后摇参数、Testing/Editor 依赖故障 |
-| 基础对话与动态选项 | [实现与测试确认](records/14-dialogue-system-implementation.md)、[开发日志](logs/2026-10-16-dialogue.md) | 用户测试确认本轮流程完成，剩余小漏洞次日处理 |
+| [records/](records/) | 每个问题的过程记录，按编号递增 | 持续维护 |
+| [evidence/](evidence/) | 实际测试导出的 JSON 证据，测试数值不改 | 有新证据时添加 |
+| [history/](history/) | 旧版 STATUS 的原样归档 | 只读 |
+| [deliveries/](deliveries/) | 10-15 至 10-30 的分模块交付清单 | 11-05 起停用，交付信息改写在 CHANGELOG 和提交信息里 |
+| [logs/](logs/) | 10-16 至 10-30 的开发日志 | 11-05 起停用，内容并入 records |
+| [SOURCES.json](SOURCES.json) | evidence 对应的本地原始文件路径和 SHA256 | 有新证据时更新 |
 
-[文本证据目录](evidence/)保留实际测试数据。[来源清单](SOURCES.json)记录原始文档路径与 SHA256。公开副本只调整文档链接与本机路径表达，不改测试数值。
+## 记录列表
 
-论文可使用这些记录说明排查方法、资源适配和验证过程。旧工程记录应明确为探索过程；当前实现须与最终提交工程重新对应。这里没有完成率、帧率提升、用户实验或最终构建结论。
+| 编号 | 日期 | 主题 | 当前适用范围 |
+|---|---|---|---|
+| [01](records/01-project-path.md)、[02](records/02-project-path-acceptance.md) | 10-15 | 工程路径搬迁与启动异常 | 历史；工程现位于 G 盘 |
+| [03](records/03-legacy-pmx-materials.md) | 10-15 | 旧 PMX 白色颗粒与透明叠层 | 历史；旧工程已删除 |
+| [04](records/04-avatar-and-plugins.md) | 10-15 | Avatar 映射、插件与 Shader | 历史；旧 FBX |
+| [05](records/05-wasd-and-root-motion.md) | 10-15 | 临时 WASD 与身体偏移 | 历史；旧测试控制器 |
+| [06](records/06-bonecloth.md) | 10-15 | CATS 模型 BoneCloth | 历史模型 |
+| [07](records/07-face-overlay.md) | 10-15 | 面部黑块（旧材质） | 历史；当前材质见 21 |
+| [08](records/08-blender42-bonecloth.md) | 10-15 | Cyrene_Blender4.2 衣物物理 | 当前模型 |
+| [09](records/09-movement-and-dash-transitions.md)、[10](records/10-user-design-and-implementation.md) | 10-15 | 换向减速、冲刺衔接、MoveWeight | 当前移动代码 |
+| [11](records/11-weapon-prefab-and-hand-socket.md) | 10-15 | 武器预制件与右手挂点 | 收放剑切换待完成 |
+| [12](records/12-stage-summary-20261015.md)、[13](records/13-animation-stock-dash-and-cleanup.md) | 10-15 | 阶段总结、动画库存与编译清理 | 历史快照 |
+| [14](records/14-dialogue-system-implementation.md) | 10-16 | 基础对话与动态选项 | 用户测试确认 |
+| [15](records/15-manager-and-npc-interaction.md) | 10-28 | 管理器基类与 NPC 距离交互 | 当前 |
+| [16](records/16-pool-billboard-and-world-ui.md) | 10-28 | 对象池、朝向脚本、世界空间 UI | 对象池后续见 27 |
+| [17](records/17-character-config-health-and-hit.md) | 10-28 | 角色配置、生命值与血条 | 当前 |
+| [18](records/18-animation-lock-and-recovery.md) | 10-28 | 动画锁定与恢复 | 当前 |
+| [19](records/19-mission-panel-ui.md) | 10-29 | 任务面板 UI 框架 | 逻辑后续见 22 |
+| [20](records/20-devconsole-mission-reset.md) | 10-30 | 控制台清空任务存档 | 待复测 |
+| [21](records/21-face-overlay-material-set.md) | 10-30 | 当前模型面部覆盖材质 | 当前 |
+| [22](records/22-mission-system-design-and-prototype.md) | 10-30 | 任务系统设计与原型 | 当前 |
+| [23](records/23-dev-console-and-player-hud.md) | 10-29 | 控制台与玩家 HUD | 配套部分已在 29 撤回 |
+| [24](records/24-first-interaction-ui-warmup.md) | 10-29 | 首次交互提示预热 | 当前 |
+| [25](records/25-enemy-ai-and-combat.md) | 11-05 | 敌人导航、攻击与死亡 | 当前 |
+| [26](records/26-npc-dialogue-and-mission-turn-in.md) | 11-06 | NPC 对话与两阶段任务结算 | 当前 |
+| [27](records/27-pool-capacity-and-usage-contract.md) | 11-08 | 缓存池容量与使用约定 | 当前 |
+| [28](records/28-dialogue-input-and-finished-dialogue.md) | 11-09 | 对话输入控制与完成后对白 | 待回归 |
+| [29](records/29-console-support-code-removal.md) | 11-10 | 撤回控制台配套代码与待办清单 | 待办已迁到 Issues |
+| [30](records/30-player-growth-and-save-design.md) | 11-11 | 玩家成长、存档与属性计算 | 待验证 |
+| [31](records/31-player-health-bar-refresh.md) | 11-14 | 玩家血条：显示时拉取与生命事件 | 待回归 |
 
-后续问题记录使用 [记录模板](ISSUE_TEMPLATE.md)，保留用户想法、辅助建议、实际采纳和验证来源。
+## 本机 Git 配置
 
-本轮版本整理见 [分模块交付清单](deliveries/2026-10-15.md)。
+`.gitattributes` 会把场景、预制件、SO 等 Unity YAML 文件的合并交给 UnityYAMLMerge。这个驱动要在每台机器的 `.git/config` 里单独配置（本机已于 2026-11-14 配好）。换电脑后执行下面的命令，路径换成本机 Unity 的安装位置：
 
-本轮收工见 [2026-10-16 分模块交付清单](deliveries/2026-10-16.md)。
+```bash
+git config merge.unityyamlmerge.name "Unity SmartMerge (UnityYAMLMerge)"
+git config merge.unityyamlmerge.driver "<Unity 安装目录>/Editor/Data/Tools/UnityYAMLMerge.exe merge -h -p --force %O %B %A %A"
+git config merge.unityyamlmerge.recursive binary
+```
 
-## 2026-10-28 最新过程记录
+## 论文使用边界
 
-- [管理器基类与NPC距离交互](records/15-manager-and-npc-interaction.md)：补记用户管理器重构、提示恢复、离开范围与F键交互。
-- [对象池、朝向脚本与世界空间UI](records/16-pool-billboard-and-world-ui.md)：保留用户暂不改ClearPool、Pivot自查和布局保留决定。
-- [角色配置、生命值与血条排查](records/17-character-config-health-and-hit.md)：分SO表、下标ID、枚举预加载、初始化与NaN/Infinity证据。
-- [动画锁定与恢复](records/18-animation-lock-and-recovery.md)：区分动画事件、状态退出和MoveWeight。
-- [开发日志](logs/2026-10-28-config-health.md) · [交付清单](deliveries/2026-10-28.md)。
-
-## 2026-10-29 任务界面框架
-
-- [任务面板 UI 框架](records/19-mission-panel-ui.md)：按用户参考搭建主线/支线、列表、详情、奖励占位和追踪按钮；仅完成场景 UI，任务逻辑由用户后续实现。
-
-## 2026-10-30 任务系统与其他优化
-
-- [基础任务设计与用户实现](records/22-mission-system-design-and-prototype.md)：SO/JSON、顺序阶段、用户性能疑问与out复用、动态条目依赖、存档/奖励排查及未完成边界。
-- [控制台与玩家HUD](records/23-dev-console-and-player-hud.md)：运行时副本、生命事件、历史Play Mode范围和用户独立修改。
-- [首次提示预热](records/24-first-interaction-ui-warmup.md)：用户提出并实现启动Show/Hide，用户确认与未测指标分开记录。
-- [清空任务存档](records/20-devconsole-mission-reset.md) · [当前模型面部覆盖层](records/21-face-overlay-material-set.md)。
-- [本轮日志](logs/2026-10-30-mission-and-ui.md) · [交付清单](deliveries/2026-10-30.md)。
-
-## 2026-11-05 敌人系统
-
-- [敌人导航、攻击与死亡原型](records/25-enemy-ai-and-combat.md)记录用户实现、巡逻下标越界排查、场景配置和已有运行证据。
-
-## 2026-11-06 NPC 对话与两阶段任务
-
-- [NPC 对话与任务结算](records/26-npc-dialogue-and-mission-turn-in.md)记录击杀进度、按阶段播放对白、交付时机、字体缺字排查及本机存档证据。
-
-## 2026-11-08 缓存池优化
-
-- [缓存池数量上限与使用约定](records/27-pool-capacity-and-usage-contract.md)记录用户实现的容量控制、满额轮换、调试层级，以及生命周期职责和延期边界。
-
-## 2026-11-09 对话输入与完成后对白
-
-- [输入权限、淡出回调与完成后对白](records/28-dialogue-input-and-finished-dialogue.md)记录用户为修复额外挥刀引入 `canInput` 的思路、回调覆盖问题，以及新增对白与实际代码依据。
-
-## 2026-11-10 控制台配套实现撤回
-
-- [撤回范围与后续问题清单](records/29-console-support-code-removal.md)记录用户要求、原代码恢复、后续代码保护及编译核验。
-
-## 2026-11-11 玩家成长设计归档
-
-- [玩家等级成长、存档与属性计算](records/30-player-growth-and-save-design.md)记录用户提出的 SO 成长参数、玩家状态持久化、攻击力计算疑问与当前代码依据。成长流程仍在实现和验证中，用户优先处理另一边的 Bug。
-
-## 2026-11-14 玩家血条刷新
-
-- [显示时拉取与生命事件](records/31-player-health-bar-refresh.md)记录用户逐步实现血条刷新的过程：面板重建与隐藏期间的两个缺陷、用户提出又放弃的候选方案、事件订阅的取舍与演示，以及未采纳的建议。只完成了静态审查和编译，Play Mode 待验证。
+论文可以用这些记录说明排查方法、资源适配和验证过程。旧工程的记录要写明是探索过程，当前实现要和最终提交的工程重新对应。这里没有完成率、帧率提升、用户实验或最终构建结论。

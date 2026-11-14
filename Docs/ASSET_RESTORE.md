@@ -1,8 +1,41 @@
 # 资源与本地恢复说明
 
-本次按用户要求仅提交自编代码、Input System 配置、场景/Animator/URP/项目文本配置以及开发文档。
+仓库只提交自编代码、Input System 配置、场景、Animator、URP 和项目文本配置、自编数据（`Resources/GameData/` 下的全部 SO 配置、`StreamingAssets/Dialogue/` 下的测试对白和 NPC 对白）以及开发文档。下面的清单是**当前**需要从本地备份补回的内容，新增本地依赖时直接修改这张表。
 
-## 未上传内容
+## 补回清单（2026-11-14 整理）
+
+所有资源都要**连同原 `.meta` 一起恢复**，不要重新生成 GUID，否则场景、Animator 和材质的引用会断开。
+
+| 本地路径 | 内容 | 谁依赖它 | 缺失的后果 |
+|---|---|---|---|
+| `Assets/Scripts/Json/LitJson/` 及 `LitJson.meta` | 第三方 JSON 库 | `JsonMgr`（对话、任务、存档） | **编译失败** |
+| `Assets/ArtRes/` | 角色 FBX/PMX、贴图、材质、物理预制体；当前角色 `Cyrene_Blender4.2.fbx`（GUID `8a20f58c2d3f4ef46b0e6140851c62db`） | GMScene 玩家、Animator | 角色缺失 |
+| `Assets/MagicaCloth2/` | 衣物物理插件 2.18.4 | 场景里的 BoneCloth 组件 | Missing Script |
+| `Assets/Shader/` | 第三方 Nilo 示例 Shader | 角色材质 | 材质粉色 |
+| `Assets/CombatGirlsCharacterPack/`、`Assets/KAWAII_ANIMATIOMS_100/` | 第三方角色和动作资源包 | 武器、动作 | 部分动作缺失 |
+| `Assets/Resources/Animation/` | FBX 动作、动作副本（含 StartQuick/EndQuick、攻击判定等动画事件） | `Cyrene.controller` | 动画缺失，动画事件失效 |
+| `Assets/Resources/Prefab/` | 角色预制件 `Cyrene_Blender4.2.prefab`、剑 `Dawnbreak.prefab`、`EnemyObj.prefab`（GUID `0d0b28005492b914989176f4beaec0ea`） | GMScene 中的两个敌人实例 | 敌人缺失 |
+| `Assets/Resources/UI/` | Canvas（含 DevConsole）、GamePanel、DialoguePanel、OptionsPanel、Option、InteractPanel、MissionPanel、MissionItem、RewardSlot 共 9 个预制件 | `UIManager.ShowPanel` | 面板无法打开 |
+| `Assets/Resources/DevConsole/DevConsoleFont.asset` 及中文字体源 | TMP 字体 | 对话、任务、控制台文字 | 中文显示为方框 |
+| `Assets/TextMesh Pro/` | TMP Essential Resources，也可以从 Window → TextMeshPro 菜单重新导入，但重新导入的 GUID 可能和原来不同，优先用备份 | 所有 TMP 文本 | 文字不显示 |
+| `Assets/Resources/Mat/` | 测试用颜色材质 | 场景中的占位物体 | 材质缺失 |
+| 血条 Sprite 等 UI 图片 | 世界空间血条和 HUD 图片 | GMScene、UI 预制件 | 图片缺失 |
+
+恢复步骤：
+
+1. 用 Unity 6000.4.8f1 打开工程，Package Manager 会按 `manifest.json` 和 `packages-lock.json` 还原公开依赖。
+2. 关闭 Unity，把上表中的目录从本地备份复制回原位置。
+3. 重新打开工程，打开 GMScene 检查 Missing 引用、材质和动画事件。
+4. 面部覆盖材质 `Materials/顏+.mat`、`Materials/顏2+.mat` 需要保持 Alpha=0 并开启裁剪，参见[记录 21](Development/records/21-face-overlay-material-set.md)。
+5. 玩家存档（`Application.persistentDataPath` 下的 `MissionData.json` 等）不属于工程文件，复现时使用自己的测试存档。
+
+仓库是源码与配置快照，单独克隆不保证场景能完整显示或运行，但这不等于源代码缺失。素材和插件的使用与再分发以各自的许可为准，本文不宣称取得了额外授权。
+
+---
+
+以下是各轮交付时写下的补充说明，原样保留作为历史；其中"由 .gitignore 排除、需要补回"的 NPC 配置和 NPC 对白，从 2026-11-14 起已经入库。
+
+## 首次整理时的未上传内容（2026-10-15）
 
 - `Assets/ArtRes`：角色 FBX/PMX、贴图、材质和物理预制体。
 - `Assets/CombatGirlsCharacterPack`、`Assets/KAWAII_ANIMATIOMS_100`：第三方角色与动作资源包。

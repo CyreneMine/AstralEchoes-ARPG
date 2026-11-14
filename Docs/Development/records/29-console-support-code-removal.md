@@ -53,6 +53,10 @@ UIManager、PlayerHealth、EnemyHealth、EnemyAI、任务和对话代码、Playe
 - 11 月 11 日交付复核时，血条仍只有手动刷新方法，移动和攻击入口仍未接回死亡判断，生命组件仍按基础配置初始化。这三项继续保留在待办中，UIManager 按用户决定延期。
 - 11 月 11 日再次使用当前编译参数独立编译主脚本和 Editor 脚本，均无编译错误。交付只保存工作区源码和更新文档，没有在收尾阶段接回上述玩法功能；实际操作效果仍待用户运行验证。
 
+### 补充：问题清单迁到 GitHub Issues（2026-11-14）
+
+上面的清单已经转成 Issue 跟踪，以后以 Issue 状态为准：第 1 项血条的回归 → #1，第 2 项 → #2，第 3 项 → #3，第 4 项 → #4，第 5 项 → #5。
+
 ## 文件依据
 
 - [角色初始化](../../../Assets/Scripts/Base/CharacterObject.cs)、[生命及死亡流程](../../../Assets/Scripts/Object/Common/CharacterHealth.cs)
