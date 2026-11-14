@@ -4,6 +4,7 @@
 
 ## 2026-11-14
 
+- **Alt 光标模式与任务面板暂停**（`2b95693`、`41c9683`）：PlayerMgr 统一管理光标模式并通过事件通知；按住 Alt 或对话时不出刀，CameraCursorLock 锁住镜头；任务面板打开时暂停，UI 淡入淡出不受暂停影响。只做了静态审查和编译，最终版本待回归。[记录 32](Docs/Development/records/32-cursor-mode-camera-and-panel-pause.md)
 - **文档与仓库管理**（`e284f9f`、`1672b06` 和随后的文档提交）：README 改为项目首页和功能状态表；新增本文件；STATUS 压缩为当前状态，原全文归档到 [history](Docs/Development/history/STATUS-2026-10-15_2026-11-14.md)；资源补回说明改为清单表；自编的 NPC 配置和 NPC 对白改为入库；待办迁到 GitHub Issues。协作规则改为 Codex 与 Claude Code 共用。
 - **场景接线**：一起提交 GMScene 中 GamePanel 实例的 `playerHealthBar` 引用和 TestDialogue 的序列化字段，这两处是接血条时 Unity 保存下来的，经用户确认。
 - **Issue 决定**：#12 演示用的重复配置只在本地存在过，已关闭；#20 用户决定暂时继续使用 LitJson。

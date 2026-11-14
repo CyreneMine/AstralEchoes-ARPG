@@ -17,12 +17,13 @@
 |---|---|---|---|
 | 移动与冲刺 | `PlayerObject`：currentSpeed 标量、1D Velocity 混合、MoveWeight 曲线、冲刺期间禁止转向 | 静态核验 + 用户声明（10-15）；当前版本没有完整试玩记录 | [记录 9–10](records/10-user-design-and-implementation.md) |
 | 普攻与命中 | `PlayerCombat.OnAttackCheck` 球形检测，伤害取自 `PlayerMgr.GetAtkValue` | 运行证据（11-05 编辑器日志，双方命中） | [记录 25](records/25-enemy-ai-and-combat.md) |
-| 受击与死亡 | `CharacterHealth.TakeDamage` / `Dead`；死亡后禁止操作的逻辑已在 11-10 撤回 | 静态核验；死亡后的操作限制待用户接回 | [记录 29](records/29-console-support-code-removal.md) |
+| 受击与死亡 | `CharacterHealth.TakeDamage` / `Dead`；死亡后禁止操作的逻辑已在 11-10 撤回 | 静态核验；死亡后的操作限制待用户接回，11-14 讨论后方向调整为"最小死亡流程"，尚未实施 | [记录 29](records/29-console-support-code-removal.md)、[32](records/32-cursor-mode-camera-and-panel-pause.md) |
 | 敌人 AI | NavMesh 巡逻（4 个点）、追击、脱战返回、攻击冷却、死亡停机 | 运行证据（11-05）；巡逻边界和完整脱战流程待回归 | [记录 25](records/25-enemy-ai-and-combat.md) |
 | 属性、等级与经验 | CharacterData 成长参数、PlayerGrowth、PlayerSaveData（level、exp） | 静态核验 + 编译（11-11）；升级、满级、存档恢复、生命和防御成长都没有运行 | [记录 30](records/30-player-growth-and-save-design.md) |
 | NPC 对话 | 动态选项；按 NPC 和任务阶段选对白（接取、进行中、交付、完成后）；对话期间关闭输入 | 基础对话有用户测试确认（10-16）；完成后对白和输入控制待回归 | [记录 14](records/14-dialogue-system-implementation.md)、[28](records/28-dialogue-input-and-finished-dialogue.md) |
 | 任务 | 任务 0 分两阶段：击杀 0 号怪，再与 0 号 NPC 对话；击杀推进、交付结算、进度存档 | 本机存档已写入 `isFinished = true`；完整流程待复测；实际发奖未接入 | [记录 26](records/26-npc-dialogue-and-mission-turn-in.md) |
 | 玩家 HUD | 血条在 `Start` 拉取血量并订阅 `OnHealthChange`，在 `OnDestroy` 取消订阅 | 静态核验 + 编译（11-14）；Play Mode 待验证 | [记录 31](records/31-player-health-bar-refresh.md) |
+| 光标模式与面板暂停 | PlayerMgr 保存光标模式并触发 `OnCursorChanged`；按住 Alt、对话期间进入光标模式；光标模式下 PlayerCombat 不攻击，CameraCursorLock 关闭镜头输入；任务面板打开时 `timeScale = 0`，BasePanel 淡入淡出改用不受缩放的时间 | 静态核验 + 编译（11-14）；用户声明暂停、攻击拦截、首次按 Alt 和对话光标正常，最终版本待回归 | [记录 32](records/32-cursor-mode-camera-and-panel-pause.md) |
 | 存档 | MissionData JSON 写入 persistentDataPath；`SavePlayerData` 还没有调用方 | 任务存档有本机文件；玩家存档未运行 | [记录 22](records/22-mission-system-design-and-prototype.md)、[30](records/30-player-growth-and-save-design.md) |
 | 对象池 | PoolData / PoolObj，容量配置、满额轮换 | 静态核验；源码中没有调用方 | [记录 27](records/27-pool-capacity-and-usage-contract.md) |
 | 调试控制台 | DevConsole 通过反射读写字段，不再依赖玩法脚本的接口 | 编译通过（11-10）；联动效果待复测 | [记录 29](records/29-console-support-code-removal.md) |
