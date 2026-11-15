@@ -26,11 +26,6 @@ public class CharacterHealth : MonoBehaviour
         if (currentHp <= 0)
         {
             currentHp = 0;
-            isDead = true;
-        }
-        print($"Current HP: {currentHp},Damage: {damage},maxHp: {maxHp}");
-        if (currentHp <= 0)
-        {
             Dead();
         }
         OnHealthChange?.Invoke(currentHp, maxHp);
@@ -48,5 +43,16 @@ public class CharacterHealth : MonoBehaviour
             return finalDamage;
         else
             return 0;
+    }
+    protected virtual void Heal(int amount)
+    {
+        currentHp += amount;
+        currentHp = Mathf.Clamp(currentHp, 0, MaxHp);
+        OnHealthChange?.Invoke(currentHp, maxHp);
+    }
+    public virtual void Respawn()
+    {
+        isDead = false;
+        Heal(MaxHp);
     }
 }

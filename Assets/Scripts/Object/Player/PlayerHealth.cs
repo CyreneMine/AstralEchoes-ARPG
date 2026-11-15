@@ -7,5 +7,16 @@ public class PlayerHealth : CharacterHealth
         base.TakeDamage(damage);
         // UIManager.Instance.GetPanel<GamePanel>().UpdateHpBar(CurrentHp,MaxHp);
     }
-    // public
+
+    public override void Dead()
+    {
+        base.Dead();
+        PlayerMgr.Instance.PlayerStateChange(true);
+    }
+
+    public override void Respawn()
+    {
+        base.Respawn();
+        PlayerMgr.Instance.PlayerStateChange(false);
+    }
 }

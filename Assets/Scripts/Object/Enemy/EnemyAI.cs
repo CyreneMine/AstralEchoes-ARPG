@@ -26,9 +26,24 @@ public class EnemyAI : MonoBehaviour
         health = GetComponent<CharacterHealth>();
     }
 
+    private void OnPlayerStateChange(bool arg0)
+    {
+        //死亡和复活都脱战
+        LoseTarget();
+    }
     private void Start()
     {
         UpdatePatrolPoint();
+    }
+    private void OnEnable()
+    {
+        PlayerMgr.Instance.OnPlayerStateChange += OnPlayerStateChange;
+    }
+
+    private void OnDisable()
+    {
+        //考虑到后面接入缓存池所以使用这个生命周期
+        PlayerMgr.Instance.OnPlayerStateChange -= OnPlayerStateChange;
     }
 
     private void Update()
@@ -66,14 +81,13 @@ public class EnemyAI : MonoBehaviour
 
     public void CheckPlayer()
     {
-        if (isReturning)
+        if (isReturning||PlayerMgr.Instance.player.Health.isDead)
             return;
         playerDistance = Vector3.Distance(transform.position,PlayerMgr.Instance.player.transform.position);
         if (isFollowUp)
         {
             agent.SetDestination(PlayerMgr.Instance.player.transform.position);
             currentWay = Vector3.Distance(transform.position, startPos);
-            print(currentWay);
             if (playerDistance > config.loseRange
                 ||
                 currentWay > config.maxRange)

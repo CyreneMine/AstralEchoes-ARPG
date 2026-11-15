@@ -23,6 +23,12 @@ public class PlayerObject : CharacterObject
     private Vector3 dashDirection; 
     private float moveWeight;
     private bool isAttacking = false;
+
+    private void ChangeState(bool nowState)
+    {
+        animator.SetBool("IsDead", nowState);
+        isAttacking = false;
+    }
     protected override void Awake()
     {
         base.Awake();
@@ -33,15 +39,16 @@ public class PlayerObject : CharacterObject
             controller = GetComponent<CharacterController>();
         //TODO 测试写死 后续动态更新
         Init(0,CharacterConfig.CharacterType.Player);
+        
+        PlayerMgr.Instance.OnPlayerStateChange += ChangeState;
     }
-
     public void SetIsAttacking(bool isAttacking)
     {
         this.isAttacking = isAttacking;
     }
     private void Update()
     {
-        if (isAttacking)
+        if (isAttacking || health.isDead)
             return;
         HandleMovement();
         if (PlayerMgr.Instance.inputActions.Player.Sprint.WasPressedThisFrame())
@@ -53,7 +60,6 @@ public class PlayerObject : CharacterObject
     {
         Vector2 input = PlayerMgr.Instance.inputActions.Player.Move.ReadValue<Vector2>();
         input = Vector2.ClampMagnitude(input, 1f);
-
         bool hasInput = input.sqrMagnitude > 0.01f;
         bool isRunning = PlayerMgr.Instance.inputActions.Player.Sprint.IsPressed();
         float targetSpeed = hasInput
@@ -144,6 +150,10 @@ public class PlayerObject : CharacterObject
         velocity.y = vSpeed;
         controller.Move(velocity * Time.deltaTime);
     }*/
+    private void OnDestroy()
+    {
+        PlayerMgr.Instance.OnPlayerStateChange -= ChangeState;
+    }
 
     private void Quick()
     {

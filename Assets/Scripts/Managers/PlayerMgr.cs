@@ -7,6 +7,7 @@ public class PlayerMgr :BaseManager<PlayerMgr>
     private bool isCursor;
     public bool CurrentIsCursor => isCursor;
     public event UnityAction<bool> OnCursorChanged;
+    public event UnityAction<bool> OnPlayerStateChange; 
     private PlayerGrowth playerGrowth = new PlayerGrowth();
     public PlayerSaveData saveData;
     //后续进入游戏选择角色时候为它赋值
@@ -23,7 +24,12 @@ public class PlayerMgr :BaseManager<PlayerMgr>
         inputActions = new InputSystem_Actions();
         inputActions.Enable();
     }
-
+    public void PlayerStateChange(bool state)
+    {
+        //TODO 后续可在此处让显示死亡后的UI
+        //true为死亡
+        OnPlayerStateChange?.Invoke(state);
+    }
     public void SetCursorState(bool state)
     {
         if (state == isCursor)
