@@ -388,7 +388,9 @@ public static class DevConsoleSetup
                 if (player == null || health == null || health.MaxHp <= 0 || console == null || Time.frameCount < 20)
                     return;
                 var template = ConfigMgr.Instance.GetCharacterData(player.Config.type, player.Config.id);
-                int templateAttack = template.atk, templateDefense = template.def, templateMax = template.maxHp;
+                int templateAttack = template.atk, templateDefense = template.def, templateMaxConfig = template.maxHp;
+                // 属性按等级计算，基准取当前等级下 CharacterStats 的结果，而不是配置表的 1 级数值。
+                int startAttack = player.Stats.Atk, templateMax = health.MaxHp;
                 console.SetOpen(true);
                 Click(console, "Damage10"); Require(health.CurrentHp == templateMax - 10, "直接扣血10");
                 Click(console, "Heal10"); Require(health.CurrentHp == templateMax, "回血10");
@@ -399,14 +401,14 @@ public static class DevConsoleSetup
                 Field(console, "MaxHealthInput").SetTextWithoutNotify("80");
                 Click(console, "ApplyAttributes");
                 int defense = (int)typeof(CharacterHealth).GetField("def", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(health);
-                Require(player.Config.atk == 7 && defense == 4 && health.MaxHp == 80 && health.CurrentHp == 80, "实时属性应用并限制生命上限");
+                Require(player.Stats.Atk == 7 && player.Stats.Def == 4 && defense == 4 && health.MaxHp == 80 && health.CurrentHp == 80, "实时属性应用并限制生命上限");
                 Field(console, "AmountInput").SetTextWithoutNotify("14");
                 Click(console, "TestDamage"); Require(health.CurrentHp == 70, "原始伤害14减防御4");
                 Field(console, "AmountInput").SetTextWithoutNotify("5");
                 Click(console, "HealCustom"); Require(health.CurrentHp == 75, "自定义回血");
                 Click(console, "ResetAttributes");
-                Require(health.CurrentHp == templateMax && player.Config.atk == templateAttack, "恢复初始配置");
-                Require(template.atk == templateAttack && template.def == templateDefense && template.maxHp == templateMax, "共享SO数据未被修改");
+                Require(health.CurrentHp == templateMax && player.Stats.Atk == startAttack, "恢复初始配置");
+                Require(template.atk == templateAttack && template.def == templateDefense && template.maxHp == templateMaxConfig, "共享SO数据未被修改");
                 console.Close(); Require(player.enabled && player.GetComponent<PlayerCombat>().enabled, "关闭控制台恢复玩家组件");
                 console.SetOpen(true);
                 resultJson = "{\"passed\":true,\"runtime\":true,\"checks\":[\"damage\",\"heal\",\"kill\",\"revive\",\"attributes\",\"defense\",\"reset\",\"shared-config-isolation\",\"close-input-restore\"],\"note\":\"Buttons invoked through serialized UnityEvents in actual Play Mode; HUD auto-binding was removed and is excluded. Pointer and keyboard require separate UI verification.\"}";

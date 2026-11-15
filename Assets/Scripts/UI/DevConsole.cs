@@ -24,13 +24,13 @@ public class DevConsole : MonoBehaviour
     private float refreshAt;
     private CharacterHealth boundHealth;
     // 调试读写集中在控制台中，角色与生命脚本使用原有接口。
-    private static readonly FieldInfo ConfigField = typeof(CharacterObject).GetField("config", BindingFlags.Instance | BindingFlags.NonPublic);
     private static readonly FieldInfo CurrentHealthField = typeof(CharacterHealth).GetField("currentHp", BindingFlags.Instance | BindingFlags.NonPublic);
-    private static readonly FieldInfo MaximumHealthField = typeof(CharacterHealth).GetField("maxHp", BindingFlags.Instance | BindingFlags.NonPublic);
-    private static readonly FieldInfo DefenseField = typeof(CharacterHealth).GetField("def", BindingFlags.Instance | BindingFlags.NonPublic);
+    // 最终属性由 CharacterStats 持有；控制台直接改写它的计算结果，再通过 CharacterHealth.UpdateStats 应用到生命组件。
+    private static readonly FieldInfo StatsAttackField = typeof(CharacterStats).GetField("atk", BindingFlags.Instance | BindingFlags.NonPublic);
+    private static readonly FieldInfo StatsDefenseField = typeof(CharacterStats).GetField("def", BindingFlags.Instance | BindingFlags.NonPublic);
+    private static readonly FieldInfo StatsMaxHealthField = typeof(CharacterStats).GetField("maxHp", BindingFlags.Instance | BindingFlags.NonPublic);
     // 事件只能在 CharacterHealth 内部触发；控制台改血后通过它的编译器生成字段通知血条刷新。
     private static readonly FieldInfo HealthChangedField = typeof(CharacterHealth).GetField("OnHealthChange", BindingFlags.Instance | BindingFlags.NonPublic);
-    private int CurrentDefense => (int)DefenseField.GetValue(boundHealth);
     public bool IsOpen => isOpen;
 
     private void Start()
@@ -64,7 +64,7 @@ public class DevConsole : MonoBehaviour
         if (targetPlayer == null)
             targetPlayer = PlayerMgr.Instance.player;
         boundHealth = targetPlayer != null ? targetPlayer.GetComponent<CharacterHealth>() : null;
-        return targetPlayer != null && targetPlayer.Config != null && boundHealth != null && boundHealth.MaxHp > 0;
+        return targetPlayer != null && targetPlayer.Config != null && targetPlayer.Stats != null && boundHealth != null && boundHealth.MaxHp > 0;
     }
 
     private void OnAttributeEndEdit(string _) => ApplyAttributes();
@@ -90,17 +90,16 @@ public class DevConsole : MonoBehaviour
         handler?.Invoke(boundHealth.CurrentHp, boundHealth.MaxHp);
     }
 
+    // 只改写这名角色运行时的最终属性，不碰共享 SO；下次升级或"恢复初始值"时会按等级重新计算并覆盖。
     private void ApplyConsoleAttributes(int attack, int defense, int maximumHealth)
     {
-        // 仅在使用调试按钮时创建副本，保留配置中的成长等全部序列化字段。
-        var runtimeConfig = JsonUtility.FromJson<CharacterConfig.CharacterData>(JsonUtility.ToJson(targetPlayer.Config));
-        runtimeConfig.atk = Mathf.Max(0, attack);
-        runtimeConfig.def = Mathf.Max(0, defense);
-        runtimeConfig.maxHp = Mathf.Max(1, maximumHealth);
-        ConfigField.SetValue(targetPlayer, runtimeConfig);
-        MaximumHealthField.SetValue(boundHealth, runtimeConfig.maxHp);
-        DefenseField.SetValue(boundHealth, runtimeConfig.def);
-        SetConsoleHealth(boundHealth.CurrentHp);
+        CharacterStats stats = targetPlayer.Stats;
+        StatsAttackField.SetValue(stats, Mathf.Max(0, attack));
+        StatsDefenseField.SetValue(stats, Mathf.Max(0, defense));
+        StatsMaxHealthField.SetValue(stats, Mathf.Max(1, maximumHealth));
+        // 用户的接口：更新上限与防御，当前生命限制在新上限内并刷新血条。
+        boundHealth.UpdateStats(stats.MaxHp, stats.Def);
+        RefreshDisplay();
     }
 
     public void Toggle() => SetOpen(!isOpen);
@@ -174,10 +173,16 @@ public class DevConsole : MonoBehaviour
             statusText.text = "等待玩家初始化…";
             return;
         }
-        var data = targetPlayer.Config;
-        statusText.text = $"{targetPlayer.name}\n生命  {boundHealth.CurrentHp} / {boundHealth.MaxHp}    状态  {(boundHealth.isDead ? "死亡" : "存活")}\n攻击  {data.atk}    防御  {CurrentDefense}";
-        SyncField(attackInput, data.atk);
-        SyncField(defenseInput, CurrentDefense);
+        CharacterStats stats = targetPlayer.Stats;
+        if (stats == null)
+        {
+            statusText.text = "等待玩家初始化…";
+            return;
+        }
+        string level = PlayerMgr.Instance.saveData != null ? $"Lv.{PlayerMgr.Instance.saveData.level}    " : "";
+        statusText.text = $"{targetPlayer.name}    {level}\n生命  {boundHealth.CurrentHp} / {boundHealth.MaxHp}    状态  {(boundHealth.isDead ? "死亡" : "存活")}\n攻击  {stats.Atk}    防御  {stats.Def}";
+        SyncField(attackInput, stats.Atk);
+        SyncField(defenseInput, stats.Def);
         SyncField(maxHealthInput, boundHealth.MaxHp);
     }
 
@@ -262,19 +267,18 @@ public class DevConsole : MonoBehaviour
             return;
         }
         ApplyConsoleAttributes(attack, defense, maximum);
-        Say("运行时属性已应用；当前生命保留并限制在新上限内。 ");
-        RefreshDisplay();
+        Say("运行时属性已应用；当前生命保留并限制在新上限内。升级或恢复初始值后按等级重新计算。");
     }
 
     private void Step(int attack, int defense, int maximum)
     {
         if (!Ready()) return;
+        CharacterStats stats = targetPlayer.Stats;
         ApplyConsoleAttributes(
-            Mathf.Clamp(targetPlayer.Config.atk + attack, 0, 1000000),
-            Mathf.Clamp(CurrentDefense + defense, 0, 1000000),
+            Mathf.Clamp(stats.Atk + attack, 0, 1000000),
+            Mathf.Clamp(stats.Def + defense, 0, 1000000),
             Mathf.Clamp(boundHealth.MaxHp + maximum, 1, 1000000));
         Say("运行时属性已调整。 ");
-        RefreshDisplay();
     }
 
     public void AttackUp() => Step(1, 0, 0);
@@ -295,7 +299,7 @@ public class DevConsole : MonoBehaviour
         targetPlayer.SetIsAttacking(false);
         NotifyHealthChanged();
         RefreshDisplay();
-        Say("已恢复该角色配置表中的属性，并回满生命。 ");
+        Say("已按配置表和当前等级重新计算属性，并回满生命。 ");
     }
 
     // 保存空进度并同步内存，防止旧任务数据再次被写回存档。
