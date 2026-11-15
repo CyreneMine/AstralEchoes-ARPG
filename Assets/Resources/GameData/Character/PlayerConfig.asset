@@ -17,7 +17,7 @@ MonoBehaviour:
     atk: 5
     def: 3
     maxHp: 100
-    initLv: 0
+    initLv: 1
     maxLv: 20
     initExpPerLv: 100
     atkPerLv: 1
