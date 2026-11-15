@@ -48,6 +48,7 @@
 | [30](records/30-player-growth-and-save-design.md) | 11-11 | 玩家成长、存档与属性计算 | 待验证 |
 | [31](records/31-player-health-bar-refresh.md) | 11-14 | 玩家血条：显示时拉取与生命事件 | 待回归 |
 | [32](records/32-cursor-mode-camera-and-panel-pause.md) | 11-14 | Alt 光标模式、镜头锁定与任务面板暂停 | 待回归 |
+| [33](records/33-minimal-death-flow.md) | 11-15 | 玩家最小死亡流程与控制台适配 | 部分实测，怪物脱战待复测 |
 
 ## 本机 Git 配置
 

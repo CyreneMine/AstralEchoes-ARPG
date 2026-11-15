@@ -13,7 +13,7 @@
 | `Assets/MagicaCloth2/` | 衣物物理插件 2.18.4 | 场景里的 BoneCloth 组件 | Missing Script |
 | `Assets/Shader/` | 第三方 Nilo 示例 Shader | 角色材质 | 材质粉色 |
 | `Assets/CombatGirlsCharacterPack/`、`Assets/KAWAII_ANIMATIOMS_100/` | 第三方角色和动作资源包 | 武器、动作 | 部分动作缺失 |
-| `Assets/Resources/Animation/` | FBX 动作、动作副本（含 StartQuick/EndQuick、攻击判定等动画事件） | `Cyrene.controller` | 动画缺失，动画事件失效 |
+| `Assets/Resources/Animation/` | FBX 动作、动作副本（含 StartQuick/EndQuick、攻击判定等动画事件）；11-15 新增死亡动作 `Charecter/Normal/S_Die.fbx`（GUID `2151d986a78dd47459ae5f82490b93cd`） | `Cyrene.controller` | 动画缺失，动画事件失效 |
 | `Assets/Resources/Prefab/` | 角色预制件 `Cyrene_Blender4.2.prefab`、剑 `Dawnbreak.prefab`、`EnemyObj.prefab`（GUID `0d0b28005492b914989176f4beaec0ea`） | GMScene 中的两个敌人实例 | 敌人缺失 |
 | `Assets/Resources/UI/` | Canvas（含 DevConsole）、GamePanel、DialoguePanel、OptionsPanel、Option、InteractPanel、MissionPanel、MissionItem、RewardSlot 共 9 个预制件 | `UIManager.ShowPanel` | 面板无法打开 |
 | `Assets/Resources/DevConsole/DevConsoleFont.asset` 及中文字体源 | TMP 字体 | 对话、任务、控制台文字 | 中文显示为方框 |
