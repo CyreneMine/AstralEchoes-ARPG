@@ -39,8 +39,18 @@ public class PlayerObject : CharacterObject
             controller = GetComponent<CharacterController>();
         //TODO 测试写死 后续动态更新
         Init(0,CharacterConfig.CharacterType.Player);
-        
+        PlayerMgr.Instance.OnPlayerLevelChange += UpdateStats;
         PlayerMgr.Instance.OnPlayerStateChange += ChangeState;
+    }
+    protected override int GetLevel()
+    {
+        return PlayerMgr.Instance.saveData.level;
+    }
+
+    public void UpdateStats()
+    {
+        Stats.Recalculate(GetLevel());
+        health.UpdateStats(Stats.MaxHp, Stats.Def);
     }
     public void SetIsAttacking(bool isAttacking)
     {
@@ -152,6 +162,7 @@ public class PlayerObject : CharacterObject
     }*/
     private void OnDestroy()
     {
+        PlayerMgr.Instance.OnPlayerLevelChange -= UpdateStats;
         PlayerMgr.Instance.OnPlayerStateChange -= ChangeState;
     }
 

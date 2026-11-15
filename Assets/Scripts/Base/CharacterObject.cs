@@ -6,6 +6,8 @@ public class CharacterObject : MonoBehaviour
     public CharacterConfig.CharacterData Config => config;
     protected CharacterHealth health;
     public CharacterHealth Health => health;
+    private CharacterStats stats;
+    public CharacterStats Stats => stats;
     protected virtual void Awake()
     {
         health = GetComponent<CharacterHealth>();
@@ -13,20 +15,22 @@ public class CharacterObject : MonoBehaviour
         {
             health = gameObject.AddComponent<CharacterHealth>();
         }
-        //后续改成字符串拼接来动态决定加载内容
-        // config = Resources.Load<CharacterConfig>("GameData/Character/"+config.type+"_"+config.id);
-        // Init(config);
-        // health.Init(config.maxHp,config.def);
-        
     }
 
     public void Init(int id,CharacterConfig.CharacterType type)
     {
         config = ConfigMgr.Instance.GetCharacterData(type, id);
-        health.Init(config.maxHp,config.def);
+        stats = new CharacterStats(config);
+        Stats.Recalculate(GetLevel());
+        health.Init(Stats.MaxHp,Stats.Def);
     }
     public virtual void TakeDamage(int damage)
     {
         health.TakeDamage(damage);
+    }
+
+    protected virtual int GetLevel()
+    {
+        return config.initLv;
     }
 }

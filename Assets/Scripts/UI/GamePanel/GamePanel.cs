@@ -1,10 +1,12 @@
+using System;
+using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
 public class GamePanel : BasePanel
 {
-    
+    public TMP_Text lvTxt;
     [SerializeField] private PlayerHealthBar playerHealthBar;
     [SerializeField] private InteractPanel interactPanel;
     public Button btnMission;
@@ -15,6 +17,7 @@ public class GamePanel : BasePanel
             UIManager.Instance.ShowPanel<MissionPanel>();
             PlayerMgr.Instance.inputActions.Disable();
         });
+        UpdateLvTxt();
     }
     protected override void Update()
     {
@@ -26,11 +29,6 @@ public class GamePanel : BasePanel
         if (Keyboard.current.leftAltKey.wasReleasedThisFrame)
             PlayerMgr.Instance.SetCursorState(false);
     }
-
-    // public void OpenCloseMouseInput(bool state)
-    // {
-    //     
-    // }
     public void UpdateHpBar(int currentHp, int maxHp)
     {
         playerHealthBar.UpdatePlayerHealthBar(currentHp, maxHp);
@@ -48,5 +46,20 @@ public class GamePanel : BasePanel
     {
         base.ShowMe();
         PlayerMgr.Instance.inputActions.Enable();
+    }
+
+    private void OnEnable()
+    {
+        PlayerMgr.Instance.OnPlayerLevelChange += UpdateLvTxt;
+    }
+
+    private void OnDisable()
+    {
+        PlayerMgr.Instance.OnPlayerLevelChange -= UpdateLvTxt;
+    }
+
+    public void UpdateLvTxt()
+    {
+        lvTxt.text = PlayerMgr.Instance.saveData.level + "";
     }
 }

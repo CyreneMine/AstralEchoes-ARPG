@@ -29,9 +29,3 @@ public class MissionStage
     public int targetCount;
     public int targetId;
 }
-[System.Serializable]
-public class ItemRewardData
-{
-    public int itemId;
-    public int count;
-}

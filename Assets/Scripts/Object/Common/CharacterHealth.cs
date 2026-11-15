@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -9,7 +10,7 @@ public class CharacterHealth : MonoBehaviour
     public int CurrentHp => currentHp;
     public int MaxHp => maxHp;
     public bool isDead;
-
+    
     public void Init(int maxHp, int def)
     {
         isDead = false;
@@ -17,6 +18,14 @@ public class CharacterHealth : MonoBehaviour
         this.def = def;
         this.currentHp = maxHp;
     }
+    public void UpdateStats(int maxHp, int def)
+    {
+        this.maxHp = maxHp;
+        this.def = def;
+        currentHp = Mathf.Clamp(currentHp, 0, MaxHp);
+        OnHealthChange?.Invoke(currentHp, maxHp);
+    }
+    
 
     public virtual void TakeDamage(int damage)
     {

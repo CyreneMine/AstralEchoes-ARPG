@@ -7,6 +7,8 @@ public class ConfigMgr:BaseManager<ConfigMgr>
     public Dictionary<CharacterConfig.CharacterType,CharacterConfig> characterConfigs = new Dictionary<CharacterConfig.CharacterType, CharacterConfig>();
     public MissionConfig missionConfig;
     public NpcConfig npcConfig;
+    public ItemDatabase itemDatabase;
+    public EnemyRewardDatabase enemyRewardDatabase;
     private ConfigMgr()
     {
         foreach (CharacterConfig.CharacterType value in Enum.GetValues(typeof(CharacterConfig.CharacterType)))
@@ -16,8 +18,36 @@ public class ConfigMgr:BaseManager<ConfigMgr>
         }
         missionConfig = Resources.Load<MissionConfig>("GameData/Mission/MissionConfig");
         npcConfig = Resources.Load<NpcConfig>("GameData/Npc/NpcConfig");
+        itemDatabase = Resources.Load<ItemDatabase>("GameData/Item/ItemDatabase");
+        enemyRewardDatabase = Resources.Load<EnemyRewardDatabase>("GameData/Enemy/EnemyRewardDatabase");
     }
 
+    public EnemyReward GetEnemyRewardById(int id)
+    {
+        EnemyReward e = null;
+        foreach (EnemyReward reward in enemyRewardDatabase.data)
+        {
+            if (reward.EnemyId == id)
+            {
+                e = reward;
+                break;
+            }
+        }
+        return e;
+    }
+    public ItemConfig GetItemConfigByID(int itemId)
+    {
+        ItemConfig data = null;
+        foreach (ItemConfig item in itemDatabase.items)
+        {
+            if (item.itemID == itemId)
+            {
+                data = item;
+                break;
+            }
+        }
+        return data;
+    }
     public NpcData GetNpcConfig(int npcId)
     {
         foreach (NpcData data in npcConfig.npcConfigs)

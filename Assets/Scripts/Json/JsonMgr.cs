@@ -16,6 +16,10 @@ public class JsonMgr
     public void SaveData(object data,string fileName, JsonType jsonType = JsonType.LitJson)
     {
         string path = Application.persistentDataPath +$"/{fileName}.json";
+        // 取出路径中的文件夹部分，例如 .../Character/Player
+        string directory = Path.GetDirectoryName(path);
+        // 文件夹不存在就创建，包括中间缺少的每一层；已经存在就什么也不做
+        Directory.CreateDirectory(directory);
         string jsonStr = "";
         switch (jsonType)
         {
@@ -28,7 +32,7 @@ public class JsonMgr
         }
         File.WriteAllText(path,jsonStr);
     }
-
+    
     public T LoadData<T>(string fileName, JsonType jsonType = JsonType.LitJson) where T : new()
     {
         string path = Application.streamingAssetsPath + $"/{fileName}.json";

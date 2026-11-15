@@ -2,14 +2,15 @@
 {
     private CharacterConfig.CharacterData playerConfigData;
     private PlayerSaveData saveData;
-    int lvUpNeedExp => saveData.level * playerConfigData.expPerLv + playerConfigData.initExpPerLv;
+    int lvUpNeedExp => (saveData.level-playerConfigData.initLv) * playerConfigData.expPerLv + playerConfigData.initExpPerLv;
     public void AddExp(int exp)
     {
        initData();
        //添加经验
        saveData.exp += exp;
        CheckLevelUp();
-       PlayerMgr.Instance.saveData = saveData;
+       PlayerMgr.Instance.PlayerLevelChanged();
+       PlayerMgr.Instance.SavePlayerData();
     }
 
     public void CheckLevelUp()
@@ -21,9 +22,14 @@
     }
     public void LevelUp()
     {
-        saveData.level++;
+        if (saveData.level >= playerConfigData.maxLv)
+        {
+            return;
+        }
         saveData.exp -= lvUpNeedExp;
+        saveData.level++;
         CheckLevelUp();
+        
     }
 
     private void initData()

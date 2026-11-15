@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Data;
+using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.InputSystem;
 
@@ -7,7 +8,8 @@ public class PlayerMgr :BaseManager<PlayerMgr>
     private bool isCursor;
     public bool CurrentIsCursor => isCursor;
     public event UnityAction<bool> OnCursorChanged;
-    public event UnityAction<bool> OnPlayerStateChange; 
+    public event UnityAction<bool> OnPlayerStateChange;
+    public event UnityAction OnPlayerLevelChange;
     private PlayerGrowth playerGrowth = new PlayerGrowth();
     public PlayerSaveData saveData;
     //后续进入游戏选择角色时候为它赋值
@@ -17,12 +19,25 @@ public class PlayerMgr :BaseManager<PlayerMgr>
     public InputSystem_Actions inputActions;
     //0为目前测试的单手剑
     public int currentWeaponType = 0;
-    string playerJsonFileName => "Character/" + nameof(CharacterConfig.CharacterType.Player) + "/" + currentPlayerId + ".json";
+    string playerJsonFileName => "Character/" + nameof(CharacterConfig.CharacterType.Player) + "/" + currentPlayerId;
     private PlayerMgr()
     {
         saveData = JsonMgr.Instance.LoadData<PlayerSaveData>(playerJsonFileName);
         inputActions = new InputSystem_Actions();
         inputActions.Enable();
+        if (saveData.level <= 0)
+        {
+            //TODO 说明是新档这里初始化
+            saveData.level = ConfigMgr.Instance.GetCharacterData(CharacterConfig.CharacterType.Player, currentPlayerId).initLv;
+        }
+    }
+    /// <summary>
+    /// 在玩家等级变化时调用
+    /// </summary>
+    public void PlayerLevelChanged()
+    {
+        //TODO 更新界面以及其他地方的显示
+        OnPlayerLevelChange?.Invoke();
     }
     public void PlayerStateChange(bool state)
     {
@@ -41,9 +56,7 @@ public class PlayerMgr :BaseManager<PlayerMgr>
     }
     public int GetAtkValue()
     {
-        int atkValue = 0;
-        atkValue = saveData.level * player.Config.atkPerLv + player.Config.atk;
-        return atkValue;
+        return player.Stats.Atk;
     }
     public void AddExp(int exp)
     {
