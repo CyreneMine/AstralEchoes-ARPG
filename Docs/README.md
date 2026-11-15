@@ -7,6 +7,7 @@
 | [资源补回说明](ASSET_RESTORE.md) | 仓库排除的内容、恢复时要保留的 GUID |
 | [世界观与主线剧情 V1](Design/世界观与主线剧情-V1.md) | 剧情设计草案；制作设想待关卡实现和试玩验证 |
 | [论文与学校材料索引](Writing/README.md) | 本地材料入口和写作的事实边界 |
+| [模拟面试记录](Interview/README.md) | 按时间段针对提交出题、作答和点评，用于复习 |
 
 按日期的变更见根目录的 [CHANGELOG](../CHANGELOG.md)，待办见 [GitHub Issues](https://github.com/CyreneMine/AstralEchoes-ARPG/issues)。
 

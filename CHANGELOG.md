@@ -4,6 +4,7 @@
 
 ## 2026-11-15
 
+- **模拟面试记录**：新增 [Docs/Interview](Docs/Interview/README.md)，针对当天的死亡流程、奖励与升级提交出了 6 题，保留用户回答和点评；记录 34 追加用户补充：主流程在 Codex 阶段就已设计，属性计算的改法是用户自己实现的。
 - **怪物奖励、升级与属性层**（`c42cf15`、`84042d5`）：新增道具表、怪物奖励表和统一发奖方法；杀怪获得经验，升级后由 CharacterStats 重新计算攻击、防御、生命上限并更新生命组件；等级显示与玩家存档。用户实测通过，满级未测。[记录 34](Docs/Development/records/34-reward-level-and-stats.md)
 - **控制台属性适配**（`accde67`）：属性改为读写 CharacterStats，显示等级。
 
