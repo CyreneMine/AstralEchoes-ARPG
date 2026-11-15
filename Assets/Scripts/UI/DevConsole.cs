@@ -28,6 +28,8 @@ public class DevConsole : MonoBehaviour
     private static readonly FieldInfo CurrentHealthField = typeof(CharacterHealth).GetField("currentHp", BindingFlags.Instance | BindingFlags.NonPublic);
     private static readonly FieldInfo MaximumHealthField = typeof(CharacterHealth).GetField("maxHp", BindingFlags.Instance | BindingFlags.NonPublic);
     private static readonly FieldInfo DefenseField = typeof(CharacterHealth).GetField("def", BindingFlags.Instance | BindingFlags.NonPublic);
+    // 事件只能在 CharacterHealth 内部触发；控制台改血后通过它的编译器生成字段通知血条刷新。
+    private static readonly FieldInfo HealthChangedField = typeof(CharacterHealth).GetField("OnHealthChange", BindingFlags.Instance | BindingFlags.NonPublic);
     private int CurrentDefense => (int)DefenseField.GetValue(boundHealth);
     public bool IsOpen => isOpen;
 
@@ -67,11 +69,25 @@ public class DevConsole : MonoBehaviour
 
     private void OnAttributeEndEdit(string _) => ApplyAttributes();
 
+    // 直接改写生命值。归零时走玩家自己的 Dead()（死亡广播、动画、敌人停止），之后通知血条刷新。
     private void SetConsoleHealth(int value)
     {
         CurrentHealthField.SetValue(boundHealth, Mathf.Clamp(value, 0, boundHealth.MaxHp));
-        boundHealth.isDead = boundHealth.CurrentHp == 0;
+        if (boundHealth.CurrentHp == 0 && !boundHealth.isDead)
+            boundHealth.Dead();
+        NotifyHealthChanged();
         RefreshDisplay();
+    }
+
+    private void NotifyHealthChanged()
+    {
+        if (HealthChangedField == null)
+        {
+            Debug.LogWarning("DevConsole：找不到 CharacterHealth.OnHealthChange，血条不会随控制台刷新。");
+            return;
+        }
+        var handler = HealthChangedField.GetValue(boundHealth) as UnityEngine.Events.UnityAction<int, int>;
+        handler?.Invoke(boundHealth.CurrentHp, boundHealth.MaxHp);
     }
 
     private void ApplyConsoleAttributes(int attack, int defense, int maximumHealth)
@@ -215,19 +231,24 @@ public class DevConsole : MonoBehaviour
     public void KillPlayer()
     {
         if (!Ready()) return;
+        if (boundHealth.isDead) { Say("玩家已经处于死亡状态。", true); return; }
         SetConsoleHealth(0);
-        targetPlayer.SetIsAttacking(false);
-        if (targetPlayer.animator != null)
-            targetPlayer.animator.SetFloat("Velocity", 0);
-        Say("玩家生命归零，已进入死亡状态。 ");
+        Say("玩家生命归零，已调用 Dead() 进入死亡流程。 ");
     }
 
+    // 复活走玩家自己的 Respawn()；玩家未死亡时只回满，避免多发一次复活广播。
     public void RevivePlayer()
     {
         if (!Ready()) return;
-        SetConsoleHealth(boundHealth.MaxHp);
-        targetPlayer.SetIsAttacking(false);
-        Say("玩家已复活并恢复满生命。 ");
+        if (!boundHealth.isDead)
+        {
+            Heal(boundHealth.MaxHp);
+            Say("玩家未死亡，已恢复满生命。 ");
+            return;
+        }
+        boundHealth.Respawn();
+        RefreshDisplay();
+        Say("已调用 Respawn()，玩家复活并恢复满生命。 ");
     }
 
     public void ApplyAttributes()
@@ -266,10 +287,13 @@ public class DevConsole : MonoBehaviour
     public void ResetAttributes()
     {
         if (!Ready()) return;
+        // Init 会直接清除死亡标记，绕过 Respawn 的复活广播，所以死亡时先复活。
+        if (boundHealth.isDead) { Say("玩家已死亡，请先使用“复活并回满”。", true); return; }
         int id = targetPlayer.Config.id;
         var type = targetPlayer.Config.type;
         targetPlayer.Init(id, type);
         targetPlayer.SetIsAttacking(false);
+        NotifyHealthChanged();
         RefreshDisplay();
         Say("已恢复该角色配置表中的属性，并回满生命。 ");
     }
