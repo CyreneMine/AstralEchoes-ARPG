@@ -4,6 +4,7 @@
 
 ## 2026-11-16
 
+- **背包与持有道具开始实施**（`be23363`、`e3e0ec4`）：用户编写 `PlayerItemMgr`（读档、增删查、每次变化存盘、广播新数量、数量为 0 时删除记录）和 BagPanel、BagSlot 脚本，GamePanel 新增背包按钮。Claude Code 按参考图拼接背包预制件并提供生成工具，修复了关闭按钮文字没有开启射线检测导致点不到的问题。只做了编译和静态检查，关闭按钮待复测；上限、货币、格子生成与详情还没做。[记录 38](Docs/Development/records/38-inventory-ui-and-item-mgr-start.md)
 - **背包与发奖设计定稿**（只有文档）：用户指出要先做背包再做发奖，并完成了设计：新建玩家持有道具管理器负责数据和存档，背包面板只负责显示；只存持有的物品；`maxCount` 为 -1 表示无上限，货币单独显示。结论和参考类图写在 #25，尚未实施，没有代码改动。[记录 37](Docs/Development/records/37-inventory-and-reward-design.md)
 - **控制台复测**（`9209b36`、`9dbf9b7`）：控制台改用玩家的光标模式，消除与 CameraCursorLock 的冲突；Play Mode 自动检查扩充到 49 项并全部通过，用户手动复测按键、伤害、清空任务存档正常。撤回清单五项至此全部完成。[记录 36](Docs/Development/records/36-devconsole-retest.md)
 - **UIManager 恢复统一由预制体创建**（`c166a09`、`d345388`）：删除 10-30 为适配调试场景加入的两段接管逻辑，GMScene 删除调试用的 Canvas 和 MissionPanel，界面全部由 UIManager 在运行时创建，关闭时销毁。用户实测通过。[记录 35](Docs/Development/records/35-uimanager-prefab-only.md)

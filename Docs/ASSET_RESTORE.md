@@ -15,7 +15,7 @@
 | `Assets/CombatGirlsCharacterPack/`、`Assets/KAWAII_ANIMATIOMS_100/` | 第三方角色和动作资源包 | 武器、动作 | 部分动作缺失 |
 | `Assets/Resources/Animation/` | FBX 动作、动作副本（含 StartQuick/EndQuick、攻击判定等动画事件）；11-15 新增死亡动作 `Charecter/Normal/S_Die.fbx`（GUID `2151d986a78dd47459ae5f82490b93cd`） | `Cyrene.controller` | 动画缺失，动画事件失效 |
 | `Assets/Resources/Prefab/` | 角色预制件 `Cyrene_Blender4.2.prefab`、剑 `Dawnbreak.prefab`、`EnemyObj.prefab`（GUID `0d0b28005492b914989176f4beaec0ea`） | GMScene 中的两个敌人实例 | 敌人缺失 |
-| `Assets/Resources/UI/` | Canvas（含 DevConsole）、GamePanel、DialoguePanel、OptionsPanel、Option、InteractPanel、MissionPanel、MissionItem、RewardSlot 共 9 个预制件 | `UIManager.ShowPanel` | 面板无法打开 |
+| `Assets/Resources/UI/` | Canvas（含 DevConsole）、GamePanel（11-16 新增背包按钮 `btnBag`）、DialoguePanel、OptionsPanel、Option、InteractPanel、MissionPanel、MissionItem、RewardSlot、BagPanel、BagSlot 共 11 个预制件。BagPanel、BagSlot 可以用 `Tools/AstralEchoes/Bag UI` 重新生成布局，但生成结果不带用户挂的脚本和引用（`BagPanel` 的 `bagParent`、`bagSlotPrefab`、`btnClose`，`BagSlot` 的 `icon`、`amount`），优先从备份恢复 | `UIManager.ShowPanel` | 面板无法打开 |
 | `Assets/Resources/DevConsole/DevConsoleFont.asset` 及中文字体源 | TMP 字体 | 对话、任务、控制台文字 | 中文显示为方框 |
 | `Assets/TextMesh Pro/` | TMP Essential Resources，也可以从 Window → TextMeshPro 菜单重新导入，但重新导入的 GUID 可能和原来不同，优先用备份 | 所有 TMP 文本 | 文字不显示 |
 | `Assets/Resources/Mat/` | 测试用颜色材质 | 场景中的占位物体 | 材质缺失 |
