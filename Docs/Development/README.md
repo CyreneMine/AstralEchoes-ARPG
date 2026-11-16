@@ -52,6 +52,7 @@
 | [34](records/34-reward-level-and-stats.md) | 11-15 | 怪物奖励、升级与属性层 | 用户实测通过，满级未测 |
 | [35](records/35-uimanager-prefab-only.md) | 11-16 | UIManager 恢复统一由预制体创建 | 用户实测通过 |
 | [36](records/36-devconsole-retest.md) | 11-16 | 控制台复测与自动检查扩充 | 自动检查 49/49，手动复测通过 |
+| [37](records/37-inventory-and-reward-design.md) | 11-16 | 玩家持有道具、背包与任务发奖的设计讨论 | 设计定稿，未实施 |
 
 ## 本机 Git 配置
 
