@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.Reflection;
 using TMPro;
-using Unity.Cinemachine;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -18,8 +17,8 @@ public class DevConsole : MonoBehaviour
     [SerializeField] private TMP_InputField maxHealthInput;
 
     private readonly List<Behaviour> pausedBehaviours = new List<Behaviour>();
-    private CursorLockMode previousCursorLock;
-    private bool previousCursorVisible;
+    // 打开前的光标模式；控制台通过用户的 PlayerMgr.SetCursorState 显示光标，镜头由 CameraCursorLock 自动锁定。
+    private bool previousCursorMode;
     private bool isOpen;
     private float refreshAt;
     private CharacterHealth boundHealth;
@@ -50,6 +49,10 @@ public class DevConsole : MonoBehaviour
             Toggle();
         else if (keyboard != null && isOpen && keyboard.escapeKey.wasPressedThisFrame)
             Close();
+
+        // 控制台打开期间松开 Alt 会退出光标模式，这里重新进入，保证光标可用、镜头保持锁定。
+        if (isOpen && !PlayerMgr.Instance.CurrentIsCursor)
+            PlayerMgr.Instance.SetCursorState(true);
 
         if (isOpen && Time.unscaledTime >= refreshAt)
         {
@@ -115,18 +118,15 @@ public class DevConsole : MonoBehaviour
         if (value)
         {
             BindPlayer();
-            previousCursorLock = Cursor.lockState;
-            previousCursorVisible = Cursor.visible;
             pausedBehaviours.Clear();
+            // 光标模式只拦截攻击和镜头，移动仍需暂停玩家组件。
             if (targetPlayer != null)
             {
                 Pause(targetPlayer);
                 Pause(targetPlayer.GetComponent<PlayerCombat>());
             }
-            foreach (var cameraInput in FindObjectsByType<CinemachineInputAxisController>(FindObjectsSortMode.None))
-                Pause(cameraInput);
-            Cursor.lockState = CursorLockMode.None;
-            Cursor.visible = true;
+            previousCursorMode = PlayerMgr.Instance.CurrentIsCursor;
+            PlayerMgr.Instance.SetCursorState(true);
             RefreshDisplay();
         }
         else
@@ -135,8 +135,7 @@ public class DevConsole : MonoBehaviour
                 if (behaviour != null)
                     behaviour.enabled = true;
             pausedBehaviours.Clear();
-            Cursor.lockState = previousCursorLock;
-            Cursor.visible = previousCursorVisible;
+            PlayerMgr.Instance.SetCursorState(previousCursorMode);
         }
     }
 
