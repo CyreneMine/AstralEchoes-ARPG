@@ -1,6 +1,6 @@
 # 当前开发状态
 
-更新日期：2026-11-15。本文件只写**当前**状态，每次提交时直接覆盖对应行，不按日期追加。按日期的变化写在 [CHANGELOG](../../CHANGELOG.md)，过程细节写在 [records](README.md)，旧版全文在 [history](history/STATUS-2026-10-15_2026-11-14.md)。
+更新日期：2026-11-16。本文件只写**当前**状态，每次提交时直接覆盖对应行，不按日期追加。按日期的变化写在 [CHANGELOG](../../CHANGELOG.md)，过程细节写在 [records](README.md)，旧版全文在 [history](history/STATUS-2026-10-15_2026-11-14.md)。
 
 正式题目：基于Unity3D的ARPG游戏《星渊回响》设计与实现。只做一个剧情探索模式，三选一临时 Buff 只用于部分战斗节点。
 
@@ -24,6 +24,7 @@
 | NPC 对话 | 动态选项；按 NPC 和任务阶段选对白（接取、进行中、交付、完成后）；对话期间关闭输入 | 基础对话有用户测试确认（10-16）；完成后对白和输入控制待回归 | [记录 14](records/14-dialogue-system-implementation.md)、[28](records/28-dialogue-input-and-finished-dialogue.md) |
 | 任务 | 任务 0 分两阶段：击杀 0 号怪，再与 0 号 NPC 对话；击杀推进、交付结算、进度存档 | 本机存档已写入 `isFinished = true`；完整流程待复测；实际发奖未接入 | [记录 26](records/26-npc-dialogue-and-mission-turn-in.md) |
 | 玩家 HUD | 血条在 `Start` 拉取血量并订阅 `OnHealthChange`，在 `OnDestroy` 取消订阅；GamePanel 显示等级并订阅 `OnPlayerLevelChange` | 用户实测（11-15）：升级后等级和血条上限更新；面板重建与隐藏期间受伤的专项回归仍未记录 | [记录 31](records/31-player-health-bar-refresh.md)、[34](records/34-reward-level-and-stats.md) |
+| UI 管理 | UIManager 构造时实例化 `UI/Canvas`，面板统一从 `Resources/UI` 预制件创建，关闭时销毁；场景中不预放 UI；子控件由各面板脚本管理 | 用户实测（11-16）：HUD、任务面板往返、对话选项、控制台正常；淡出约 0.2 秒内重开同一面板会丢失面板，已知未处理 | [记录 35](records/35-uimanager-prefab-only.md) |
 | 光标模式与面板暂停 | PlayerMgr 保存光标模式并触发 `OnCursorChanged`；按住 Alt、对话期间进入光标模式；光标模式下 PlayerCombat 不攻击，CameraCursorLock 关闭镜头输入；任务面板打开时 `timeScale = 0`，BasePanel 淡入淡出改用不受缩放的时间 | 静态核验 + 编译（11-14）；用户声明暂停、攻击拦截、首次按 Alt 和对话光标正常，最终版本待回归 | [记录 32](records/32-cursor-mode-camera-and-panel-pause.md) |
 | 存档 | MissionData 与玩家存档 `Character/Player/{id}.json` 写入 persistentDataPath，JsonMgr 自动创建子目录；获得经验后保存玩家存档；新档等级取配置 initLv | 任务存档有本机文件；玩家存档用户实测读写正常（11-15，`{"level":2,"exp":0}`） | [记录 22](records/22-mission-system-design-and-prototype.md)、[34](records/34-reward-level-and-stats.md) |
 | 对象池 | PoolData / PoolObj，容量配置、满额轮换 | 静态核验；源码中没有调用方 | [记录 27](records/27-pool-capacity-and-usage-contract.md) |

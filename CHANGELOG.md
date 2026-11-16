@@ -2,6 +2,10 @@
 
 按日期倒序记录每次交付的内容、对应提交和验证范围，每条一两句话，细节放在链接的开发记录里。"待回归"表示还没有在 Play Mode 里重新验证。
 
+## 2026-11-16
+
+- **UIManager 恢复统一由预制体创建**（`c166a09`、`d345388`）：删除 10-30 为适配调试场景加入的两段接管逻辑，GMScene 删除调试用的 Canvas 和 MissionPanel，界面全部由 UIManager 在运行时创建，关闭时销毁。用户实测通过。[记录 35](Docs/Development/records/35-uimanager-prefab-only.md)
+
 ## 2026-11-15
 
 - **模拟面试记录**：新增 [Docs/Interview](Docs/Interview/README.md)，针对当天的死亡流程、奖励与升级提交出了 6 题，保留用户回答和点评；记录 34 追加用户补充：主流程在 Codex 阶段就已设计，属性计算的改法是用户自己实现的。
