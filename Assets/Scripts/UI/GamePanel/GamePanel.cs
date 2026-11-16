@@ -9,12 +9,17 @@ public class GamePanel : BasePanel
     public TMP_Text lvTxt;
     [SerializeField] private PlayerHealthBar playerHealthBar;
     [SerializeField] private InteractPanel interactPanel;
-    public Button btnMission;
+    public Button btnMission,btnBag;
     public override void Init()
     {
         btnMission.onClick.AddListener(() =>
         {
             UIManager.Instance.ShowPanel<MissionPanel>();
+            PlayerMgr.Instance.inputActions.Disable();
+        });
+        btnBag.onClick.AddListener(() =>
+        {
+            UIManager.Instance.ShowPanel<BagPanel>();
             PlayerMgr.Instance.inputActions.Disable();
         });
         UpdateLvTxt();
