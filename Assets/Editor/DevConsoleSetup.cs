@@ -375,63 +375,212 @@ public static class DevConsoleSetup
         else { EditorApplication.update -= VerifyTick; EditorApplication.update += VerifyTick; }
     }
 
+    // ---- Play Mode 自动检查（Claude 维护）：逐项记录通过/失败，不在第一处失败时中断 ----
+    private static readonly List<string> checkLines = new List<string>();
+    private static int passCount, failCount, stageFrame;
+    private static int healthEventCount, stateEventCount;
+    private static bool lastStateEvent;
+    private static bool startCursorMode;
+    private static int startMax, startAttack, startDefense;
+    private static PlayerObject vPlayer;
+    private static CharacterHealth vHealth;
+    private static DevConsole vConsole;
+    private static readonly FieldInfo HealthDefField = typeof(CharacterHealth).GetField("def", BindingFlags.Instance | BindingFlags.NonPublic);
+    private static readonly FieldInfo EnemyReturningField = typeof(EnemyAI).GetField("isReturning", BindingFlags.Instance | BindingFlags.NonPublic);
+
+    private static void OnHealthEvent(int current, int max) => healthEventCount++;
+    private static void OnStateEvent(bool dead) { stateEventCount++; lastStateEvent = dead; }
+
+    private static void Check(bool condition, string name, string detail = "")
+    {
+        if (condition) { passCount++; checkLines.Add("PASS  " + name); }
+        else { failCount++; checkLines.Add("FAIL  " + name + (detail.Length > 0 ? "  —— " + detail : "")); }
+    }
+
+    private static void Note(string text) => checkLines.Add("NOTE  " + text);
+
+    private static bool CameraInputEnabled()
+    {
+        var locks = UnityEngine.Object.FindObjectsByType<CameraCursorLock>(FindObjectsSortMode.None);
+        foreach (var l in locks)
+        {
+            var axis = l.GetComponent<Unity.Cinemachine.CinemachineInputAxisController>();
+            if (axis != null && axis.enabled) return true;
+        }
+        return false;
+    }
+
+    private static string Hp() => $"实际 {vHealth.CurrentHp}/{vHealth.MaxHp}，isDead={vHealth.isDead}";
+
+    private static void Amount(int value) => Field(vConsole, "AmountInput").SetTextWithoutNotify(value.ToString());
+
+    private static void Unsubscribe()
+    {
+        if (vHealth != null) vHealth.OnHealthChange -= OnHealthEvent;
+        PlayerMgr.Instance.OnPlayerStateChange -= OnStateEvent;
+    }
+
     private static void VerifyTick()
     {
         if (!Application.isPlaying || EditorApplication.isCompiling) return;
+        string stage = SessionState.GetString(StageKey, "");
         try
         {
-            if (SessionState.GetString(StageKey, "") == "WaitingForPlayer")
+            if (stage == "WaitingForPlayer")
             {
-                var player = PlayerMgr.Instance.player;
-                var console = UnityEngine.Object.FindFirstObjectByType<DevConsole>();
-                CharacterHealth health = player != null ? player.GetComponent<CharacterHealth>() : null;
-                if (player == null || health == null || health.MaxHp <= 0 || console == null || Time.frameCount < 20)
+                vPlayer = PlayerMgr.Instance.player;
+                vConsole = UnityEngine.Object.FindFirstObjectByType<DevConsole>();
+                vHealth = vPlayer != null ? vPlayer.GetComponent<CharacterHealth>() : null;
+                if (vPlayer == null || vHealth == null || vHealth.MaxHp <= 0 || vConsole == null || vPlayer.Stats == null || Time.frameCount < 20)
                     return;
-                var template = ConfigMgr.Instance.GetCharacterData(player.Config.type, player.Config.id);
-                int templateAttack = template.atk, templateDefense = template.def, templateMaxConfig = template.maxHp;
-                // 属性按等级计算，基准取当前等级下 CharacterStats 的结果，而不是配置表的 1 级数值。
-                int startAttack = player.Stats.Atk, templateMax = health.MaxHp;
-                console.SetOpen(true);
-                Click(console, "Damage10"); Require(health.CurrentHp == templateMax - 10, "直接扣血10");
-                Click(console, "Heal10"); Require(health.CurrentHp == templateMax, "回血10");
-                Click(console, "KillPlayer"); Require(health.CurrentHp == 0 && health.isDead, "杀死玩家");
-                Click(console, "RevivePlayer"); Require(health.CurrentHp == templateMax && !health.isDead, "复活");
-                Field(console, "AttackInput").SetTextWithoutNotify("7");
-                Field(console, "DefenseInput").SetTextWithoutNotify("4");
-                Field(console, "MaxHealthInput").SetTextWithoutNotify("80");
-                Click(console, "ApplyAttributes");
-                int defense = (int)typeof(CharacterHealth).GetField("def", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(health);
-                Require(player.Stats.Atk == 7 && player.Stats.Def == 4 && defense == 4 && health.MaxHp == 80 && health.CurrentHp == 80, "实时属性应用并限制生命上限");
-                Field(console, "AmountInput").SetTextWithoutNotify("14");
-                Click(console, "TestDamage"); Require(health.CurrentHp == 70, "原始伤害14减防御4");
-                Field(console, "AmountInput").SetTextWithoutNotify("5");
-                Click(console, "HealCustom"); Require(health.CurrentHp == 75, "自定义回血");
-                Click(console, "ResetAttributes");
-                Require(health.CurrentHp == templateMax && player.Stats.Atk == startAttack, "恢复初始配置");
-                Require(template.atk == templateAttack && template.def == templateDefense && template.maxHp == templateMaxConfig, "共享SO数据未被修改");
-                console.Close(); Require(player.enabled && player.GetComponent<PlayerCombat>().enabled, "关闭控制台恢复玩家组件");
-                console.SetOpen(true);
-                resultJson = "{\"passed\":true,\"runtime\":true,\"checks\":[\"damage\",\"heal\",\"kill\",\"revive\",\"attributes\",\"defense\",\"reset\",\"shared-config-isolation\",\"close-input-restore\"],\"note\":\"Buttons invoked through serialized UnityEvents in actual Play Mode; HUD auto-binding was removed and is excluded. Pointer and keyboard require separate UI verification.\"}";
+                checkLines.Clear(); passCount = failCount = 0; healthEventCount = stateEventCount = 0;
+                Note($"开始：Lv.{PlayerMgr.Instance.saveData.level}，攻击 {vPlayer.Stats.Atk}，防御 {vPlayer.Stats.Def}，{Hp()}");
+                if (vHealth.isDead || vHealth.CurrentHp != vHealth.MaxHp)
+                    Note("开始时玩家不是满血存活状态，后续数值以控制台回满后的状态为准。");
+                startMax = vHealth.MaxHp; startAttack = vPlayer.Stats.Atk; startDefense = vPlayer.Stats.Def;
+                startCursorMode = PlayerMgr.Instance.CurrentIsCursor;
+                vHealth.OnHealthChange += OnHealthEvent;
+                PlayerMgr.Instance.OnPlayerStateChange += OnStateEvent;
+
+                // 1. 打开控制台
+                vConsole.SetOpen(true);
+                Check(vConsole.IsOpen, "打开：控制台窗口打开");
+                Check(PlayerMgr.Instance.CurrentIsCursor, "打开：进入光标模式");
+                Check(Cursor.lockState == CursorLockMode.None && Cursor.visible, "打开：光标解锁且可见", $"lockState={Cursor.lockState}，visible={Cursor.visible}");
+                Check(!CameraInputEnabled(), "打开：镜头输入关闭（CameraCursorLock）");
+                Check(!vPlayer.enabled, "打开：玩家移动组件已暂停");
+                Check(!vPlayer.GetComponent<PlayerCombat>().enabled, "打开：玩家攻击组件已暂停");
+                if (vHealth.isDead) Click(vConsole, "RevivePlayer");
+                Click(vConsole, "FullHealth");
+
+                // 2. 模拟松开 Alt：退出光标模式，等控制台下一帧重新进入
+                PlayerMgr.Instance.SetCursorState(false);
+                stageFrame = Time.frameCount;
+                SessionState.SetString(StageKey, "AltReentry");
+            }
+            else if (stage == "AltReentry")
+            {
+                if (Time.frameCount < stageFrame + 3) return;
+                Check(PlayerMgr.Instance.CurrentIsCursor, "打开期间光标模式被退出后，控制台自动重新进入");
+                Check(!CameraInputEnabled(), "重新进入后镜头输入仍关闭");
+                RunValueChecks();
+                // 截图时保持控制台打开
+                vConsole.SetOpen(true);
+                // ScreenCapture 不会自动创建目录。
+                Directory.CreateDirectory(ReportDir);
                 ScreenCapture.CaptureScreenshot(ReportDir + "/DevConsole-PlayMode.png");
                 captureFrame = Time.frameCount;
                 SessionState.SetString(StageKey, "Capture");
             }
-            else if (SessionState.GetString(StageKey, "") == "Capture" && Time.frameCount >= captureFrame + 12)
+            else if (stage == "Capture" && Time.frameCount >= captureFrame + 12)
             {
-                WriteReport("playmode-verification.json", resultJson);
-                SessionState.SetString(StageKey, "Done");
+                vConsole.SetOpen(false);
+                Unsubscribe();
+                string summary = $"DevConsole Play Mode 检查：通过 {passCount}，失败 {failCount}（{DateTime.Now:yyyy-MM-dd HH:mm:ss}）";
+                WriteReport("playmode-verification.txt", summary + "\n\n" + string.Join("\n", checkLines) + "\n");
+                if (failCount == 0) Debug.Log(summary); else Debug.LogWarning(summary + "\n" + string.Join("\n", checkLines.Where(l => l.StartsWith("FAIL"))));
+                SessionState.SetString(StageKey, failCount == 0 ? "Done" : "Failed");
                 EditorApplication.update -= VerifyTick;
                 EditorApplication.ExitPlaymode();
             }
         }
         catch (Exception error)
         {
+            Unsubscribe();
+            checkLines.Add("ERROR " + error);
+            WriteReport("playmode-verification.txt", $"DevConsole Play Mode 检查中断：通过 {passCount}，失败 {failCount}\n\n" + string.Join("\n", checkLines) + "\n");
             WriteReport("playmode-error.txt", error.ToString());
             SessionState.SetString(StageKey, "Failed");
             EditorApplication.update -= VerifyTick;
             Debug.LogException(error);
             EditorApplication.ExitPlaymode();
         }
+    }
+
+    private static void RunValueChecks()
+    {
+        int max = vHealth.MaxHp;
+        int def = (int)HealthDefField.GetValue(vHealth);
+
+        // 3. 生命按钮
+        int events = healthEventCount;
+        Click(vConsole, "Damage10"); Check(vHealth.CurrentHp == max - 10, "扣血 10", Hp());
+        Check(healthEventCount > events, "扣血后触发 OnHealthChange（血条刷新）");
+        Click(vConsole, "Heal10"); Check(vHealth.CurrentHp == max, "回血 10", Hp());
+        Click(vConsole, "Damage25"); Check(vHealth.CurrentHp == max - 25, "扣血 25", Hp());
+        Click(vConsole, "Heal25"); Check(vHealth.CurrentHp == max, "回血 25（不超过上限）", Hp());
+        Amount(7); Click(vConsole, "DamageCustom"); Check(vHealth.CurrentHp == max - 7, "按数值扣血 7", Hp());
+        Amount(3); Click(vConsole, "HealCustom"); Check(vHealth.CurrentHp == max - 4, "按数值回血 3", Hp());
+        events = healthEventCount;
+        Click(vConsole, "FullHealth"); Check(vHealth.CurrentHp == max, "恢复满血", Hp());
+        Check(healthEventCount > events, "回血后触发 OnHealthChange");
+        Amount(14); Click(vConsole, "TestDamage");
+        int expected = max - Mathf.Max(14 - def, 0);
+        Check(vHealth.CurrentHp == expected, $"经过防御的伤害 14（防御 {def}）", Hp() + $"，期望 {expected}");
+        Click(vConsole, "FullHealth");
+
+        // 4. 死亡
+        int states = stateEventCount;
+        Click(vConsole, "KillPlayer");
+        Check(vHealth.CurrentHp == 0 && vHealth.isDead, "杀死玩家：生命归零且 isDead", Hp());
+        Check(stateEventCount > states && lastStateEvent, "杀死玩家：发出死亡广播 OnPlayerStateChange(true)");
+        Check(vPlayer.animator != null && vPlayer.animator.GetBool("IsDead"), "杀死玩家：Animator 的 IsDead 为 true");
+        // 只检查启用中的 EnemyAI：被禁用的组件（例如场景里的静止木桩）不会在 OnEnable 订阅，本来就不参与脱战。
+        var allEnemies = UnityEngine.Object.FindObjectsByType<EnemyAI>(FindObjectsSortMode.None);
+        var enemies = allEnemies.Where(e => e.isActiveAndEnabled).ToArray();
+        if (allEnemies.Length > enemies.Length) Note($"场景中有 {allEnemies.Length - enemies.Length} 个 EnemyAI 组件处于禁用状态，不参与脱战检查。");
+        if (enemies.Length == 0) Note("场景中没有启用的 EnemyAI，跳过怪物脱战检查。");
+        else Check(enemies.All(e => (bool)EnemyReturningField.GetValue(e)), $"杀死玩家：{enemies.Length} 个启用中的 EnemyAI 都进入返回状态（脱战）");
+        Click(vConsole, "Damage10"); Check(vHealth.CurrentHp == 0, "死亡时扣血被拒绝", Hp());
+        Click(vConsole, "Heal10"); Check(vHealth.CurrentHp == 0 && vHealth.isDead, "死亡时回血被拒绝", Hp());
+        Click(vConsole, "ResetAttributes"); Check(vHealth.isDead && vHealth.CurrentHp == 0, "死亡时恢复初始值被拒绝", Hp());
+
+        // 5. 复活
+        states = stateEventCount;
+        Click(vConsole, "RevivePlayer");
+        Check(vHealth.CurrentHp == max && !vHealth.isDead, "复活：回满且存活", Hp());
+        Check(stateEventCount > states && !lastStateEvent, "复活：发出复活广播 OnPlayerStateChange(false)");
+        Check(vPlayer.animator != null && !vPlayer.animator.GetBool("IsDead"), "复活：Animator 的 IsDead 为 false");
+        Click(vConsole, "Damage10");
+        states = stateEventCount;
+        Click(vConsole, "RevivePlayer");
+        Check(vHealth.CurrentHp == max && stateEventCount == states, "存活时点复活：只回满，不发复活广播", Hp());
+
+        // 6. 属性
+        events = healthEventCount;
+        Field(vConsole, "AttackInput").SetTextWithoutNotify("7");
+        Field(vConsole, "DefenseInput").SetTextWithoutNotify("4");
+        Field(vConsole, "MaxHealthInput").SetTextWithoutNotify("80");
+        Click(vConsole, "ApplyAttributes");
+        int healthDef = (int)HealthDefField.GetValue(vHealth);
+        Check(vPlayer.Stats.Atk == 7 && vPlayer.Stats.Def == 4, "应用属性：CharacterStats 为 7/4", $"实际 {vPlayer.Stats.Atk}/{vPlayer.Stats.Def}");
+        Check(healthDef == 4 && vHealth.MaxHp == 80 && vHealth.CurrentHp == 80, "应用属性：生命组件防御 4、上限 80，当前生命压到 80", $"防御 {healthDef}，{Hp()}");
+        Check(PlayerMgr.Instance.GetAtkValue() == 7, "应用属性：玩家攻击力（GetAtkValue）为 7", $"实际 {PlayerMgr.Instance.GetAtkValue()}");
+        Check(healthEventCount > events, "应用属性后触发 OnHealthChange");
+        Amount(14); Click(vConsole, "TestDamage"); Check(vHealth.CurrentHp == 70, "新防御下伤害 14 → 生命 70", Hp());
+        Amount(5); Click(vConsole, "HealCustom"); Check(vHealth.CurrentHp == 75, "回血 5 → 生命 75", Hp());
+        Click(vConsole, "AttackUp"); Check(vPlayer.Stats.Atk == 8, "攻击 +1", $"实际 {vPlayer.Stats.Atk}");
+        Click(vConsole, "AttackDown"); Check(vPlayer.Stats.Atk == 7, "攻击 −1", $"实际 {vPlayer.Stats.Atk}");
+        Click(vConsole, "DefenseUp"); Check(vPlayer.Stats.Def == 5 && (int)HealthDefField.GetValue(vHealth) == 5, "防御 +1（属性与生命组件同步）");
+        Click(vConsole, "DefenseDown"); Check(vPlayer.Stats.Def == 4, "防御 −1", $"实际 {vPlayer.Stats.Def}");
+        Click(vConsole, "MaxHealthUp"); Check(vHealth.MaxHp == 90 && vHealth.CurrentHp == 75, "生命上限 +10（当前生命不变）", Hp());
+        Click(vConsole, "MaxHealthDown"); Check(vHealth.MaxHp == 80 && vHealth.CurrentHp == 75, "生命上限 −10", Hp());
+
+        // 7. 恢复初始值
+        Click(vConsole, "ResetAttributes");
+        Check(vPlayer.Stats.Atk == startAttack && vPlayer.Stats.Def == startDefense, "恢复初始值：属性回到当前等级的数值", $"实际 {vPlayer.Stats.Atk}/{vPlayer.Stats.Def}，期望 {startAttack}/{startDefense}");
+        Check(vHealth.MaxHp == startMax && vHealth.CurrentHp == startMax, "恢复初始值：生命上限回到当前等级并回满", Hp());
+        Check(PlayerMgr.Instance.GetAtkValue() == startAttack, "恢复初始值：GetAtkValue 同步");
+        var template = ConfigMgr.Instance.GetCharacterData(vPlayer.Config.type, vPlayer.Config.id);
+        Check(ReferenceEquals(template, vPlayer.Config), "共享 SO：玩家仍引用配置表中的同一份数据（未被控制台替换）");
+
+        // 8. 关闭
+        vConsole.SetOpen(false);
+        Check(!vConsole.IsOpen, "关闭：控制台窗口关闭");
+        Check(vPlayer.enabled && vPlayer.GetComponent<PlayerCombat>().enabled, "关闭：玩家移动和攻击组件恢复");
+        Check(PlayerMgr.Instance.CurrentIsCursor == startCursorMode, "关闭：光标模式恢复到打开前", $"打开前 {startCursorMode}，现在 {PlayerMgr.Instance.CurrentIsCursor}");
+        Check(CameraInputEnabled() == !startCursorMode, "关闭：镜头输入随光标模式恢复");
+        Note("未覆盖：实际按键（F1、Esc、Alt、WASD）、打怪的实际伤害、清空任务存档、与任务面板或对话同时使用。");
     }
 
     private static TMP_InputField Field(DevConsole console, string name) => console.transform.Find("Window/" + name).GetComponent<TMP_InputField>();
