@@ -4,6 +4,7 @@
 
 ## 2026-11-16
 
+- **控制台复测**（`9209b36`、`9dbf9b7`）：控制台改用玩家的光标模式，消除与 CameraCursorLock 的冲突；Play Mode 自动检查扩充到 49 项并全部通过，用户手动复测按键、伤害、清空任务存档正常。撤回清单五项至此全部完成。[记录 36](Docs/Development/records/36-devconsole-retest.md)
 - **UIManager 恢复统一由预制体创建**（`c166a09`、`d345388`）：删除 10-30 为适配调试场景加入的两段接管逻辑，GMScene 删除调试用的 Canvas 和 MissionPanel，界面全部由 UIManager 在运行时创建，关闭时销毁。用户实测通过。[记录 35](Docs/Development/records/35-uimanager-prefab-only.md)
 
 ## 2026-11-15

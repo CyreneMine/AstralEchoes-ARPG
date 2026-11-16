@@ -28,7 +28,7 @@
 | 光标模式与面板暂停 | PlayerMgr 保存光标模式并触发 `OnCursorChanged`；按住 Alt、对话期间进入光标模式；光标模式下 PlayerCombat 不攻击，CameraCursorLock 关闭镜头输入；任务面板打开时 `timeScale = 0`，BasePanel 淡入淡出改用不受缩放的时间 | 静态核验 + 编译（11-14）；用户声明暂停、攻击拦截、首次按 Alt 和对话光标正常，最终版本待回归 | [记录 32](records/32-cursor-mode-camera-and-panel-pause.md) |
 | 存档 | MissionData 与玩家存档 `Character/Player/{id}.json` 写入 persistentDataPath，JsonMgr 自动创建子目录；获得经验后保存玩家存档；新档等级取配置 initLv | 任务存档有本机文件；玩家存档用户实测读写正常（11-15，`{"level":2,"exp":0}`） | [记录 22](records/22-mission-system-design-and-prototype.md)、[34](records/34-reward-level-and-stats.md) |
 | 对象池 | PoolData / PoolObj，容量配置、满额轮换 | 静态核验；源码中没有调用方 | [记录 27](records/27-pool-capacity-and-usage-contract.md) |
-| 调试控制台 | 由 Claude 维护，只适配用户接口：生命归零调用 `Dead()`，复活调用 `Respawn()`，改血后通过反射触发 `OnHealthChange`；属性读写 `CharacterStats` 并经 `CharacterHealth.UpdateStats` 应用；显示等级 | 编译通过（11-15）；用户实测控制台杀死、改攻击、恢复初始值正确，其余按钮待复测 | [记录 29](records/29-console-support-code-removal.md)、[33](records/33-minimal-death-flow.md)、[34](records/34-reward-level-and-stats.md) |
+| 调试控制台 | 由 Claude 维护，只适配用户接口：打开时进入玩家的光标模式；生命归零调用 `Dead()`，复活调用 `Respawn()`，改血后通过反射触发 `OnHealthChange`；属性读写 `CharacterStats` 并经 `CharacterHealth.UpdateStats` 应用；Editor 自动检查 49 项 | 运行证据（11-16）：自动检查 49/49 通过；用户手动实测按键、打怪伤害、清空任务存档正常；与其他面板同时使用有问题，仅调试用，用户决定不处理 | [记录 29](records/29-console-support-code-removal.md)、[33](records/33-minimal-death-flow.md)、[34](records/34-reward-level-and-stats.md)、[36](records/36-devconsole-retest.md) |
 | 角色与衣物 | Cyrene_Blender4.2，8 组 BoneCloth，面部覆盖材质开启裁剪 | 运行证据（10-15，396 次采样）；跑步、闪避时的穿插和性能未测 | [记录 8](records/08-blender42-bonecloth.md)、[21](records/21-face-overlay-material-set.md) |
 | 技能、场景切换、剧情推进、临时 Buff、音效 | 未开始 | — | [剧情草案](../Design/世界观与主线剧情-V1.md) |
 | 发布构建 | 没有发布过构建 | — | — |

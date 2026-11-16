@@ -27,7 +27,7 @@
 | 场景切换与剧情推进 | 未开始 | 目前只有测试场景 GMScene |
 | 三选一临时 Buff | 未开始 | |
 | 音效 | 未开始 | |
-| 调试控制台 | 原型 · 待回归 | 11-15 改为调用玩家的 Dead/Respawn、属性读写 CharacterStats 并显示等级；部分按钮已实测，其余待复测 |
+| 调试控制台 | 有运行证据 | 仅用于 GMScene 调试；11-16 Play Mode 自动检查 49 项全部通过，手动复测按键、伤害、清空任务存档正常 |
 
 详细的验证边界见[当前开发状态](Docs/Development/STATUS.md)，具体待办记在 [GitHub Issues](https://github.com/CyreneMine/AstralEchoes-ARPG/issues)。
 
