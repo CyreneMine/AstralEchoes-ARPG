@@ -2,6 +2,10 @@
 
 按日期倒序记录每次交付的内容、对应提交和验证范围，每条一两句话，细节放在链接的开发记录里。"待回归"表示还没有在 Play Mode 里重新验证。
 
+## 2026-11-17
+
+- **控制台等级调试与敌人测试攻击力**（`4bff8ce`、`1af6688`）：按用户 11-16 的建议，控制台加入"设置等级 / 重置为初始等级"，写入存档并调用用户的 `PlayerLevelChanged`；Play Mode 自动检查 56 项全部通过（11-16 运行）。敌人攻击力按用户确认提交为测试值 50。[记录 39](Docs/Development/records/39-devconsole-level-controls.md)
+
 ## 2026-11-16
 
 - **背包与持有道具开始实施**（`be23363`、`e3e0ec4`）：用户编写 `PlayerItemMgr`（读档、增删查、每次变化存盘、广播新数量、数量为 0 时删除记录）和 BagPanel、BagSlot 脚本，GamePanel 新增背包按钮。Claude Code 按参考图拼接背包预制件并提供生成工具，修复了关闭按钮文字没有开启射线检测导致点不到的问题。只做了编译和静态检查，关闭按钮待复测；上限、货币、格子生成与详情还没做。[记录 38](Docs/Development/records/38-inventory-ui-and-item-mgr-start.md)
