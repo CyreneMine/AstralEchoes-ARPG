@@ -15,6 +15,7 @@ public class DevConsole : MonoBehaviour
     [SerializeField] private TMP_InputField attackInput;
     [SerializeField] private TMP_InputField defenseInput;
     [SerializeField] private TMP_InputField maxHealthInput;
+    [SerializeField] private TMP_InputField levelInput;
 
     private readonly List<Behaviour> pausedBehaviours = new List<Behaviour>();
     // 打开前的光标模式；控制台通过用户的 PlayerMgr.SetCursorState 显示光标，镜头由 CameraCursorLock 自动锁定。
@@ -183,6 +184,8 @@ public class DevConsole : MonoBehaviour
         SyncField(attackInput, stats.Atk);
         SyncField(defenseInput, stats.Def);
         SyncField(maxHealthInput, boundHealth.MaxHp);
+        if (PlayerMgr.Instance.saveData != null)
+            SyncField(levelInput, PlayerMgr.Instance.saveData.level);
     }
 
     private static void SyncField(TMP_InputField field, int value)
@@ -299,6 +302,39 @@ public class DevConsole : MonoBehaviour
         NotifyHealthChanged();
         RefreshDisplay();
         Say("已按配置表和当前等级重新计算属性，并回满生命。 ");
+    }
+
+    // 等级调试：直接写入玩家存档的等级（经验清零），再调用用户的 PlayerLevelChanged 广播，
+    // 由 PlayerObject 重新计算属性、GamePanel 刷新等级；随后保存，和获得经验后的存档行为一致。
+    public void ApplyLevel()
+    {
+        if (!Ready()) return;
+        if (levelInput == null || !int.TryParse(levelInput.text, out int level))
+        {
+            Say("等级请输入整数。", true);
+            return;
+        }
+        SetLevel(level);
+    }
+
+    public void ResetLevel()
+    {
+        if (!Ready()) return;
+        SetLevel(targetPlayer.Config.initLv);
+    }
+
+    private void SetLevel(int level)
+    {
+        var config = targetPlayer.Config;
+        int clamped = Mathf.Clamp(level, config.initLv, Mathf.Max(config.initLv, config.maxLv));
+        PlayerSaveData save = PlayerMgr.Instance.saveData;
+        save.level = clamped;
+        save.exp = 0;
+        PlayerMgr.Instance.PlayerLevelChanged();
+        PlayerMgr.Instance.SavePlayerData();
+        RefreshDisplay();
+        string note = clamped != level ? $"（输入 {level} 超出 {config.initLv}～{config.maxLv}，已限制）" : "";
+        Say($"等级已设为 Lv.{clamped}，经验清零并写入存档{note}。当前生命保持不变。");
     }
 
     // 保存空进度并同步内存，防止旧任务数据再次被写回存档。

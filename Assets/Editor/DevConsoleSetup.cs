@@ -246,6 +246,56 @@ public static class DevConsoleSetup
         }
     }
 
+    // 在本地 Canvas 预制件的控制台里加一行等级调试：输入框、设置等级、重置为初始等级。
+    [MenuItem("Tools/AstralEchoes/Dev Console/Add Level Controls")]
+    public static void AddLevelControls()
+    {
+        if (Application.isPlaying) throw new InvalidOperationException("请在编辑模式添加等级控件。");
+        font = GetConsoleFont();
+        const string prefabPath = "Assets/Resources/UI/Canvas.prefab";
+        GameObject prefab = PrefabUtility.LoadPrefabContents(prefabPath);
+        int upgraded = 0;
+        try
+        {
+            foreach (var console in prefab.GetComponentsInChildren<DevConsole>(true))
+            {
+                UpgradeLevelControls(console);
+                upgraded++;
+            }
+            if (upgraded == 0) throw new InvalidOperationException("Canvas.prefab 里没有找到 DevConsole。");
+            PrefabUtility.SaveAsPrefabAsset(prefab, prefabPath);
+        }
+        finally { PrefabUtility.UnloadPrefabContents(prefab); }
+        WriteReport("level-controls.json", $"{{\"prefabConsoles\":{upgraded},\"saved\":true}}");
+        Debug.Log($"[DevConsole] 已在 Canvas.prefab 的 {upgraded} 个控制台中加入等级控件。");
+    }
+
+    private static void UpgradeLevelControls(DevConsole console)
+    {
+        var window = console.transform.Find("Window") as RectTransform;
+        if (window == null) throw new InvalidOperationException("控制台 Window 不存在。");
+        const float titleY = 796, rowY = 832, messageY = 886;
+        if (window.Find("LevelInput") == null)
+        {
+            Label(window, "LevelTitle", "等级调试（写入存档，经验清零）", 24, titleY, 470, 28, 23, new Color(0.4f, 0.9f, 0.85f));
+            TMP_InputField level = Input(window, "LevelInput", "1", 24, rowY, 115, 42);
+            Button(window, "ApplyLevel", "设置等级", 149, rowY, 178, 42, Accent, console.ApplyLevel);
+            Button(window, "ResetLevel", "重置为初始等级", 337, rowY, 179, 42, new Color(0.25f, 0.31f, 0.42f), console.ResetLevel);
+            var serialized = new SerializedObject(console);
+            Set(serialized, "levelInput", level);
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+        }
+        window.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, Mathf.Max(window.sizeDelta.y, messageY + 62 + 16));
+        if (window.Find("Message") is RectTransform message)
+            message.anchoredPosition = new Vector2(24, -messageY);
+        foreach (string name in new[] { "ApplyLevel", "ResetLevel" })
+        {
+            var button = window.Find(name).GetComponent<Button>();
+            if (button.onClick.GetPersistentEventCount() != 1 || button.onClick.GetPersistentMethodName(0) != name)
+                throw new InvalidOperationException(name + " 按钮回调不正确。");
+        }
+    }
+
     private static TMP_FontAsset GetConsoleFont()
     {
         const string path = "Assets/Resources/DevConsole/DevConsoleFont.asset";
@@ -388,6 +438,8 @@ public static class DevConsoleSetup
     private static readonly FieldInfo HealthDefField = typeof(CharacterHealth).GetField("def", BindingFlags.Instance | BindingFlags.NonPublic);
     private static readonly FieldInfo EnemyReturningField = typeof(EnemyAI).GetField("isReturning", BindingFlags.Instance | BindingFlags.NonPublic);
 
+    private static int levelEventCount;
+    private static void OnLevelEvent() => levelEventCount++;
     private static void OnHealthEvent(int current, int max) => healthEventCount++;
     private static void OnStateEvent(bool dead) { stateEventCount++; lastStateEvent = dead; }
 
@@ -418,6 +470,7 @@ public static class DevConsoleSetup
     {
         if (vHealth != null) vHealth.OnHealthChange -= OnHealthEvent;
         PlayerMgr.Instance.OnPlayerStateChange -= OnStateEvent;
+        PlayerMgr.Instance.OnPlayerLevelChange -= OnLevelEvent;
     }
 
     private static void VerifyTick()
@@ -441,6 +494,8 @@ public static class DevConsoleSetup
                 startCursorMode = PlayerMgr.Instance.CurrentIsCursor;
                 vHealth.OnHealthChange += OnHealthEvent;
                 PlayerMgr.Instance.OnPlayerStateChange += OnStateEvent;
+                PlayerMgr.Instance.OnPlayerLevelChange += OnLevelEvent;
+                levelEventCount = 0;
 
                 // 1. 打开控制台
                 vConsole.SetOpen(true);
@@ -574,7 +629,51 @@ public static class DevConsoleSetup
         var template = ConfigMgr.Instance.GetCharacterData(vPlayer.Config.type, vPlayer.Config.id);
         Check(ReferenceEquals(template, vPlayer.Config), "共享 SO：玩家仍引用配置表中的同一份数据（未被控制台替换）");
 
-        // 8. 关闭
+        // 8. 等级（会写入玩家存档，检查结束时恢复原等级和经验并再次保存）
+        if (vConsole.transform.Find("Window/ResetLevel") == null)
+        {
+            Note("控制台还没有等级控件（先运行 Add Level Controls），跳过等级检查。");
+        }
+        else
+        {
+            var save = PlayerMgr.Instance.saveData;
+            var cfg = vPlayer.Config;
+            int origLevel = save.level, origExp = save.exp;
+            Note($"等级检查前存档：Lv.{origLevel}，经验 {origExp}，检查结束后恢复。");
+            try
+            {
+                int levelEvents = levelEventCount;
+                Click(vConsole, "ResetLevel");
+                Check(save.level == cfg.initLv && save.exp == 0, "重置为初始等级：等级回到 initLv 且经验清零", $"实际 Lv.{save.level}，经验 {save.exp}");
+                Check(levelEventCount > levelEvents, "重置等级后广播 OnPlayerLevelChange");
+                Check(vPlayer.Stats.Atk == cfg.atk && vPlayer.Stats.Def == cfg.def && vHealth.MaxHp == cfg.maxHp,
+                    "重置等级后属性与生命上限回到初始等级", $"实际 攻击 {vPlayer.Stats.Atk}、防御 {vPlayer.Stats.Def}、{Hp()}");
+                Check(vHealth.CurrentHp <= vHealth.MaxHp, "重置等级后当前生命不超过上限", Hp());
+
+                int target = Mathf.Min(cfg.initLv + 2, Mathf.Max(cfg.initLv, cfg.maxLv));
+                Field(vConsole, "LevelInput").SetTextWithoutNotify(target.ToString());
+                Click(vConsole, "ApplyLevel");
+                int expectedAtk = cfg.atk + cfg.atkPerLv * (target - cfg.initLv);
+                int expectedMax = cfg.maxHp + cfg.maxHpPerLv * (target - cfg.initLv);
+                Check(save.level == target && vPlayer.Stats.Atk == expectedAtk && vHealth.MaxHp == expectedMax,
+                    $"设置等级 {target}：属性按等级重新计算", $"实际 Lv.{save.level}、攻击 {vPlayer.Stats.Atk}、上限 {vHealth.MaxHp}，期望攻击 {expectedAtk}、上限 {expectedMax}");
+
+                Field(vConsole, "LevelInput").SetTextWithoutNotify((cfg.maxLv + 5).ToString());
+                Click(vConsole, "ApplyLevel");
+                Check(save.level == Mathf.Max(cfg.initLv, cfg.maxLv), "超出最高等级的输入被限制到 maxLv", $"实际 Lv.{save.level}");
+            }
+            finally
+            {
+                save.level = origLevel;
+                save.exp = origExp;
+                PlayerMgr.Instance.PlayerLevelChanged();
+                PlayerMgr.Instance.SavePlayerData();
+                Click(vConsole, "FullHealth");
+            }
+            Check(save.level == origLevel && vPlayer.Stats.Atk == startAttack && vHealth.MaxHp == startMax, "等级检查后已恢复原等级和属性", $"实际 Lv.{save.level}、攻击 {vPlayer.Stats.Atk}、{Hp()}");
+        }
+
+        // 9. 关闭
         vConsole.SetOpen(false);
         Check(!vConsole.IsOpen, "关闭：控制台窗口关闭");
         Check(vPlayer.enabled && vPlayer.GetComponent<PlayerCombat>().enabled, "关闭：玩家移动和攻击组件恢复");
