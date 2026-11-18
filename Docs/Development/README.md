@@ -55,6 +55,7 @@
 | [37](records/37-inventory-and-reward-design.md) | 11-16 | 玩家持有道具、背包与任务发奖的设计讨论 | 设计定稿，未实施 |
 | [38](records/38-inventory-ui-and-item-mgr-start.md) | 11-16 | 背包面板界面与玩家持有道具管理器（第一天） | 编译通过，未运行测试 |
 | [39](records/39-devconsole-level-controls.md) | 11-17 | 控制台等级调试与敌人测试攻击力 | 自动检查 56/56 通过 |
+| [40](records/40-user-playtest-movement-dialogue-mission.md) | 11-18 | 用户实测：移动、对话与两阶段任务 | 用户实测通过，关闭 #7、#8、#10 |
 
 ## 本机 Git 配置
 
