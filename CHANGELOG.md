@@ -4,6 +4,7 @@
 
 ## 2026-11-21
 
+- **背包显示持有道具**（`6834c6d`、`ee723ed`）：用户完成格子生成、金币栏显示、订阅数量变化事件整表刷新并在销毁时取消订阅；道具表金币类型改为 money，新增 2 号星屑药剂。只做了编译，背包开着时的刷新待 Play Mode 验证；上限、选中详情、使用按钮未做。[记录 43](Docs/Development/records/43-bag-slot-display-and-refresh.md)
 - **星屑药剂图标定稿**（仅文档入库）：用户选定 A 版青蓝圆肚瓶，作为计划道具 ID `2` 的本地图标。设计取舍和验证范围见 [记录 42](Docs/Development/records/42-stardust-potion-icon.md)。
 - **金币图标定稿**（仅文档入库）：用户选定 A 版观星币，透明底 PNG 已保存到本地资源目录。界面绑定和显示验证列在 [记录 41](Docs/Development/records/41-gold-coin-icon.md) 与 #25。
 

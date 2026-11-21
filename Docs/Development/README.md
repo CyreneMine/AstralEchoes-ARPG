@@ -58,6 +58,7 @@
 | [40](records/40-user-playtest-movement-dialogue-mission.md) | 11-18 | 用户实测：移动、对话与两阶段任务 | 用户实测通过，关闭 #7、#8、#10 |
 | [41](records/41-gold-coin-icon.md) | 11-21 | 金币图标设计与定稿 | 本地 PNG 已核验，待绑定和显示验证 |
 | [42](records/42-stardust-potion-icon.md) | 11-21 | 星屑药剂图标设计与定稿 | PNG 已核验，背包接入和显示待验证 |
+| [43](records/43-bag-slot-display-and-refresh.md) | 11-21 | 背包格子显示与数量变化刷新 | 编译通过，用户声明可显示，刷新待验证 |
 
 ## 本机 Git 配置
 
