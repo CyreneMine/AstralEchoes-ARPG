@@ -57,6 +57,7 @@
 | [39](records/39-devconsole-level-controls.md) | 11-17 | 控制台等级调试与敌人测试攻击力 | 自动检查 56/56 通过 |
 | [40](records/40-user-playtest-movement-dialogue-mission.md) | 11-18 | 用户实测：移动、对话与两阶段任务 | 用户实测通过，关闭 #7、#8、#10 |
 | [41](records/41-gold-coin-icon.md) | 11-21 | 金币图标设计与定稿 | 本地 PNG 已核验，待绑定和显示验证 |
+| [42](records/42-stardust-potion-icon.md) | 11-21 | 星屑药剂图标设计与定稿 | PNG 已核验，背包接入和显示待验证 |
 
 ## 本机 Git 配置
 

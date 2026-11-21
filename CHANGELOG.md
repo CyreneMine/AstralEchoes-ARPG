@@ -4,6 +4,7 @@
 
 ## 2026-11-21
 
+- **星屑药剂图标定稿**（仅文档入库）：用户选定 A 版青蓝圆肚瓶，作为计划道具 ID `2` 的本地图标。设计取舍和验证范围见 [记录 42](Docs/Development/records/42-stardust-potion-icon.md)。
 - **金币图标定稿**（仅文档入库）：用户选定 A 版观星币，透明底 PNG 已保存到本地资源目录。界面绑定和显示验证列在 [记录 41](Docs/Development/records/41-gold-coin-icon.md) 与 #25。
 
 ## 2026-11-18
