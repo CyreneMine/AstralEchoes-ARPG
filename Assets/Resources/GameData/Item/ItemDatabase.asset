@@ -22,6 +22,12 @@ MonoBehaviour:
   - itemID: 1
     itemName: "\u91D1\u5E01"
     itemDesc: "\u91D1\u5E01"
-    itemIcon: {fileID: 0}
+    itemIcon: {fileID: 21300000, guid: 4b8ad667a7069c645b9d083eb44307b8, type: 3}
     maxCount: -1
-    itemType: 0
+    itemType: 1
+  - itemID: 2
+    itemName: "\u661F\u5C51\u836F\u5242"
+    itemDesc: "\u4F7F\u7528\u540E\u53EF\u4EE5\u56DE\u590D20%\u751F\u547D\u503C"
+    itemIcon: {fileID: 21300000, guid: 7ed04d3907bbd914492a345b36aef68b, type: 3}
+    maxCount: 99
+    itemType: 2
