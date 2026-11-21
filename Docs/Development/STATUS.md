@@ -1,6 +1,6 @@
 # 当前开发状态
 
-更新日期：2026-11-18。本文件只写**当前**状态，每次提交时直接覆盖对应行，不按日期追加。按日期的变化写在 [CHANGELOG](../../CHANGELOG.md)，过程细节写在 [records](README.md)，旧版全文在 [history](history/STATUS-2026-10-15_2026-11-14.md)。
+更新日期：2026-11-21。本文件只写**当前**状态，每次提交时直接覆盖对应行，不按日期追加。按日期的变化写在 [CHANGELOG](../../CHANGELOG.md)，过程细节写在 [records](README.md)，旧版全文在 [history](history/STATUS-2026-10-15_2026-11-14.md)。
 
 正式题目：基于Unity3D的ARPG游戏《星渊回响》设计与实现。只做一个剧情探索模式，三选一临时 Buff 只用于部分战斗节点。
 
@@ -20,7 +20,7 @@
 | 受击与死亡 | 最小死亡流程：`PlayerHealth.Dead/Respawn` 通过 PlayerMgr 的 `OnPlayerStateChange` 广播；死亡时不移动、不闪避、不攻击，播放 S_Die 并重置攻击状态；`Heal` 限制上限并刷新血条；复活暂由控制台触发 | 用户实测（11-15）：死亡、复活、出刀时死亡、控制台杀死都正确；之后加入的怪物脱战尚待复测；死亡界面和传送点未做 | [记录 33](records/33-minimal-death-flow.md) |
 | 敌人 AI | NavMesh 巡逻（4 个点）、追击、脱战返回、攻击冷却、死亡停机；玩家死亡和复活时都脱战，玩家死亡期间不侦测、不攻击 | 运行证据（11-05）；巡逻边界和完整脱战流程待回归；11-15 的玩家死亡脱战只做了静态核验 | [记录 25](records/25-enemy-ai-and-combat.md)、[33](records/33-minimal-death-flow.md) |
 | 属性、等级与经验 | `CharacterStats` 按（等级 − initLv）计算攻击、防御、生命上限，玩家和敌人共用；PlayerGrowth 先扣经验再升级、处理满级；升级后 PlayerObject 重新计算属性并更新生命组件（当前血量不变）；怪物死亡经 RewardMgr 发放经验 | 用户实测（11-15）：1→2 级、经验归零、属性和血条上限更新、存档重进；满级、连续多级、新档流程未测 | [记录 30](records/30-player-growth-and-save-design.md)、[34](records/34-reward-level-and-stats.md) |
-| 道具与奖励 | 道具表 ItemDatabase（经验、金币）、怪物奖励表 EnemyRewardDatabase、`ItemRewardData` 共用、`RewardMgr.SettlementReward` 按类型分发；目前只处理经验 | 用户实测：杀怪获得经验；金币、背包、任务发奖未接入。11-16 背包与发奖的设计已定稿；同日开始实施：`PlayerItemMgr` 增删查、存盘、广播新数量已写，背包面板预制件已拼好，可以打开和关闭。上限、货币、格子生成与详情尚未实现。只做了编译和静态检查，关闭按钮修复待复测 | [记录 34](records/34-reward-level-and-stats.md)、[37](records/37-inventory-and-reward-design.md)、[38](records/38-inventory-ui-and-item-mgr-start.md)、#25 |
+| 道具与奖励 | `ItemDatabase` 定义经验、金币，怪物与任务共用 `ItemRewardData`。`RewardMgr` 目前只发经验。`PlayerItemMgr` 已写增删查、存盘和数量变化事件，背包上限、格子生成与详情仍在开发。观星币图标已定稿并存入本地资源目录，界面仍用占位图 | 用户实测：击杀获得经验。背包原型有编译与静态检查记录，关闭按钮修复待复测。金币图标已核对文件与透明通道，待绑定后验证显示。金币入账与任务发奖待接入 | [记录 34](records/34-reward-level-and-stats.md)、[37](records/37-inventory-and-reward-design.md)、[38](records/38-inventory-ui-and-item-mgr-start.md)、[41](records/41-gold-coin-icon.md)、#25 |
 | NPC 对话 | 动态选项；按 NPC 和任务阶段选对白（接取、进行中、交付、完成后）；对话期间关闭输入 | 用户实测（11-18，`aeda051`）：对话结束不再多挥一刀，结束后能移动、再次交互，任务完成后播放完成后对白；对话中按下再松开 Alt 会锁住光标仍未修复（#22） | [记录 14](records/14-dialogue-system-implementation.md)、[28](records/28-dialogue-input-and-finished-dialogue.md)、[40](records/40-user-playtest-movement-dialogue-mission.md) |
 | 任务 | 任务 0 分两阶段：击杀 0 号怪，再与 0 号 NPC 对话；击杀推进、交付结算、进度存档 | 用户实测（11-18，`aeda051`）：从新存档开始的接取、提前对话、击杀推进、交付结算、完成后对白、重进状态都正常；实际发奖未接入（#13） | [记录 26](records/26-npc-dialogue-and-mission-turn-in.md)、[40](records/40-user-playtest-movement-dialogue-mission.md) |
 | 玩家 HUD | 血条在 `Start` 拉取血量并订阅 `OnHealthChange`，在 `OnDestroy` 取消订阅；GamePanel 显示等级并订阅 `OnPlayerLevelChange` | 用户实测（11-15）：升级后等级和血条上限更新；面板重建与隐藏期间受伤的专项回归仍未记录 | [记录 31](records/31-player-health-bar-refresh.md)、[34](records/34-reward-level-and-stats.md) |

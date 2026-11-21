@@ -19,6 +19,7 @@
 | `Assets/Resources/DevConsole/DevConsoleFont.asset` 及中文字体源 | TMP 字体 | 对话、任务、控制台文字 | 中文显示为方框 |
 | `Assets/TextMesh Pro/` | TMP Essential Resources，也可以从 Window → TextMeshPro 菜单重新导入，但重新导入的 GUID 可能和原来不同，优先用备份 | 所有 TMP 文本 | 文字不显示 |
 | `Assets/Resources/Mat/` | 测试用颜色材质 | 场景中的占位物体 | 材质缺失 |
+| `Assets/Resources/Icon/Item/1.png` | 金币图标，用户选定的观星币 A 版。备份 PNG 时一并保留 Unity 导入后生成的 `.meta` | 道具 ID `1`，计划用于背包金币栏 | 绑定后还原工程时，缺少该资源会导致金币图标不可用。当前背包使用占位图 |
 | 血条 Sprite 等 UI 图片 | 世界空间血条和 HUD 图片 | GMScene、UI 预制件 | 图片缺失 |
 
 恢复步骤：
