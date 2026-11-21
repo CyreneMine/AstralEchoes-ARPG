@@ -6,10 +6,10 @@ public class BagSlot : MonoBehaviour
 {
     public Image icon;
     public TMP_Text amount;
-
-    public void Init(Sprite sprite,int currentAmount)
+    public Button btn;
+    public void Init(int currentId,int currentAmount)
     {
-        icon.sprite = sprite;
+        icon.sprite = ConfigMgr.Instance.GetItemConfigByID(currentId).itemIcon;
         amount.text = currentAmount.ToString();
     }
 }
