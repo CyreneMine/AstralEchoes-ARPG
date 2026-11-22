@@ -4,6 +4,7 @@
 
 ## 2026-11-22
 
+- **控制台复测**（只有文档）：开关按钮下移后自动检查 84 项全部通过，包括开关按钮不压住 HUD 按钮、奖励结算金币进背包；用户手动确认控制台关闭时背包按钮可正常点击，关闭 #30。[记录 46](Docs/Development/records/46-devconsole-tabs-and-item-debug.md)
 - **控制台重构为分页界面并加入道具调试**（`7269797`、`b3c303d`）：控制台改为运行时由代码生成，分生命、属性·等级、道具、存档四页；道具页可从列表选择或直接输入 ID，调用 `PlayerItemMgr` 加减或经 `RewardMgr` 结算；新增清空背包道具，清空按钮需两次确认。用户在 11-21 版本上运行自动检查 82 项全部通过；之后开关按钮下移避开背包按钮，并跟进上限截断与背包自刷新，这部分只做了编译，待复测（#30）。[记录 46](Docs/Development/records/46-devconsole-tabs-and-item-debug.md)
 - **道具上限、奖励进背包与任务发奖**（`be4eb71`、`5a511b4`）：用户补上 `maxCount` 截断（-1 不截断）、`RewardMgr` 非经验类型进背包、`RewardSlot` 读道具名，并完成任务结算发奖（先标记完成再发奖）。用户实测上限、打怪掉落、任务奖励到账与不重复发奖均通过，关闭 #13。销毁按钮不做，使用消耗品延后。[记录 45](Docs/Development/records/45-item-cap-reward-and-mission-settlement.md)
 - **用户实测登记：背包详情区**（只有文档）：默认显示第一个格子、点击切换、清空后为空，三项用户自测通过，没有截图或日志。[记录 44](Docs/Development/records/44-bag-detail-panel.md)
