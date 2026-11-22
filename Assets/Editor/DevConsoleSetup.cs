@@ -6,25 +6,19 @@ using System.Linq;
 using System.Reflection;
 using TMPro;
 using UnityEditor;
-using UnityEditor.Events;
-using UnityEditor.SceneManagement;
 using UnityEngine;
-using UnityEngine.Events;
-using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
-// 在已打开的 GMScene 内搭建控件，不覆盖或重新创建用户的场景。
+// 控制台的编辑器工具（Claude Code 维护）。
+// 控制台界面已改为运行时由 DevConsole 代码生成，这里只负责：把 DevConsole 物体放进 Canvas 预制件、
+// 清理旧版预制件控件、准备字体，以及 Play Mode 自动检查。
 public static class DevConsoleSetup
 {
-    private const string ScenePath = "Assets/Scenes/GMScene.unity";
+    private const string CanvasPrefabPath = "Assets/Resources/UI/Canvas.prefab";
     private const string RequestPath = "Temp/DevConsoleSetup.request";
     private const string ReportDir = "Temp/DevConsoleReports";
     private const string StageKey = "AstralEchoes.DevConsole.VerifyStage";
-    private static TMP_FontAsset font;
-    private static int captureFrame;
-    private static string resultJson;
-    private static readonly Color Background = new Color(0.045f, 0.065f, 0.11f, 0.98f);
-    private static readonly Color Accent = new Color(0.17f, 0.48f, 0.56f, 1);
+    private static readonly string[] LegacyChildren = { "Window", "ToggleButton" };
 
     [InitializeOnLoadMethod]
     private static void Initialize()
@@ -32,6 +26,7 @@ public static class DevConsoleSetup
         EditorApplication.delayCall += RunPending;
     }
 
+    // 编译完成后读取 Temp/DevConsoleSetup.request：内容含 migrate 时先清理旧控件，再进入 Play Mode 自动检查。
     private static void RunPending()
     {
         if (EditorApplication.isCompiling || EditorApplication.isUpdating)
@@ -52,15 +47,10 @@ public static class DevConsoleSetup
         File.Delete(RequestPath);
         try
         {
-            if (request.Contains("mission-reset"))
-            {
-                AddMissionResetButton();
-                return;
-            }
-            if (request.Contains("font")) RefreshConsoleFont();
-            else Build();
-            SessionState.SetString(StageKey, "WaitingForPlayer");
-            EditorApplication.EnterPlaymode();
+            if (request.Contains("migrate"))
+                RemoveLegacyLayout();
+            if (request.Contains("verify"))
+                Verify();
         }
         catch (Exception error)
         {
@@ -69,231 +59,65 @@ public static class DevConsoleSetup
         }
     }
 
-    [MenuItem("Tools/AstralEchoes/Dev Console/Build in GMScene")]
-    public static void Build()
+    // 资源恢复用：Canvas 预制件里没有控制台时，加一个挂 DevConsole 的空物体，界面由代码生成。
+    [MenuItem("Tools/AstralEchoes/Dev Console/Add to Canvas Prefab")]
+    public static void AddToCanvasPrefab()
     {
-        Scene scene = SceneManager.GetSceneByPath(ScenePath);
-        if (!scene.IsValid() || !scene.isLoaded || Application.isPlaying)
-            throw new InvalidOperationException("请在编辑模式打开 GMScene 再搭建控制台。");
-
-        Canvas canvas = scene.GetRootGameObjects().SelectMany(go => go.GetComponentsInChildren<Canvas>(true))
-            .FirstOrDefault(c => c.isRootCanvas && c.renderMode == RenderMode.ScreenSpaceOverlay);
-        if (canvas == null)
-            throw new InvalidOperationException("没有找到场景中的屏幕空间 Canvas。");
-
-        Transform existing = canvas.transform.Find("DevConsole");
-        if (existing != null)
-            throw new InvalidOperationException("DevConsole 已存在，为保留手动布局，本工具不会覆盖它。");
-
-        font = GetConsoleFont();
-
-        GameObject root = new GameObject("DevConsole", typeof(RectTransform), typeof(Canvas), typeof(GraphicRaycaster), typeof(DevConsole));
-        Undo.RegisterCreatedObjectUndo(root, "Create DevConsole");
-        RectTransform rootRect = root.GetComponent<RectTransform>();
-        rootRect.SetParent(canvas.transform, false);
-        rootRect.anchorMin = Vector2.zero;
-        rootRect.anchorMax = Vector2.one;
-        rootRect.offsetMin = rootRect.offsetMax = Vector2.zero;
-        Canvas overlay = root.GetComponent<Canvas>();
-        overlay.overrideSorting = true;
-        overlay.sortingOrder = 5000;
-        DevConsole console = root.GetComponent<DevConsole>();
-
-        GameObject launcher = Button(root.transform, "ToggleButton", "管理员控制台 · F1", 0, 0, 200, 42, Accent, console.Toggle);
-        RectTransform launcherRect = launcher.GetComponent<RectTransform>();
-        launcherRect.anchorMin = launcherRect.anchorMax = launcherRect.pivot = Vector2.one;
-        launcherRect.anchoredPosition = new Vector2(-24, -18);
-
-        GameObject window = Box(root.transform, "Window", 0, 0, 540, 874, Background);
-        RectTransform windowRect = window.GetComponent<RectTransform>();
-        windowRect.anchorMin = windowRect.anchorMax = windowRect.pivot = Vector2.one;
-        windowRect.anchoredPosition = new Vector2(-24, -70);
-        Box(window.transform, "AccentLine", 0, 0, 540, 4, new Color(0.25f, 0.9f, 0.86f));
-        Label(window.transform, "Title", "管理员控制台", 24, 15, 410, 34, 27, Color.white);
-        Label(window.transform, "Subtitle", "F1 开关 · Esc 关闭 · 角色与任务调试", 24, 53, 470, 26, 17, new Color(0.55f, 0.67f, 0.77f));
-        Button(window.transform, "CloseButton", "×", 478, 14, 40, 38, new Color(0.22f, 0.27f, 0.35f), console.Close);
-        Box(window.transform, "StatusBackground", 20, 92, 500, 104, new Color(0.09f, 0.13f, 0.20f));
-        TMP_Text status = Label(window.transform, "Status", "等待玩家初始化…", 35, 100, 470, 88, 20, Color.white);
-        Label(window.transform, "HealthTitle", "生命调试", 24, 210, 470, 28, 23, new Color(0.4f, 0.9f, 0.85f));
-
-        Color damageColor = new Color(0.55f, 0.21f, 0.25f);
-        Color healColor = new Color(0.15f, 0.4f, 0.32f);
-        Button(window.transform, "Damage10", "扣血 10", 24, 247, 117, 42, damageColor, console.Damage10);
-        Button(window.transform, "Damage25", "扣血 25", 149, 247, 117, 42, damageColor, console.Damage25);
-        Button(window.transform, "Heal10", "回血 10", 274, 247, 117, 42, healColor, console.Heal10);
-        Button(window.transform, "Heal25", "回血 25", 399, 247, 117, 42, healColor, console.Heal25);
-        TMP_InputField amount = Input(window.transform, "AmountInput", "10", 24, 301, 115, 42);
-        Button(window.transform, "DamageCustom", "按数值扣血", 149, 301, 178, 42, damageColor, console.DamageCustom);
-        Button(window.transform, "HealCustom", "按数值回血", 337, 301, 179, 42, healColor, console.HealCustom);
-        Button(window.transform, "FullHealth", "恢复满血", 24, 355, 157, 42, healColor, console.FullHealth);
-        Button(window.transform, "KillPlayer", "杀死玩家", 191, 355, 157, 42, new Color(0.64f, 0.16f, 0.20f), console.KillPlayer);
-        Button(window.transform, "RevivePlayer", "复活并回满", 358, 355, 158, 42, Accent, console.RevivePlayer);
-        Button(window.transform, "TestDamage", "按输入值造成伤害（经过防御）", 24, 409, 492, 40, new Color(0.25f, 0.31f, 0.42f), console.TestDamage);
-
-        Label(window.transform, "AttributesTitle", "实时属性", 24, 466, 470, 28, 23, new Color(0.4f, 0.9f, 0.85f));
-        Label(window.transform, "AttackLabel", "攻击力", 24, 504, 150, 25, 19, Color.white);
-        Label(window.transform, "DefenseLabel", "防御力", 191, 504, 150, 25, 19, Color.white);
-        Label(window.transform, "MaxHealthLabel", "最大生命", 358, 504, 150, 25, 19, Color.white);
-        TMP_InputField attack = Input(window.transform, "AttackInput", "0", 24, 535, 157, 42);
-        TMP_InputField defense = Input(window.transform, "DefenseInput", "0", 191, 535, 157, 42);
-        TMP_InputField maxHealth = Input(window.transform, "MaxHealthInput", "100", 358, 535, 158, 42);
-        Button(window.transform, "AttackDown", "攻击 −1", 24, 590, 117, 36, Accent, console.AttackDown);
-        Button(window.transform, "AttackUp", "攻击 +1", 149, 590, 117, 36, Accent, console.AttackUp);
-        Button(window.transform, "DefenseDown", "防御 −1", 274, 590, 117, 36, Accent, console.DefenseDown);
-        Button(window.transform, "DefenseUp", "防御 +1", 399, 590, 117, 36, Accent, console.DefenseUp);
-        Button(window.transform, "MaxHealthDown", "生命上限 −10", 24, 638, 241, 36, Accent, console.MaxHealthDown);
-        Button(window.transform, "MaxHealthUp", "生命上限 +10", 275, 638, 241, 36, Accent, console.MaxHealthUp);
-        Button(window.transform, "ApplyAttributes", "应用属性", 24, 686, 241, 42, Accent, console.ApplyAttributes);
-        Button(window.transform, "ResetAttributes", "恢复 SO 初始值", 275, 686, 241, 42, new Color(0.25f, 0.31f, 0.42f), console.ResetAttributes);
-        Button(window.transform, "ClearMissionSave", "清空任务存档", 24, 742, 492, 42, new Color(0.55f, 0.21f, 0.25f), console.ClearMissionSave);
-        TMP_Text message = Label(window.transform, "Message", "输入属性后回车或移开焦点即可生效。\n扣血直接减生命；伤害按钮经过防御计算。", 24, 796, 492, 62, 17, new Color(0.55f, 0.87f, 0.9f));
-
-        var serialized = new SerializedObject(console);
-        Set(serialized, "window", window);
-        Set(serialized, "targetPlayer", scene.GetRootGameObjects().SelectMany(go => go.GetComponentsInChildren<PlayerObject>(true)).FirstOrDefault());
-        Set(serialized, "statusText", status);
-        Set(serialized, "messageText", message);
-        Set(serialized, "amountInput", amount);
-        Set(serialized, "attackInput", attack);
-        Set(serialized, "defenseInput", defense);
-        Set(serialized, "maxHealthInput", maxHealth);
-        serialized.ApplyModifiedPropertiesWithoutUndo();
-
-        int boundBars = 0;
-        foreach (PlayerHealthBar bar in scene.GetRootGameObjects().SelectMany(go => go.GetComponentsInChildren<PlayerHealthBar>(true)))
-        {
-            bar.healthBarFill = bar.GetComponentsInChildren<Image>(true).FirstOrDefault(image => image.name == "Fill");
-            bar.txtHp = bar.GetComponentInChildren<TMP_Text>(true);
-            EditorUtility.SetDirty(bar);
-            boundBars++;
-        }
-        EditorSceneManager.MarkSceneDirty(scene);
-        EditorSceneManager.SaveScene(scene);
-        Selection.activeGameObject = root;
-        int buttons = root.GetComponentsInChildren<Button>(true).Length;
-        if (buttons < 18 || boundBars < 1)
-            throw new InvalidOperationException("控制台按钮或玩家血条绑定数量异常。");
-        WriteReport("scene-build.json", $"{{\"scene\":\"GMScene\",\"buttons\":{buttons},\"boundPlayerBars\":{boundBars},\"canvas\":\"{canvas.name}\",\"saved\":true}}");
-        Debug.Log($"[DevConsole] 已在现有Canvas搭建控制台，{buttons}个按钮，{boundBars}条玩家血条引用已绑定。");
-    }
-
-    [MenuItem("Tools/AstralEchoes/Dev Console/Add Mission Reset Button")]
-    public static void AddMissionResetButton()
-    {
-        if (Application.isPlaying) throw new InvalidOperationException("请在编辑模式添加按钮。");
-        font = GetConsoleFont();
-        const string prefabPath = "Assets/Resources/UI/Canvas.prefab";
-        GameObject prefab = PrefabUtility.LoadPrefabContents(prefabPath);
-        int prefabCount;
+        if (Application.isPlaying) throw new InvalidOperationException("请在编辑模式执行。");
+        GetConsoleFont();
+        GameObject prefab = PrefabUtility.LoadPrefabContents(CanvasPrefabPath);
         try
         {
-            var consoles = prefab.GetComponentsInChildren<DevConsole>(true);
-            prefabCount = consoles.Length;
-            foreach (var console in consoles) UpgradeMissionButton(console);
-            PrefabUtility.SaveAsPrefabAsset(prefab, prefabPath);
+            if (prefab.GetComponentInChildren<DevConsole>(true) != null)
+            {
+                Debug.Log("[DevConsole] Canvas.prefab 里已经有 DevConsole，未做修改。");
+                return;
+            }
+            // 不用 ??：编辑器里 GetComponent 找不到时返回的是 Unity 的"假 null"。
+            Canvas rootCanvas = prefab.GetComponent<Canvas>();
+            if (rootCanvas == null) rootCanvas = prefab.GetComponentInChildren<Canvas>(true);
+            if (rootCanvas == null) throw new InvalidOperationException("Canvas.prefab 里没有 Canvas。");
+            var root = new GameObject("DevConsole", typeof(RectTransform), typeof(Canvas), typeof(GraphicRaycaster), typeof(DevConsole));
+            var rect = root.GetComponent<RectTransform>();
+            rect.SetParent(rootCanvas.transform, false);
+            rect.anchorMin = Vector2.zero;
+            rect.anchorMax = Vector2.one;
+            rect.offsetMin = rect.offsetMax = Vector2.zero;
+            var overlay = root.GetComponent<Canvas>();
+            overlay.overrideSorting = true;
+            overlay.sortingOrder = 5000;
+            PrefabUtility.SaveAsPrefabAsset(prefab, CanvasPrefabPath);
+            Debug.Log("[DevConsole] 已在 Canvas.prefab 中加入 DevConsole。");
         }
         finally { PrefabUtility.UnloadPrefabContents(prefab); }
-
-        Scene scene = SceneManager.GetSceneByPath(ScenePath);
-        int sceneCount = 0;
-        if (scene.IsValid() && scene.isLoaded)
-        {
-            foreach (var console in scene.GetRootGameObjects().SelectMany(go => go.GetComponentsInChildren<DevConsole>(true)))
-            {
-                UpgradeMissionButton(console);
-                sceneCount++;
-            }
-            EditorSceneManager.MarkSceneDirty(scene);
-            EditorSceneManager.SaveScene(scene);
-        }
-        WriteReport("mission-reset-button.json", $"{{\"prefabConsoles\":{prefabCount},\"sceneConsoles\":{sceneCount},\"saved\":true,\"saveDataExecuted\":false}}");
-        Debug.Log("[DevConsole] 已添加清空任务存档按钮；未执行清空操作。");
     }
 
-    private static void UpgradeMissionButton(DevConsole console)
+    // 旧版由编辑器生成的 Window / ToggleButton 不再使用；运行时 DevConsole 也会自动移除它们，这里把预制件一并清理干净。
+    [MenuItem("Tools/AstralEchoes/Dev Console/Remove Legacy Layout")]
+    public static void RemoveLegacyLayout()
     {
-        var window = console.transform.Find("Window") as RectTransform;
-        if (window == null) throw new InvalidOperationException("控制台 Window 不存在。");
-        Undo.RecordObject(window, "Extend DevConsole Window");
-        window.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, Mathf.Max(window.sizeDelta.y, 874));
-        if (window.Find("ClearMissionSave") == null)
-            Button(window, "ClearMissionSave", "清空任务存档", 24, 742, 492, 42,
-                new Color(0.55f, 0.21f, 0.25f), console.ClearMissionSave);
-        var message = window.Find("Message") as RectTransform;
-        if (message != null)
-        {
-            Undo.RecordObject(message, "Move DevConsole Message");
-            message.anchoredPosition = new Vector2(24, -796);
-        }
-        var subtitle = window.Find("Subtitle")?.GetComponent<TMP_Text>();
-        if (subtitle != null && subtitle.text.Contains("仅修改运行时实例"))
-        {
-            Undo.RecordObject(subtitle, "Update DevConsole Subtitle");
-            subtitle.text = "F1 开关 · Esc 关闭 · 角色与任务调试";
-        }
-        Canvas.ForceUpdateCanvases();
-        var label = window.Find("ClearMissionSave/Label").GetComponent<TMP_Text>();
-        label.ForceMeshUpdate(true);
-        var button = window.Find("ClearMissionSave").GetComponent<Button>();
-        if (button.onClick.GetPersistentEventCount() != 1 ||
-            button.onClick.GetPersistentMethodName(0) != nameof(DevConsole.ClearMissionSave))
-            throw new InvalidOperationException("清空任务存档按钮回调不正确。");
-        if (PrefabUtility.IsPartOfPrefabInstance(window))
-        {
-            PrefabUtility.RecordPrefabInstancePropertyModifications(window);
-            if (message != null) PrefabUtility.RecordPrefabInstancePropertyModifications(message);
-            if (subtitle != null) PrefabUtility.RecordPrefabInstancePropertyModifications(subtitle);
-        }
-    }
-
-    // 在本地 Canvas 预制件的控制台里加一行等级调试：输入框、设置等级、重置为初始等级。
-    [MenuItem("Tools/AstralEchoes/Dev Console/Add Level Controls")]
-    public static void AddLevelControls()
-    {
-        if (Application.isPlaying) throw new InvalidOperationException("请在编辑模式添加等级控件。");
-        font = GetConsoleFont();
-        const string prefabPath = "Assets/Resources/UI/Canvas.prefab";
-        GameObject prefab = PrefabUtility.LoadPrefabContents(prefabPath);
-        int upgraded = 0;
+        if (Application.isPlaying) throw new InvalidOperationException("请在编辑模式执行。");
+        GameObject prefab = PrefabUtility.LoadPrefabContents(CanvasPrefabPath);
+        int removed = 0, consoles = 0;
         try
         {
-            foreach (var console in prefab.GetComponentsInChildren<DevConsole>(true))
+            foreach (DevConsole console in prefab.GetComponentsInChildren<DevConsole>(true))
             {
-                UpgradeLevelControls(console);
-                upgraded++;
+                consoles++;
+                foreach (string name in LegacyChildren)
+                {
+                    Transform child = console.transform.Find(name);
+                    if (child == null) continue;
+                    UnityEngine.Object.DestroyImmediate(child.gameObject);
+                    removed++;
+                }
             }
-            if (upgraded == 0) throw new InvalidOperationException("Canvas.prefab 里没有找到 DevConsole。");
-            PrefabUtility.SaveAsPrefabAsset(prefab, prefabPath);
+            if (consoles == 0) throw new InvalidOperationException("Canvas.prefab 里没有找到 DevConsole，可先执行 Add to Canvas Prefab。");
+            if (removed > 0) PrefabUtility.SaveAsPrefabAsset(prefab, CanvasPrefabPath);
         }
         finally { PrefabUtility.UnloadPrefabContents(prefab); }
-        WriteReport("level-controls.json", $"{{\"prefabConsoles\":{upgraded},\"saved\":true}}");
-        Debug.Log($"[DevConsole] 已在 Canvas.prefab 的 {upgraded} 个控制台中加入等级控件。");
-    }
-
-    private static void UpgradeLevelControls(DevConsole console)
-    {
-        var window = console.transform.Find("Window") as RectTransform;
-        if (window == null) throw new InvalidOperationException("控制台 Window 不存在。");
-        const float titleY = 796, rowY = 832, messageY = 886;
-        if (window.Find("LevelInput") == null)
-        {
-            Label(window, "LevelTitle", "等级调试（写入存档，经验清零）", 24, titleY, 470, 28, 23, new Color(0.4f, 0.9f, 0.85f));
-            TMP_InputField level = Input(window, "LevelInput", "1", 24, rowY, 115, 42);
-            Button(window, "ApplyLevel", "设置等级", 149, rowY, 178, 42, Accent, console.ApplyLevel);
-            Button(window, "ResetLevel", "重置为初始等级", 337, rowY, 179, 42, new Color(0.25f, 0.31f, 0.42f), console.ResetLevel);
-            var serialized = new SerializedObject(console);
-            Set(serialized, "levelInput", level);
-            serialized.ApplyModifiedPropertiesWithoutUndo();
-        }
-        window.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, Mathf.Max(window.sizeDelta.y, messageY + 62 + 16));
-        if (window.Find("Message") is RectTransform message)
-            message.anchoredPosition = new Vector2(24, -messageY);
-        foreach (string name in new[] { "ApplyLevel", "ResetLevel" })
-        {
-            var button = window.Find(name).GetComponent<Button>();
-            if (button.onClick.GetPersistentEventCount() != 1 || button.onClick.GetPersistentMethodName(0) != name)
-                throw new InvalidOperationException(name + " 按钮回调不正确。");
-        }
+        WriteReport("remove-legacy.json", $"{{\"consoles\":{consoles},\"removedChildren\":{removed}}}");
+        Debug.Log($"[DevConsole] 已从 Canvas.prefab 移除 {removed} 个旧版控件。");
     }
 
     private static TMP_FontAsset GetConsoleFont()
@@ -313,8 +137,7 @@ public static class DevConsoleSetup
         created.name = "DevConsoleFont";
         AssetDatabase.CreateAsset(created, path);
         string characters = File.ReadAllText("Assets/Scripts/UI/DevConsole.cs") +
-            File.ReadAllText("Assets/Editor/DevConsoleSetup.cs") +
-            "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 /.-+×−_";
+            "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 /.-+×−_#·";
         characters = new string(characters.Where(c => !char.IsControl(c)).Distinct().ToArray());
         created.TryAddCharacters(characters, out string missing);
         created.fallbackFontAssetTable = new List<TMP_FontAsset>();
@@ -329,94 +152,6 @@ public static class DevConsoleSetup
         return created;
     }
 
-    [MenuItem("Tools/AstralEchoes/Dev Console/Refresh Console Font")]
-    public static void RefreshConsoleFont()
-    {
-        var console = UnityEngine.Object.FindFirstObjectByType<DevConsole>();
-        if (console == null || Application.isPlaying) throw new InvalidOperationException("请在编辑模式选择GMScene控制台。");
-        font = GetConsoleFont();
-        foreach (TMP_Text text in console.GetComponentsInChildren<TMP_Text>(true))
-        {
-            text.font = font;
-            EditorUtility.SetDirty(text);
-        }
-        EditorSceneManager.MarkSceneDirty(console.gameObject.scene);
-        EditorSceneManager.SaveScene(console.gameObject.scene);
-    }
-
-    private static void Set(SerializedObject target, string field, UnityEngine.Object value)
-    {
-        target.FindProperty(field).objectReferenceValue = value;
-    }
-
-    private static RectTransform Rect(Transform parent, string name, float x, float y, float width, float height)
-    {
-        var go = new GameObject(name, typeof(RectTransform));
-        var rect = go.GetComponent<RectTransform>();
-        rect.SetParent(parent, false);
-        rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(0, 1);
-        rect.anchoredPosition = new Vector2(x, -y);
-        rect.sizeDelta = new Vector2(width, height);
-        return rect;
-    }
-
-    private static GameObject Box(Transform parent, string name, float x, float y, float width, float height, Color color)
-    {
-        var rect = Rect(parent, name, x, y, width, height);
-        rect.gameObject.AddComponent<Image>().color = color;
-        return rect.gameObject;
-    }
-
-    private static TMP_Text Label(Transform parent, string name, string value, float x, float y, float width, float height, int size, Color color)
-    {
-        var rect = Rect(parent, name, x, y, width, height);
-        var text = rect.gameObject.AddComponent<TextMeshProUGUI>();
-        text.font = font;
-        text.text = value;
-        text.fontSize = size;
-        text.color = color;
-        text.richText = false;
-        text.raycastTarget = false;
-        text.textWrappingMode = TextWrappingModes.Normal;
-        text.overflowMode = TextOverflowModes.Ellipsis;
-        return text;
-    }
-
-    private static GameObject Button(Transform parent, string name, string title, float x, float y, float width, float height, Color color, UnityAction action)
-    {
-        var go = Box(parent, name, x, y, width, height, color);
-        var button = go.AddComponent<Button>();
-        button.targetGraphic = go.GetComponent<Image>();
-        button.navigation = new Navigation { mode = Navigation.Mode.None };
-        ColorBlock colors = button.colors;
-        colors.highlightedColor = new Color(1.2f, 1.2f, 1.2f);
-        colors.pressedColor = new Color(0.7f, 0.7f, 0.7f);
-        button.colors = colors;
-        var text = Label(go.transform, "Label", title, 4, 0, width - 8, height, 19, Color.white);
-        text.alignment = TextAlignmentOptions.Center;
-        UnityEventTools.AddPersistentListener(button.onClick, action);
-        return go;
-    }
-
-    private static TMP_InputField Input(Transform parent, string name, string value, float x, float y, float width, float height)
-    {
-        var go = Box(parent, name, x, y, width, height, new Color(0.12f, 0.17f, 0.25f));
-        var input = go.AddComponent<TMP_InputField>();
-        var area = Rect(go.transform, "TextArea", 10, 4, width - 20, height - 8);
-        area.gameObject.AddComponent<RectMask2D>();
-        var text = Label(area, "Text", value, 0, 0, width - 20, height - 8, 22, Color.white);
-        text.alignment = TextAlignmentOptions.MidlineLeft;
-        input.textViewport = area;
-        input.textComponent = text as TextMeshProUGUI;
-        input.targetGraphic = go.GetComponent<Image>();
-        input.contentType = TMP_InputField.ContentType.IntegerNumber;
-        input.characterLimit = 8;
-        input.text = value;
-        input.caretColor = Color.white;
-        input.customCaretColor = true;
-        return input;
-    }
-
     [MenuItem("Tools/AstralEchoes/Dev Console/Verify in Play Mode")]
     public static void Verify()
     {
@@ -427,8 +162,8 @@ public static class DevConsoleSetup
 
     // ---- Play Mode 自动检查（Claude 维护）：逐项记录通过/失败，不在第一处失败时中断 ----
     private static readonly List<string> checkLines = new List<string>();
-    private static int passCount, failCount, stageFrame;
-    private static int healthEventCount, stateEventCount;
+    private static int passCount, failCount, stageFrame, captureIndex;
+    private static int healthEventCount, stateEventCount, levelEventCount, itemEventCount;
     private static bool lastStateEvent;
     private static bool startCursorMode;
     private static int startMax, startAttack, startDefense;
@@ -437,11 +172,12 @@ public static class DevConsoleSetup
     private static DevConsole vConsole;
     private static readonly FieldInfo HealthDefField = typeof(CharacterHealth).GetField("def", BindingFlags.Instance | BindingFlags.NonPublic);
     private static readonly FieldInfo EnemyReturningField = typeof(EnemyAI).GetField("isReturning", BindingFlags.Instance | BindingFlags.NonPublic);
+    private static readonly string[] CaptureNames = { "Health", "Stats", "Items", "Save" };
 
-    private static int levelEventCount;
     private static void OnLevelEvent() => levelEventCount++;
     private static void OnHealthEvent(int current, int max) => healthEventCount++;
     private static void OnStateEvent(bool dead) { stateEventCount++; lastStateEvent = dead; }
+    private static void OnItemEvent(int id, int count) => itemEventCount++;
 
     private static void Check(bool condition, string name, string detail = "")
     {
@@ -464,13 +200,14 @@ public static class DevConsoleSetup
 
     private static string Hp() => $"实际 {vHealth.CurrentHp}/{vHealth.MaxHp}，isDead={vHealth.isDead}";
 
-    private static void Amount(int value) => Field(vConsole, "AmountInput").SetTextWithoutNotify(value.ToString());
+    private static void Amount(int value) => Field("AmountInput").SetTextWithoutNotify(value.ToString());
 
     private static void Unsubscribe()
     {
         if (vHealth != null) vHealth.OnHealthChange -= OnHealthEvent;
         PlayerMgr.Instance.OnPlayerStateChange -= OnStateEvent;
         PlayerMgr.Instance.OnPlayerLevelChange -= OnLevelEvent;
+        PlayerItemMgr.Instance.OnItemCountChanged -= OnItemEvent;
     }
 
     private static void VerifyTick()
@@ -486,7 +223,7 @@ public static class DevConsoleSetup
                 vHealth = vPlayer != null ? vPlayer.GetComponent<CharacterHealth>() : null;
                 if (vPlayer == null || vHealth == null || vHealth.MaxHp <= 0 || vConsole == null || vPlayer.Stats == null || Time.frameCount < 20)
                     return;
-                checkLines.Clear(); passCount = failCount = 0; healthEventCount = stateEventCount = 0;
+                checkLines.Clear(); passCount = failCount = 0; healthEventCount = stateEventCount = levelEventCount = itemEventCount = 0;
                 Note($"开始：Lv.{PlayerMgr.Instance.saveData.level}，攻击 {vPlayer.Stats.Atk}，防御 {vPlayer.Stats.Def}，{Hp()}");
                 if (vHealth.isDead || vHealth.CurrentHp != vHealth.MaxHp)
                     Note("开始时玩家不是满血存活状态，后续数值以控制台回满后的状态为准。");
@@ -495,7 +232,12 @@ public static class DevConsoleSetup
                 vHealth.OnHealthChange += OnHealthEvent;
                 PlayerMgr.Instance.OnPlayerStateChange += OnStateEvent;
                 PlayerMgr.Instance.OnPlayerLevelChange += OnLevelEvent;
-                levelEventCount = 0;
+
+                // 0. 运行时生成的界面
+                Check(vConsole.transform.Find("Window") == null && vConsole.transform.Find("ToggleButton") == null, "界面：旧版预制件控件已移除");
+                Check(vConsole.transform.Find("ConsoleWindow") != null && vConsole.transform.Find("ConsoleLauncher") != null, "界面：运行时生成窗口与开关按钮");
+                CheckHudOverlap("ConsoleLauncher", true);
+                CheckHudOverlap("ConsoleWindow", false);
 
                 // 1. 打开控制台
                 vConsole.SetOpen(true);
@@ -505,8 +247,8 @@ public static class DevConsoleSetup
                 Check(!CameraInputEnabled(), "打开：镜头输入关闭（CameraCursorLock）");
                 Check(!vPlayer.enabled, "打开：玩家移动组件已暂停");
                 Check(!vPlayer.GetComponent<PlayerCombat>().enabled, "打开：玩家攻击组件已暂停");
-                if (vHealth.isDead) Click(vConsole, "RevivePlayer");
-                Click(vConsole, "FullHealth");
+                if (vHealth.isDead) Click("RevivePlayer");
+                Click("FullHealth");
 
                 // 2. 模拟松开 Alt：退出光标模式，等控制台下一帧重新进入
                 PlayerMgr.Instance.SetCursorState(false);
@@ -519,16 +261,26 @@ public static class DevConsoleSetup
                 Check(PlayerMgr.Instance.CurrentIsCursor, "打开期间光标模式被退出后，控制台自动重新进入");
                 Check(!CameraInputEnabled(), "重新进入后镜头输入仍关闭");
                 RunValueChecks();
-                // 截图时保持控制台打开
+                // 依次截取四个分页，截图时保持控制台打开
                 vConsole.SetOpen(true);
-                // ScreenCapture 不会自动创建目录。
                 Directory.CreateDirectory(ReportDir);
-                ScreenCapture.CaptureScreenshot(ReportDir + "/DevConsole-PlayMode.png");
-                captureFrame = Time.frameCount;
+                captureIndex = 0;
+                stageFrame = Time.frameCount;
                 SessionState.SetString(StageKey, "Capture");
             }
-            else if (stage == "Capture" && Time.frameCount >= captureFrame + 12)
+            else if (stage == "Capture")
             {
+                if (Time.frameCount < stageFrame + 8) return;
+                if (captureIndex < CaptureNames.Length)
+                {
+                    vConsole.SelectTab(captureIndex);
+                    // ScreenCapture 不会自动创建目录。
+                    ScreenCapture.CaptureScreenshot($"{ReportDir}/DevConsole-{captureIndex}-{CaptureNames[captureIndex]}.png");
+                    captureIndex++;
+                    stageFrame = Time.frameCount;
+                    return;
+                }
+                vConsole.SelectTab(DevConsole.HealthTab);
                 vConsole.SetOpen(false);
                 Unsubscribe();
                 string summary = $"DevConsole Play Mode 检查：通过 {passCount}，失败 {failCount}（{DateTime.Now:yyyy-MM-dd HH:mm:ss}）";
@@ -554,29 +306,31 @@ public static class DevConsoleSetup
 
     private static void RunValueChecks()
     {
+        CheckLayout();
+
         int max = vHealth.MaxHp;
         int def = (int)HealthDefField.GetValue(vHealth);
 
         // 3. 生命按钮
         int events = healthEventCount;
-        Click(vConsole, "Damage10"); Check(vHealth.CurrentHp == max - 10, "扣血 10", Hp());
+        Click("Damage10"); Check(vHealth.CurrentHp == max - 10, "扣血 10", Hp());
         Check(healthEventCount > events, "扣血后触发 OnHealthChange（血条刷新）");
-        Click(vConsole, "Heal10"); Check(vHealth.CurrentHp == max, "回血 10", Hp());
-        Click(vConsole, "Damage25"); Check(vHealth.CurrentHp == max - 25, "扣血 25", Hp());
-        Click(vConsole, "Heal25"); Check(vHealth.CurrentHp == max, "回血 25（不超过上限）", Hp());
-        Amount(7); Click(vConsole, "DamageCustom"); Check(vHealth.CurrentHp == max - 7, "按数值扣血 7", Hp());
-        Amount(3); Click(vConsole, "HealCustom"); Check(vHealth.CurrentHp == max - 4, "按数值回血 3", Hp());
+        Click("Heal10"); Check(vHealth.CurrentHp == max, "回血 10", Hp());
+        Click("Damage25"); Check(vHealth.CurrentHp == max - 25, "扣血 25", Hp());
+        Click("Heal25"); Check(vHealth.CurrentHp == max, "回血 25（不超过上限）", Hp());
+        Amount(7); Click("DamageCustom"); Check(vHealth.CurrentHp == max - 7, "按数值扣血 7", Hp());
+        Amount(3); Click("HealCustom"); Check(vHealth.CurrentHp == max - 4, "按数值回血 3", Hp());
         events = healthEventCount;
-        Click(vConsole, "FullHealth"); Check(vHealth.CurrentHp == max, "恢复满血", Hp());
+        Click("FullHealth"); Check(vHealth.CurrentHp == max, "恢复满血", Hp());
         Check(healthEventCount > events, "回血后触发 OnHealthChange");
-        Amount(14); Click(vConsole, "TestDamage");
+        Amount(14); Click("TestDamage");
         int expected = max - Mathf.Max(14 - def, 0);
         Check(vHealth.CurrentHp == expected, $"经过防御的伤害 14（防御 {def}）", Hp() + $"，期望 {expected}");
-        Click(vConsole, "FullHealth");
+        Click("FullHealth");
 
         // 4. 死亡
         int states = stateEventCount;
-        Click(vConsole, "KillPlayer");
+        Click("KillPlayer");
         Check(vHealth.CurrentHp == 0 && vHealth.isDead, "杀死玩家：生命归零且 isDead", Hp());
         Check(stateEventCount > states && lastStateEvent, "杀死玩家：发出死亡广播 OnPlayerStateChange(true)");
         Check(vPlayer.animator != null && vPlayer.animator.GetBool("IsDead"), "杀死玩家：Animator 的 IsDead 为 true");
@@ -586,43 +340,43 @@ public static class DevConsoleSetup
         if (allEnemies.Length > enemies.Length) Note($"场景中有 {allEnemies.Length - enemies.Length} 个 EnemyAI 组件处于禁用状态，不参与脱战检查。");
         if (enemies.Length == 0) Note("场景中没有启用的 EnemyAI，跳过怪物脱战检查。");
         else Check(enemies.All(e => (bool)EnemyReturningField.GetValue(e)), $"杀死玩家：{enemies.Length} 个启用中的 EnemyAI 都进入返回状态（脱战）");
-        Click(vConsole, "Damage10"); Check(vHealth.CurrentHp == 0, "死亡时扣血被拒绝", Hp());
-        Click(vConsole, "Heal10"); Check(vHealth.CurrentHp == 0 && vHealth.isDead, "死亡时回血被拒绝", Hp());
-        Click(vConsole, "ResetAttributes"); Check(vHealth.isDead && vHealth.CurrentHp == 0, "死亡时恢复初始值被拒绝", Hp());
+        Click("Damage10"); Check(vHealth.CurrentHp == 0, "死亡时扣血被拒绝", Hp());
+        Click("Heal10"); Check(vHealth.CurrentHp == 0 && vHealth.isDead, "死亡时回血被拒绝", Hp());
+        Click("ResetAttributes"); Check(vHealth.isDead && vHealth.CurrentHp == 0, "死亡时恢复初始值被拒绝", Hp());
 
         // 5. 复活
         states = stateEventCount;
-        Click(vConsole, "RevivePlayer");
+        Click("RevivePlayer");
         Check(vHealth.CurrentHp == max && !vHealth.isDead, "复活：回满且存活", Hp());
         Check(stateEventCount > states && !lastStateEvent, "复活：发出复活广播 OnPlayerStateChange(false)");
         Check(vPlayer.animator != null && !vPlayer.animator.GetBool("IsDead"), "复活：Animator 的 IsDead 为 false");
-        Click(vConsole, "Damage10");
+        Click("Damage10");
         states = stateEventCount;
-        Click(vConsole, "RevivePlayer");
+        Click("RevivePlayer");
         Check(vHealth.CurrentHp == max && stateEventCount == states, "存活时点复活：只回满，不发复活广播", Hp());
 
         // 6. 属性
         events = healthEventCount;
-        Field(vConsole, "AttackInput").SetTextWithoutNotify("7");
-        Field(vConsole, "DefenseInput").SetTextWithoutNotify("4");
-        Field(vConsole, "MaxHealthInput").SetTextWithoutNotify("80");
-        Click(vConsole, "ApplyAttributes");
+        Field("AttackInput").SetTextWithoutNotify("7");
+        Field("DefenseInput").SetTextWithoutNotify("4");
+        Field("MaxHealthInput").SetTextWithoutNotify("80");
+        Click("ApplyAttributes");
         int healthDef = (int)HealthDefField.GetValue(vHealth);
         Check(vPlayer.Stats.Atk == 7 && vPlayer.Stats.Def == 4, "应用属性：CharacterStats 为 7/4", $"实际 {vPlayer.Stats.Atk}/{vPlayer.Stats.Def}");
         Check(healthDef == 4 && vHealth.MaxHp == 80 && vHealth.CurrentHp == 80, "应用属性：生命组件防御 4、上限 80，当前生命压到 80", $"防御 {healthDef}，{Hp()}");
         Check(PlayerMgr.Instance.GetAtkValue() == 7, "应用属性：玩家攻击力（GetAtkValue）为 7", $"实际 {PlayerMgr.Instance.GetAtkValue()}");
         Check(healthEventCount > events, "应用属性后触发 OnHealthChange");
-        Amount(14); Click(vConsole, "TestDamage"); Check(vHealth.CurrentHp == 70, "新防御下伤害 14 → 生命 70", Hp());
-        Amount(5); Click(vConsole, "HealCustom"); Check(vHealth.CurrentHp == 75, "回血 5 → 生命 75", Hp());
-        Click(vConsole, "AttackUp"); Check(vPlayer.Stats.Atk == 8, "攻击 +1", $"实际 {vPlayer.Stats.Atk}");
-        Click(vConsole, "AttackDown"); Check(vPlayer.Stats.Atk == 7, "攻击 −1", $"实际 {vPlayer.Stats.Atk}");
-        Click(vConsole, "DefenseUp"); Check(vPlayer.Stats.Def == 5 && (int)HealthDefField.GetValue(vHealth) == 5, "防御 +1（属性与生命组件同步）");
-        Click(vConsole, "DefenseDown"); Check(vPlayer.Stats.Def == 4, "防御 −1", $"实际 {vPlayer.Stats.Def}");
-        Click(vConsole, "MaxHealthUp"); Check(vHealth.MaxHp == 90 && vHealth.CurrentHp == 75, "生命上限 +10（当前生命不变）", Hp());
-        Click(vConsole, "MaxHealthDown"); Check(vHealth.MaxHp == 80 && vHealth.CurrentHp == 75, "生命上限 −10", Hp());
+        Amount(14); Click("TestDamage"); Check(vHealth.CurrentHp == 70, "新防御下伤害 14 → 生命 70", Hp());
+        Amount(5); Click("HealCustom"); Check(vHealth.CurrentHp == 75, "回血 5 → 生命 75", Hp());
+        Click("AttackUp"); Check(vPlayer.Stats.Atk == 8, "攻击 +1", $"实际 {vPlayer.Stats.Atk}");
+        Click("AttackDown"); Check(vPlayer.Stats.Atk == 7, "攻击 −1", $"实际 {vPlayer.Stats.Atk}");
+        Click("DefenseUp"); Check(vPlayer.Stats.Def == 5 && (int)HealthDefField.GetValue(vHealth) == 5, "防御 +1（属性与生命组件同步）");
+        Click("DefenseDown"); Check(vPlayer.Stats.Def == 4, "防御 −1", $"实际 {vPlayer.Stats.Def}");
+        Click("MaxHealthUp"); Check(vHealth.MaxHp == 90 && vHealth.CurrentHp == 75, "生命上限 +10（当前生命不变）", Hp());
+        Click("MaxHealthDown"); Check(vHealth.MaxHp == 80 && vHealth.CurrentHp == 75, "生命上限 −10", Hp());
 
         // 7. 恢复初始值
-        Click(vConsole, "ResetAttributes");
+        Click("ResetAttributes");
         Check(vPlayer.Stats.Atk == startAttack && vPlayer.Stats.Def == startDefense, "恢复初始值：属性回到当前等级的数值", $"实际 {vPlayer.Stats.Atk}/{vPlayer.Stats.Def}，期望 {startAttack}/{startDefense}");
         Check(vHealth.MaxHp == startMax && vHealth.CurrentHp == startMax, "恢复初始值：生命上限回到当前等级并回满", Hp());
         Check(PlayerMgr.Instance.GetAtkValue() == startAttack, "恢复初始值：GetAtkValue 同步");
@@ -630,61 +384,212 @@ public static class DevConsoleSetup
         Check(ReferenceEquals(template, vPlayer.Config), "共享 SO：玩家仍引用配置表中的同一份数据（未被控制台替换）");
 
         // 8. 等级（会写入玩家存档，检查结束时恢复原等级和经验并再次保存）
-        if (vConsole.transform.Find("Window/ResetLevel") == null)
-        {
-            Note("控制台还没有等级控件（先运行 Add Level Controls），跳过等级检查。");
-        }
-        else
-        {
-            var save = PlayerMgr.Instance.saveData;
-            var cfg = vPlayer.Config;
-            int origLevel = save.level, origExp = save.exp;
-            Note($"等级检查前存档：Lv.{origLevel}，经验 {origExp}，检查结束后恢复。");
-            try
-            {
-                int levelEvents = levelEventCount;
-                Click(vConsole, "ResetLevel");
-                Check(save.level == cfg.initLv && save.exp == 0, "重置为初始等级：等级回到 initLv 且经验清零", $"实际 Lv.{save.level}，经验 {save.exp}");
-                Check(levelEventCount > levelEvents, "重置等级后广播 OnPlayerLevelChange");
-                Check(vPlayer.Stats.Atk == cfg.atk && vPlayer.Stats.Def == cfg.def && vHealth.MaxHp == cfg.maxHp,
-                    "重置等级后属性与生命上限回到初始等级", $"实际 攻击 {vPlayer.Stats.Atk}、防御 {vPlayer.Stats.Def}、{Hp()}");
-                Check(vHealth.CurrentHp <= vHealth.MaxHp, "重置等级后当前生命不超过上限", Hp());
+        RunLevelChecks();
 
-                int target = Mathf.Min(cfg.initLv + 2, Mathf.Max(cfg.initLv, cfg.maxLv));
-                Field(vConsole, "LevelInput").SetTextWithoutNotify(target.ToString());
-                Click(vConsole, "ApplyLevel");
-                int expectedAtk = cfg.atk + cfg.atkPerLv * (target - cfg.initLv);
-                int expectedMax = cfg.maxHp + cfg.maxHpPerLv * (target - cfg.initLv);
-                Check(save.level == target && vPlayer.Stats.Atk == expectedAtk && vHealth.MaxHp == expectedMax,
-                    $"设置等级 {target}：属性按等级重新计算", $"实际 Lv.{save.level}、攻击 {vPlayer.Stats.Atk}、上限 {vHealth.MaxHp}，期望攻击 {expectedAtk}、上限 {expectedMax}");
+        // 9. 道具（会写入道具存档，检查结束时恢复原数量）
+        RunItemChecks();
 
-                Field(vConsole, "LevelInput").SetTextWithoutNotify((cfg.maxLv + 5).ToString());
-                Click(vConsole, "ApplyLevel");
-                Check(save.level == Mathf.Max(cfg.initLv, cfg.maxLv), "超出最高等级的输入被限制到 maxLv", $"实际 Lv.{save.level}");
-            }
-            finally
-            {
-                save.level = origLevel;
-                save.exp = origExp;
-                PlayerMgr.Instance.PlayerLevelChanged();
-                PlayerMgr.Instance.SavePlayerData();
-                Click(vConsole, "FullHealth");
-            }
-            Check(save.level == origLevel && vPlayer.Stats.Atk == startAttack && vHealth.MaxHp == startMax, "等级检查后已恢复原等级和属性", $"实际 Lv.{save.level}、攻击 {vPlayer.Stats.Atk}、{Hp()}");
-        }
-
-        // 9. 关闭
+        // 10. 关闭
         vConsole.SetOpen(false);
         Check(!vConsole.IsOpen, "关闭：控制台窗口关闭");
         Check(vPlayer.enabled && vPlayer.GetComponent<PlayerCombat>().enabled, "关闭：玩家移动和攻击组件恢复");
         Check(PlayerMgr.Instance.CurrentIsCursor == startCursorMode, "关闭：光标模式恢复到打开前", $"打开前 {startCursorMode}，现在 {PlayerMgr.Instance.CurrentIsCursor}");
         Check(CameraInputEnabled() == !startCursorMode, "关闭：镜头输入随光标模式恢复");
-        Note("未覆盖：实际按键（F1、Esc、Alt、WASD）、打怪的实际伤害、清空任务存档、与任务面板或对话同时使用。");
+        Note("未覆盖：实际按键（F1、Esc、Alt、WASD）和鼠标点击、打怪的实际伤害、清空任务存档、清空背包道具、与任务面板/背包面板/对话同时使用。");
     }
 
-    private static TMP_InputField Field(DevConsole console, string name) => console.transform.Find("Window/" + name).GetComponent<TMP_InputField>();
-    private static void Click(DevConsole console, string name) => console.transform.Find("Window/" + name).GetComponent<Button>().onClick.Invoke();
-    private static void Require(bool condition, string message) { if (!condition) throw new Exception("DevConsole 验证失败：" + message); }
+    // 控制台的控件不应压住 HUD 上的按钮（例如右上角的背包按钮）。
+    // 屏幕空间 Overlay 画布下，RectTransform 的世界坐标角点就是屏幕像素坐标。
+    private static void CheckHudOverlap(string child, bool failOnOverlap)
+    {
+        var target = (RectTransform)vConsole.transform.Find(child);
+        Rect area = ScreenRect(target);
+        var hits = new List<string>();
+        foreach (Button button in UnityEngine.Object.FindObjectsByType<Button>(FindObjectsSortMode.None))
+        {
+            if (!button.isActiveAndEnabled || button.transform.IsChildOf(vConsole.transform)) continue;
+            if (ScreenRect((RectTransform)button.transform).Overlaps(area)) hits.Add(button.name);
+        }
+        string name = child == "ConsoleLauncher" ? "开关按钮" : "展开后的窗口";
+        if (failOnOverlap) Check(hits.Count == 0, $"布局：{name}不压住 HUD 按钮", "重叠：" + string.Join("，", hits));
+        else Note(hits.Count == 0 ? $"布局：{name}不压住 HUD 按钮。" : $"布局：{name}压住了 HUD 按钮：{string.Join("，", hits)}。");
+    }
+
+    private static Rect ScreenRect(RectTransform rect)
+    {
+        var corners = new Vector3[4];
+        rect.GetWorldCorners(corners);
+        return Rect.MinMaxRect(corners[0].x, corners[0].y, corners[2].x, corners[2].y);
+    }
+
+    // 逐页检查固定文字是否被截断（省略号），用来发现布局放不下的问题。
+    private static void CheckLayout()
+    {
+        var window = vConsole.transform.Find("ConsoleWindow");
+        string[] pages = { "HealthPage", "StatsPage", "ItemPage", "SavePage" };
+        for (int i = 0; i < pages.Length; i++)
+        {
+            vConsole.SelectTab(i);
+            Check(window.Find(pages[i]).gameObject.activeSelf && vConsole.CurrentTab == i, $"分页：切换到 {pages[i]}");
+            Canvas.ForceUpdateCanvases();
+            var truncated = new List<string>();
+            foreach (TMP_Text text in window.GetComponentsInChildren<TMP_Text>(false))
+            {
+                // 状态栏与提示栏内容随操作变化，不参与检查。
+                if (text.name == "Status" || text.name == "Message" || text.name == "Text" || text.name == "Placeholder") continue;
+                text.ForceMeshUpdate(true);
+                if (text.isTextTruncated) truncated.Add(text.transform.parent.name + "/" + text.name + "「" + text.text + "」");
+            }
+            Check(truncated.Count == 0, $"布局：{pages[i]} 的固定文字没有被截断", string.Join("，", truncated));
+        }
+        vConsole.SelectTab(DevConsole.HealthTab);
+    }
+
+    private static void RunLevelChecks()
+    {
+        var save = PlayerMgr.Instance.saveData;
+        var cfg = vPlayer.Config;
+        int origLevel = save.level, origExp = save.exp;
+        Note($"等级检查前存档：Lv.{origLevel}，经验 {origExp}，检查结束后恢复。");
+        try
+        {
+            int levelEvents = levelEventCount;
+            Click("ResetLevel");
+            Check(save.level == cfg.initLv && save.exp == 0, "重置为初始等级：等级回到 initLv 且经验清零", $"实际 Lv.{save.level}，经验 {save.exp}");
+            Check(levelEventCount > levelEvents, "重置等级后广播 OnPlayerLevelChange");
+            Check(vPlayer.Stats.Atk == cfg.atk && vPlayer.Stats.Def == cfg.def && vHealth.MaxHp == cfg.maxHp,
+                "重置等级后属性与生命上限回到初始等级", $"实际 攻击 {vPlayer.Stats.Atk}、防御 {vPlayer.Stats.Def}、{Hp()}");
+            Check(vHealth.CurrentHp <= vHealth.MaxHp, "重置等级后当前生命不超过上限", Hp());
+
+            int target = Mathf.Min(cfg.initLv + 2, Mathf.Max(cfg.initLv, cfg.maxLv));
+            Field("LevelInput").SetTextWithoutNotify(target.ToString());
+            Click("ApplyLevel");
+            int expectedAtk = cfg.atk + cfg.atkPerLv * (target - cfg.initLv);
+            int expectedMax = cfg.maxHp + cfg.maxHpPerLv * (target - cfg.initLv);
+            Check(save.level == target && vPlayer.Stats.Atk == expectedAtk && vHealth.MaxHp == expectedMax,
+                $"设置等级 {target}：属性按等级重新计算", $"实际 Lv.{save.level}、攻击 {vPlayer.Stats.Atk}、上限 {vHealth.MaxHp}，期望攻击 {expectedAtk}、上限 {expectedMax}");
+
+            Field("LevelInput").SetTextWithoutNotify((cfg.maxLv + 5).ToString());
+            Click("ApplyLevel");
+            Check(save.level == Mathf.Max(cfg.initLv, cfg.maxLv), "超出最高等级的输入被限制到 maxLv", $"实际 Lv.{save.level}");
+        }
+        finally { RestoreLevel(origLevel, origExp); }
+        Check(save.level == origLevel && vPlayer.Stats.Atk == startAttack && vHealth.MaxHp == startMax, "等级检查后已恢复原等级和属性", $"实际 Lv.{save.level}、攻击 {vPlayer.Stats.Atk}、{Hp()}");
+    }
+
+    private static void RestoreLevel(int level, int exp)
+    {
+        var save = PlayerMgr.Instance.saveData;
+        save.level = level;
+        save.exp = exp;
+        PlayerMgr.Instance.PlayerLevelChanged();
+        PlayerMgr.Instance.SavePlayerData();
+        Click("FullHealth");
+    }
+
+    private static void RunItemChecks()
+    {
+        ItemDatabase db = ConfigMgr.Instance.itemDatabase;
+        List<ItemConfig> configs = db != null && db.items != null ? db.items.Where(i => i != null).ToList() : new List<ItemConfig>();
+        if (configs.Count == 0) { Note("ItemDatabase 为空，跳过道具检查。"); return; }
+
+        vConsole.SelectTab(DevConsole.ItemTab);
+        Transform content = vConsole.transform.Find("ConsoleWindow/ItemPage/ItemList/Viewport/Content");
+        int rows = content.Cast<Transform>().Count(t => t.name.StartsWith("ItemRow_"));
+        Check(rows == configs.Count, $"道具列表：显示配置表中的全部 {configs.Count} 个物品", $"实际 {rows} 行");
+
+        PlayerItemMgr mgr = PlayerItemMgr.Instance;
+        ItemConfig sample = configs.FirstOrDefault(i => i.itemType != ItemType.exp);
+        ItemConfig expItem = configs.FirstOrDefault(i => i.itemType == ItemType.exp);
+        if (sample == null) { Note("配置表里只有经验类物品，跳过加入背包检查。"); return; }
+
+        int id = sample.itemID, orig = mgr.GetItemCount(id);
+        Note($"道具检查前：{sample.itemName}（ID {id}）持有 {orig}，检查结束后恢复。");
+        mgr.OnItemCountChanged += OnItemEvent;
+        var save = PlayerMgr.Instance.saveData;
+        int origLevel = save.level, origExp = save.exp;
+        try
+        {
+            // 从列表选择
+            Click("ItemRow_" + id);
+            Check(Field("ItemIdInput").text == id.ToString(), "点击列表行后填入物品 ID", $"实际「{Field("ItemIdInput").text}」");
+            Check(Text("DetailName").text == sample.itemName, "选择后详情显示物品名称", $"实际「{Text("DetailName").text}」");
+            Field("ItemCountInput").SetTextWithoutNotify("3");
+            int itemEvents = itemEventCount;
+            Click("AddItem");
+            Check(mgr.GetItemCount(id) == orig + 3, $"加入背包：{sample.itemName} +3（AddItem）", $"实际 {mgr.GetItemCount(id)}");
+            Check(itemEventCount > itemEvents, "加入背包触发 OnItemCountChanged");
+            Check(Text("Sub", content.Find("ItemRow_" + id)).text.Contains("持有 " + (orig + 3)), "列表中的持有数量随之刷新", Text("Sub", content.Find("ItemRow_" + id)).text);
+            Click("RemoveItem");
+            Check(mgr.GetItemCount(id) == orig, "扣除 3（RemoveItem）后回到原数量", $"实际 {mgr.GetItemCount(id)}");
+            Field("ItemCountInput").SetTextWithoutNotify((orig + 5).ToString());
+            Click("RemoveItem");
+            Check(mgr.GetItemCount(id) == orig, "扣除数量超过持有时被拒绝，数量不变", $"实际 {mgr.GetItemCount(id)}");
+
+            // 直接输入 ID（带通知，模拟键入）
+            Field("ItemIdInput").text = "";
+            Check(Text("DetailName").text == "未选择物品", "清空 ID 后详情回到未选择");
+            Field("ItemIdInput").text = id.ToString();
+            Check(Text("DetailName").text == sample.itemName, "直接输入 ID 后详情同步");
+            Field("ItemCountInput").SetTextWithoutNotify("2");
+            Click("AddItem");
+            Check(mgr.GetItemCount(id) == orig + 2, "直接输入 ID 后加入背包 +2", $"实际 {mgr.GetItemCount(id)}");
+            Click("RemoveItem");
+
+            // 配置表外的 ID
+            int missing = configs.Max(i => i.itemID) + 1000;
+            Field("ItemIdInput").text = missing.ToString();
+            Field("ItemCountInput").SetTextWithoutNotify("1");
+            Click("AddItem");
+            Check(mgr.GetItemCount(missing) == 0, $"配置表外的 ID {missing} 被拒绝，没有写入存档");
+            Check(Text("DetailName").text == "未找到物品", "配置表外的 ID：详情提示未找到");
+
+            // 按奖励结算（RewardMgr）：非经验物品进入背包，受 maxCount 限制。
+            Field("ItemIdInput").text = id.ToString();
+            Field("ItemCountInput").SetTextWithoutNotify("1");
+            int beforeReward = mgr.GetItemCount(id);
+            Click("RewardItem");
+            int expectedReward = sample.maxCount > 0 ? Mathf.Min(beforeReward + 1, sample.maxCount) : beforeReward + 1;
+            Check(mgr.GetItemCount(id) == expectedReward, $"按奖励结算 {sample.itemName} ×1：经 RewardMgr 进入背包",
+                $"持有 {beforeReward} → {mgr.GetItemCount(id)}，期望 {expectedReward}");
+
+            if (expItem == null) Note("配置表里没有经验类物品，跳过经验检查。");
+            else
+            {
+                int expHeld = mgr.GetItemCount(expItem.itemID);
+                Field("ItemIdInput").text = expItem.itemID.ToString();
+                Click("AddItem");
+                Check(mgr.GetItemCount(expItem.itemID) == expHeld, "经验类物品不能加入背包");
+                int levelBefore = save.level, expBefore = save.exp;
+                Click("RewardItem");
+                Check(save.level != levelBefore || save.exp != expBefore, "按奖励结算经验 ×1：走 AddExp，经验或等级发生变化", $"Lv.{levelBefore} 经验 {expBefore} → Lv.{save.level} 经验 {save.exp}");
+            }
+        }
+        finally
+        {
+            mgr.OnItemCountChanged -= OnItemEvent;
+            int diff = mgr.GetItemCount(id) - orig;
+            if (diff > 0) mgr.RemoveItem(id, diff);
+            else if (diff < 0) mgr.AddItem(id, -diff);
+            if (save.level != origLevel || save.exp != origExp) RestoreLevel(origLevel, origExp);
+        }
+        Check(mgr.GetItemCount(id) == orig && save.level == origLevel && save.exp == origExp, "道具检查后已恢复原持有数量与等级经验",
+            $"持有 {mgr.GetItemCount(id)}（原 {orig}），Lv.{save.level} 经验 {save.exp}（原 Lv.{origLevel} 经验 {origExp}）");
+        vConsole.SelectTab(DevConsole.HealthTab);
+    }
+
+    private static Transform Find(string name, Transform root = null)
+    {
+        root = root != null ? root : vConsole.transform;
+        foreach (Transform t in root.GetComponentsInChildren<Transform>(true))
+            if (t.name == name) return t;
+        throw new Exception("找不到控制台控件 " + name);
+    }
+
+    private static TMP_InputField Field(string name) => Find(name).GetComponent<TMP_InputField>();
+    private static TMP_Text Text(string name, Transform root = null) => Find(name, root).GetComponent<TMP_Text>();
+    private static void Click(string name) => Find(name).GetComponent<Button>().onClick.Invoke();
+
     private static void WriteReport(string name, string contents)
     {
         Directory.CreateDirectory(ReportDir);
