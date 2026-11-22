@@ -20,13 +20,8 @@ public class RewardMgr:BaseManager<RewardMgr>
                 case ItemType.exp:
                     PlayerMgr.Instance.AddExp(item.count);
                     break;
-                case ItemType.money:
-                    break;
-                case ItemType.consumable:
-                    break;
-                case ItemType.missionItem:
-                    break;
-                case ItemType.stuff:
+                default:
+                    PlayerItemMgr.Instance.AddItem(item.itemId,item.count);
                     break;
             }
         }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 public class MissionMgr:BaseManager<MissionMgr>
 {
@@ -91,9 +92,10 @@ public class MissionMgr:BaseManager<MissionMgr>
             {
                 if (!data.isFinished)
                 {
-                    //TODO 后续加经验 金币等内容
-                    
+                    MissionData missionData = ConfigMgr.Instance.GetMissionData(missionId);
+                    List<ItemRewardData> rewards = missionData.itemRewards;
                     data.isFinished = true;
+                    RewardMgr.Instance.SettlementReward(rewards);
                 }
             }
         }
