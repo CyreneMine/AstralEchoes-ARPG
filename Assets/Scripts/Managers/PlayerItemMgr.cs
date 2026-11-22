@@ -30,6 +30,8 @@ public class PlayerItemMgr :BaseManager<PlayerItemMgr>
             if (data.itemID == itemID)
             {
                 data.itemCount += itemCount;
+                if (data.itemCount > ConfigMgr.Instance.GetItemConfigByID(data.itemID).maxCount&&ConfigMgr.Instance.GetItemConfigByID(data.itemID).maxCount > 0)
+                    data.itemCount = ConfigMgr.Instance.GetItemConfigByID(data.itemID).maxCount;
                 added = true;
                 OnItemCountChanged?.Invoke(itemID,data.itemCount);
                 Save();
@@ -39,7 +41,13 @@ public class PlayerItemMgr :BaseManager<PlayerItemMgr>
 
         if (!added)
         {
-            saveData.items.Add(new ItemCountData(itemID, itemCount));
+            ItemCountData data = new ItemCountData(itemID, itemCount);
+            if (data.itemCount > ConfigMgr.Instance.GetItemConfigByID(data.itemID).maxCount&&ConfigMgr.Instance.GetItemConfigByID(data.itemID).maxCount > 0)
+            {
+                data.itemCount = ConfigMgr.Instance.GetItemConfigByID(data.itemID).maxCount;
+                itemCount = ConfigMgr.Instance.GetItemConfigByID(data.itemID).maxCount;
+            }
+            saveData.items.Add(data);
         }
         OnItemCountChanged?.Invoke(itemID,itemCount);
         Save();
