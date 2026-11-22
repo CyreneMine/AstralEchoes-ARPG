@@ -2,6 +2,10 @@
 
 按日期倒序记录每次交付的内容、对应提交和验证范围，每条一两句话，细节放在链接的开发记录里。"待回归"表示还没有在 Play Mode 里重新验证。
 
+## 2026-11-22
+
+- **背包详情区**（`09cd4ec`）：用户完成点击格子显示物品名称、数量、描述和图标，默认显示第一个格子，空背包时清空。排查了"数据正常但不显示"：详情区继承了 BasePanel，被自动添加的 CanvasGroup 淡出到透明，改为 MonoBehaviour 后解决。只做了编译，待 Play Mode 验证。[记录 44](Docs/Development/records/44-bag-detail-panel.md)
+
 ## 2026-11-21
 
 - **背包显示持有道具**（`6834c6d`、`ee723ed`）：用户完成格子生成、金币栏显示、订阅数量变化事件整表刷新并在销毁时取消订阅；道具表金币类型改为 money，新增 2 号星屑药剂。只做了编译，背包开着时的刷新待 Play Mode 验证；上限、选中详情、使用按钮未做。[记录 43](Docs/Development/records/43-bag-slot-display-and-refresh.md)
