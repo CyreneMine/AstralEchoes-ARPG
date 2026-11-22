@@ -6,6 +6,7 @@ using UnityEngine.UI;
 
 public class BagPanel : BasePanel
 {
+    public DetailPanel detailPanel;
     public Transform bagParent;
     public GameObject bagSlotPrefab;
     public Button btnClose;
@@ -22,6 +23,11 @@ public class BagPanel : BasePanel
         PlayerItemMgr.Instance.OnItemCountChanged += OnItemCountChanged;
     }
 
+    
+    public void SetDetailById(int id)
+    {
+        detailPanel.SetDetailById(id);
+    }
     public void OnItemCountChanged(int itemId, int newCount)
     {
         UpdateBag();
@@ -35,6 +41,7 @@ public class BagPanel : BasePanel
             Destroy(child.gameObject);
         }
         bagDataDic.Clear();
+        int firstSlotId = -1;
         IReadOnlyList<ItemCountData> items = PlayerItemMgr.Instance.GetAllItems();
         foreach (ItemCountData item in items)
         {
@@ -50,13 +57,21 @@ public class BagPanel : BasePanel
             BagSlot bagSlot = obj.GetComponent<BagSlot>();
             bagSlot.Init(item.itemID, item.itemCount);
             bagDataDic.Add(item.itemID,bagSlot);
+            if (firstSlotId < 0)
+                firstSlotId = item.itemID;
+        }
+        if (firstSlotId >= 0)
+            detailPanel.SetDetailById(firstSlotId);
+        else
+        {
+            detailPanel.Clear();
         }
     }
     private void OnDestroy()
     {
         PlayerItemMgr.Instance.OnItemCountChanged -= OnItemCountChanged;
     }
-
+    
     public override void ShowMe()
     {
         base.ShowMe();

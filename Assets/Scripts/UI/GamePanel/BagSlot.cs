@@ -11,5 +11,9 @@ public class BagSlot : MonoBehaviour
     {
         icon.sprite = ConfigMgr.Instance.GetItemConfigByID(currentId).itemIcon;
         amount.text = currentAmount.ToString();
+        btn.onClick.AddListener(() =>
+        {
+            UIManager.Instance.GetPanel<BagPanel>().SetDetailById(currentId);
+        });
     }
 }
