@@ -4,6 +4,8 @@
 
 ## 2026-11-22
 
+- **README 加入 AI 辅助说明**（只有文档）：开头用一句话说明玩法代码由作者编写，Codex 与 Claude Code 只用于代码审查、调试与编辑器工具、文档和仓库管理，避免把 GitHub 贡献者列表里的 `claude` 误读为参与了玩法开发。
+
 - **背包回归与扣除事件顺序**（`f83d9e1`）：#29 四项用户复测通过；扣到 0 后详情区不切换，原因是 `RemoveItem` 先广播后删除记录，用户改为删除、存盘后再广播，并撤掉了界面侧的临时补丁。关闭 #29。[记录 47](Docs/Development/records/47-bag-regression-and-remove-event-order.md)
 - **控制台复测**（只有文档）：开关按钮下移后自动检查 84 项全部通过，包括开关按钮不压住 HUD 按钮、奖励结算金币进背包；用户手动确认控制台关闭时背包按钮可正常点击，关闭 #30。[记录 46](Docs/Development/records/46-devconsole-tabs-and-item-debug.md)
 - **控制台重构为分页界面并加入道具调试**（`7269797`、`b3c303d`）：控制台改为运行时由代码生成，分生命、属性·等级、道具、存档四页；道具页可从列表选择或直接输入 ID，调用 `PlayerItemMgr` 加减或经 `RewardMgr` 结算；新增清空背包道具，清空按钮需两次确认。用户在 11-21 版本上运行自动检查 82 项全部通过；之后开关按钮下移避开背包按钮，并跟进上限截断与背包自刷新，这部分只做了编译，待复测（#30）。[记录 46](Docs/Development/records/46-devconsole-tabs-and-item-debug.md)
