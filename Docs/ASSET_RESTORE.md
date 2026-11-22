@@ -15,7 +15,7 @@
 | `Assets/CombatGirlsCharacterPack/`、`Assets/KAWAII_ANIMATIOMS_100/` | 第三方角色和动作资源包 | 武器、动作 | 部分动作缺失 |
 | `Assets/Resources/Animation/` | FBX 动作、动作副本（含 StartQuick/EndQuick、攻击判定等动画事件）；11-15 新增死亡动作 `Charecter/Normal/S_Die.fbx`（GUID `2151d986a78dd47459ae5f82490b93cd`） | `Cyrene.controller` | 动画缺失，动画事件失效 |
 | `Assets/Resources/Prefab/` | 角色预制件 `Cyrene_Blender4.2.prefab`、剑 `Dawnbreak.prefab`、`EnemyObj.prefab`（GUID `0d0b28005492b914989176f4beaec0ea`） | GMScene 中的两个敌人实例 | 敌人缺失 |
-| `Assets/Resources/UI/` | Canvas（含 DevConsole；11-16 起含等级调试控件，缺失时可在编辑模式执行 `Tools/AstralEchoes/Dev Console/Add Level Controls` 补上）、GamePanel（11-16 新增背包按钮 `btnBag`）、DialoguePanel、OptionsPanel、Option、InteractPanel、MissionPanel、MissionItem、RewardSlot、BagPanel、BagSlot、DetailPanel（11-22 新增，嵌套在 BagPanel 中）共 12 个预制件。BagPanel、BagSlot 可以用 `Tools/AstralEchoes/Bag UI` 重新生成布局，但生成结果不带用户挂的脚本和引用（`BagPanel` 的 `bagParent`、`bagSlotPrefab`、`btnClose`、`moneyText`、`detailPanel`，`BagSlot` 的 `icon`、`amount`、`btn`；DetailPanel 不由工具生成，`txtItemName`、`txtCount`、`txtDesc`、`imageIcon` 需从备份恢复），优先从备份恢复 | `UIManager.ShowPanel` | 面板无法打开 |
+| `Assets/Resources/UI/` | Canvas（含挂 `DevConsole` 组件的 DevConsole 物体；11-22 起控制台界面在运行时由代码生成，预制件里只需要这个物体，缺失时可在编辑模式执行 `Tools/AstralEchoes/Dev Console/Add to Canvas Prefab` 补上，旧版 `Window`、`ToggleButton` 可用 `Remove Legacy Layout` 删除）、GamePanel（11-16 新增背包按钮 `btnBag`）、DialoguePanel、OptionsPanel、Option、InteractPanel、MissionPanel、MissionItem、RewardSlot、BagPanel、BagSlot、DetailPanel（11-22 新增，嵌套在 BagPanel 中）共 12 个预制件。BagPanel、BagSlot 可以用 `Tools/AstralEchoes/Bag UI` 重新生成布局，但生成结果不带用户挂的脚本和引用（`BagPanel` 的 `bagParent`、`bagSlotPrefab`、`btnClose`、`moneyText`、`detailPanel`，`BagSlot` 的 `icon`、`amount`、`btn`；DetailPanel 不由工具生成，`txtItemName`、`txtCount`、`txtDesc`、`imageIcon` 需从备份恢复），优先从备份恢复 | `UIManager.ShowPanel` | 面板无法打开 |
 | `Assets/Resources/DevConsole/DevConsoleFont.asset` 及中文字体源 | TMP 字体 | 对话、任务、控制台文字 | 中文显示为方框 |
 | `Assets/TextMesh Pro/` | TMP Essential Resources，也可以从 Window → TextMeshPro 菜单重新导入，但重新导入的 GUID 可能和原来不同，优先用备份 | 所有 TMP 文本 | 文字不显示 |
 | `Assets/Resources/Mat/` | 测试用颜色材质 | 场景中的占位物体 | 材质缺失 |
@@ -75,7 +75,7 @@
 - 任务运行依赖本地 `Resources/UI/GamePanel.prefab`、`MissionPanel.prefab`、`MissionItem.prefab`、`RewardSlot.prefab` 及原meta。任务面板持有右侧目标/简介/奖励/Content/关闭按钮引用，条目仅保存自己的标题/地点/按钮，外部详情引用由Init传入；奖励槽须绑定两个文本字段。
 - 恢复 `Resources/UI/Canvas.prefab`（包含DevConsole）、`Resources/DevConsole/DevConsoleFont.asset`、工程中文字体源及原meta。场景Canvas当前可处于用户设置的关闭状态，UIManager会在缺少活动场景Canvas时加载Resources版本；不要为修复引用随意重建GUID或替换布局。
 - 清空按钮通过JsonMgr写入 `Application.persistentDataPath/MissionData.json` 并同步内存；这个文件是玩家存档，不上传，不应作为SO配置恢复。历史 `Mission/MissionData` 子路径错误不代表当前仍使用子目录。
-- Editor搭建工具仅生成界面框架/控制台，拒绝覆盖已有MissionPanel子对象；不会重建用户已接线的完整任务UI。当前报告写到工程 `Temp/DevConsoleReports` 或 `Temp/MissionPanelReports`，旧本机历史报告另保留本地。
+- Editor搭建工具仅生成任务面板框架，拒绝覆盖已有MissionPanel子对象（控制台自 11-22 起改为运行时由代码生成，见记录 46）；不会重建用户已接线的完整任务UI。当前报告写到工程 `Temp/DevConsoleReports` 或 `Temp/MissionPanelReports`，旧本机历史报告另保留本地。
 - 本轮界面与材质的修改前快照保留在毕业设计工作记录目录。仓库仍是需要补回本地资源的开发快照，未提供独立发布构建。
 
 ## 2026-11-05 敌人原型

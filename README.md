@@ -27,7 +27,7 @@
 | 场景切换与剧情推进 | 未开始 | 目前只有测试场景 GMScene |
 | 三选一临时 Buff | 未开始 | |
 | 音效 | 未开始 | |
-| 调试控制台 | 有运行证据 | 仅用于 GMScene 调试；11-16 Play Mode 自动检查 49 项全部通过，手动复测按键、伤害、清空任务存档正常；同日加入等级调试，自动检查 56 项全部通过 |
+| 调试控制台 | 有运行证据 | 仅用于 GMScene 调试；11-22 重构为分页界面并加入道具调试，Play Mode 自动检查 82 项全部通过；开关按钮移位待复测（#30） |
 
 详细的验证边界见[当前开发状态](Docs/Development/STATUS.md)，具体待办记在 [GitHub Issues](https://github.com/CyreneMine/AstralEchoes-ARPG/issues)。
 
