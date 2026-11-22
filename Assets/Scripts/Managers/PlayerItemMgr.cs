@@ -55,7 +55,6 @@ public class PlayerItemMgr :BaseManager<PlayerItemMgr>
 
     public bool RemoveItem(int itemID, int count)
     {
-        bool removed = false;
         foreach (ItemCountData data in saveData.items)
         {
             if (data.itemID == itemID)
@@ -67,19 +66,18 @@ public class PlayerItemMgr :BaseManager<PlayerItemMgr>
                     //TODO 后续可以弹出文字告诉数量不足
                     return false;
                 }
-                removed = true;
-                OnItemCountChanged?.Invoke(itemID,data.itemCount);
                 if (data.itemCount == 0)
                 {
                     saveData.items.Remove(data);
-                    //C# 不允许在 foreach 遍历 List 时修改它 删除后循环取下一个元素时会抛 InvalidOperationException
-                    Save();
-                    return true;
                 }
+                Save();
+                OnItemCountChanged?.Invoke(itemID,data.itemCount);
+                //C# 不允许在 foreach 遍历 List 时修改它 删除后循环取下一个元素时会抛 InvalidOperationException
+                return true;
             }
         }
         Save();
-        return removed;
+        return false;
     }
 
     public IReadOnlyList<ItemCountData> GetAllItems()
