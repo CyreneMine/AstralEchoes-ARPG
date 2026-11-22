@@ -59,7 +59,8 @@
 | [41](records/41-gold-coin-icon.md) | 11-21 | 金币图标设计与定稿 | 本地 PNG 已核验，待绑定和显示验证 |
 | [42](records/42-stardust-potion-icon.md) | 11-21 | 星屑药剂图标设计与定稿 | PNG 已核验，背包接入和显示待验证 |
 | [43](records/43-bag-slot-display-and-refresh.md) | 11-21 | 背包格子显示与数量变化刷新 | 编译通过，用户声明可显示，刷新待验证 |
-| [44](records/44-bag-detail-panel.md) | 11-22 | 背包详情区：点击格子显示物品信息 | 编译通过，待 Play Mode 验证 |
+| [44](records/44-bag-detail-panel.md) | 11-22 | 背包详情区：点击格子显示物品信息 | 用户实测通过（11-22） |
+| [45](records/45-item-cap-reward-and-mission-settlement.md) | 11-22 | 道具上限、奖励进背包与任务结算发奖 | 用户实测通过，关闭 #13 |
 
 ## 本机 Git 配置
 

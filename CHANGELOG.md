@@ -4,6 +4,8 @@
 
 ## 2026-11-22
 
+- **道具上限、奖励进背包与任务发奖**（`be4eb71`、`5a511b4`）：用户补上 `maxCount` 截断（-1 不截断）、`RewardMgr` 非经验类型进背包、`RewardSlot` 读道具名，并完成任务结算发奖（先标记完成再发奖）。用户实测上限、打怪掉落、任务奖励到账与不重复发奖均通过，关闭 #13。销毁按钮不做，使用消耗品延后。[记录 45](Docs/Development/records/45-item-cap-reward-and-mission-settlement.md)
+- **用户实测登记：背包详情区**（只有文档）：默认显示第一个格子、点击切换、清空后为空，三项用户自测通过，没有截图或日志。[记录 44](Docs/Development/records/44-bag-detail-panel.md)
 - **背包详情区**（`09cd4ec`）：用户完成点击格子显示物品名称、数量、描述和图标，默认显示第一个格子，空背包时清空。排查了"数据正常但不显示"：详情区继承了 BasePanel，被自动添加的 CanvasGroup 淡出到透明，改为 MonoBehaviour 后解决。只做了编译，待 Play Mode 验证。[记录 44](Docs/Development/records/44-bag-detail-panel.md)
 
 ## 2026-11-21
