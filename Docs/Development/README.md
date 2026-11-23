@@ -63,6 +63,7 @@
 | [45](records/45-item-cap-reward-and-mission-settlement.md) | 11-22 | 道具上限、奖励进背包与任务结算发奖 | 用户实测通过，关闭 #13 |
 | [46](records/46-devconsole-tabs-and-item-debug.md) | 11-22 | 控制台重构为分页界面并加入道具调试 | 自动检查 84/84 通过，开关按钮移位已复测，关闭 #30 |
 | [47](records/47-bag-regression-and-remove-event-order.md) | 11-22 | 背包回归与扣除事件的广播顺序 | 用户实测通过，关闭 #29 |
+| [48](records/48-temporary-buff-design.md) | 11-23 | 三选一临时 Buff 的设计讨论 | 设计定稿，未实施（#16、#31、#32） |
 
 ## 本机 Git 配置
 
