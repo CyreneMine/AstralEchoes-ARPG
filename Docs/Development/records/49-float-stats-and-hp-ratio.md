@@ -1,0 +1,154 @@
+# 属性改 float 与生命上限按比例保持
+
+日期：2026-11-24。工程版本：基于 `a4dd0d7`，提交为 `505ebc6`（玩法代码）、`40447ef`（控制台）。
+
+协助工具：Claude Code，分两个会话：
+- 审查会话：负责排查、审查，以及后续的控制台比例逻辑调整。
+- 控制台会话：负责控制台适配 float，并修复等级输入的问题。
+
+相关 Issue：#31（本次实现）、#33（实机回归，待验证）、#16（Buff，以本次为前置）。前序记录：[30](30-player-growth-and-save-design.md)、[34](34-reward-level-and-stats.md)、[48](48-temporary-buff-design.md)。
+
+玩法代码的全部修改都由用户完成，涉及 `CharacterConfig`、`CharacterStats`、`CharacterObject`、`CharacterHealth`、`PlayerHealth`、`PlayerGrowth`、`PlayerObject`、`PlayerMgr`、`EnemyObject`、`HealthBarController`、`PlayerHealthBar`。Claude Code 只修改了 `DevConsole.cs` 和 `DevConsoleSetup.cs`。
+
+## 用户观察与目标
+
+- 目标来自 11-23 的 Buff 设计（[记录 48](48-temporary-buff-design.md)、#31）：攻击、防御、生命改为 float；生命上限变化时，按当前生命百分比保持当前生命，升级和以后的 Buff 都走这条规则。
+- 实现过程中，用户发现一个问题，原话见当次聊天："为什么现在 有时候打死怪 玩家会扣成0滴血 有时候又不会"。
+- 在控制台会话里，用户还发现"控制台设置等级那一块好像有问题"。
+
+## 用户提出的想法
+
+1. **第一版实现（用户独立完成）**：
+   - 数值字段和接口全部改为 float。
+   - `CharacterHealth` 新增 `UpdateHealthByRatio(float ratio)`。
+   - 在 `PlayerGrowth.CheckLevelUp` 升级前调用 `PlayerHealth.CalculateRatio()` 记录比例。
+   - `PlayerHealth` 在 `Awake` 中订阅 `OnPlayerLevelChange`，收到通知后按记录的比例恢复当前生命。
+   - `PlayerObject` 用 `new` 提供 `PlayerHealth` 类型的 `Health` 属性，供升级逻辑取得玩家生命组件。
+2. **广播放在哪里**：Claude Code 建议在 `AddExp` 里比较前后等级。用户反问："为什么不直接在升级的方法里面调用"，最终采用在 `LevelUp` 里广播。
+3. **广播顺序**：Claude Code 指出"先广播、后按比例改生命"会让血条显示旧值。用户先追问："这有什么问题吗 最后不是还是改成60了"。随后用户说明了自己的顾虑："我一开始考虑的是如果广播之前就改数据 会导致 血条完全不变 然后广播完升级后就没有效果 我现在才反应过来我在广播前就已经把最大生命值改好了"。之后用户把广播移到了最后。
+4. **显示取整（用户独立调整）**：
+   - 用户先在敌人血条里对填充比例取整，被指出有问题后改回原始比例。
+   - 改为只对玩家血量文字取整。
+   - 起初是向下取整，看到向上取整的建议后回复"有道理"，改为 `CeilToInt`。上限也一并用 `CeilToInt` 显示，这是用户自己的选择。
+5. **用户顺手清理**：删除了过时注释和不再使用的 `currentHpRatio` 字段。`UpdateStats` 里的 `Clamp` 移到按比例计算之后，作为一层保护保留。
+
+## 辅助分析与建议（Claude Code）
+
+### 生命变成 0 的原因
+
+依据：`PlayerGrowth.cs`、`PlayerHealth.cs`、`PlayerObject.cs`、`PlayerMgr.cs` 的工作区版本。
+
+`AddExp` 每次加经验都会调用 `PlayerLevelChanged()`，不管有没有升级。但比例只在升级前才记录，所以打死一只怪时：
+
+| 情况 | 比例的值 | 结果 |
+|---|---|---|
+| 这次击杀升级了 | 刚算出的比例 | 正常 |
+| 没升级，本次运行还没升过级 | 默认值 0 | 生命被设成 0 |
+| 没升级，之前升过级 | 上次升级时的旧比例 | 生命被重置成旧比例，看起来像"没扣血" |
+
+另外，`UpdateHealthByRatio` 不会调用 `Dead()`，所以会出现"0 血但还活着"。
+
+### 两个订阅者的执行顺序
+
+`PlayerHealth` 和 `PlayerObject` 都在 `Awake` 中订阅等级变化事件。同一物体上不同组件的 `Awake` 顺序 Unity 不保证，两种顺序都会出错：
+- 按比例设生命先执行：用的是旧上限，比例保持不住。
+- 更新上限先执行：按比例设生命那一步没有广播，血条停在旧值。
+
+### 两条修改建议
+
+1. 只在真正升级时广播，最初的建议是在 `AddExp` 里比较前后等级。
+2. 把"用旧上限算比例 → 换新上限 → 设当前生命"放进 `CharacterHealth.UpdateStats`。这样不再依赖订阅者的先后顺序，升级、Buff 和控制台改上限也都走同一处。
+
+### 对用户提议的评估（放在 `LevelUp` 里广播）
+
+可以这样做，两种写法的区别只在通知的频率：
+- `LevelUp` 里广播：连升 N 级会通知 N 次，适合每一级都要做事的订阅者（特效、每级奖励）。
+- 加经验后比较等级：整批只通知一次，适合只关心最终结果的订阅者。
+
+现在的订阅者（重算属性、刷新等级文字）重复执行几次结果都一样，所以放在 `LevelUp` 里结果正确。要注意两点：
+- 广播放在 `level++` 之后、递归调用 `CheckLevelUp` 之前。
+- 删除 `AddExp` 里那次无条件的广播。
+
+### 审查中发现的问题
+
+1. **编译错误**：`PlayerGrowth` 还在调用已删除的 `CalculateRatio`，Editor.log 17:14 报 CS1061。
+2. **先广播后改生命**：`PlayerHealthBar` 只在 `Start` 时读一次生命，之后完全依赖 `OnHealthChange` 的参数。所以 50/100 升到上限 120 时，HUD 会显示 50/120，实际生命是 60，要等下一次受伤才会更新。约定是数据全部改完后再通知一次。
+3. **敌人血条对比例取整**：`Mathf.FloorToInt(hp / maxHp)` 只会得到 0 或 1，挨第一刀血条就空了。填充量应该直接用比例，取整只用于文字显示。
+4. **向下取整的显示问题**：按比例换算后生命会带小数，受到整数伤害后小数部分一直保留，可能出现生命还剩 0.375、玩家还活着却显示 0 的情况。常见做法是当前生命向上取整，只有真正死亡时才显示 0。是否采用由用户决定。
+
+### 被撤回的说明
+
+对 `PlayerHealth` 订阅后没有取消订阅的提醒，在用户删除这次订阅后已不再适用。
+
+### 控制台（Claude Code）
+
+**控制台会话（15:47–15:56）**
+- **适配 float**：
+  - 反射写入 `currentHp`、`atk`、`def`、`maxHp` 时改为传 float。原来传 int，会导致 `FieldInfo.SetValue` 抛出 `ArgumentException`。
+  - `OnHealthChange` 按 `UnityAction<float,float>` 取出，类型对不上时打印警告。
+  - 自动检查中的拆箱改为 float。
+  - 数值输入框支持小数，最多显示两位小数，统一用 "." 作小数点解析。
+- **等级输入被覆盖的问题**：控制台每 0.15 秒刷新一次，会把未聚焦的输入框改回实际值，所以按回车或点"设置等级"时读到的是旧等级。这个问题 11-16 加入等级控件时就存在，和 float 无关。修复后：
+  - 只在实际数值变化时才改写输入框。
+  - 应用后立即显示实际生效的值。
+  - 等级框按回车即可应用。
+  - 新增 4 项自动检查。
+
+**审查会话（用户改用比例逻辑之后）**
+- 提示文字和注释从"当前生命不变、超过上限时压到上限"改为"按原比例换算到新上限"。
+- 自动检查：
+  - "上限 ±10"两条的期望值改为按比例：75/80 → 84.375/90 → 75/80。
+  - 新增：扣 10 血后设置等级，当前生命按原比例换算到新上限。
+  - 新增：最后一次 `OnHealthChange` 广播的值等于最终生命，用来覆盖"先广播后改"的问题。
+
+## 实际采纳与用户调整
+
+最终代码（`505ebc6`）：
+
+- `CharacterConfig.CharacterData`：`atk`、`def`、`maxHp` 改为 float，每级成长值（`atkPerLv` 等）仍为 int。`CharacterStats` 的三个属性改为 float。
+- `CharacterHealth`：
+  - `OnHealthChange` 改为 `UnityAction<float,float>`，生命、上限、防御、伤害、回血都改为 float。
+  - `UpdateStats` 的顺序：用旧上限算比例 → 换上限和防御 → `UpdateHealthByRatio` → `Clamp` → 广播一次。
+- `PlayerGrowth`：`AddExp` 不再广播；`LevelUp` 在 `level++` 之后、递归之前调用 `PlayerLevelChanged()`。
+- `PlayerHealth` 不再订阅等级事件，`TakeDamage` 改为 float。
+- `PlayerMgr.GetAtkValue`、`CharacterObject.TakeDamage`、`EnemyObject.TakeDamage` 改为 float。
+- 血条显示：
+  - `HealthBarController`（敌人）：填充量为 `hp / maxHp`。
+  - `PlayerHealthBar`：填充量为比例，文字为 `CeilToInt(当前)/CeilToInt(上限)`。
+
+未采用的方案：
+- 在 `AddExp` 里比较前后等级（用户选择放在 `LevelUp`）。
+- 第一版的"记录比例 + 单独订阅"（改为放进 `UpdateStats`）。
+- 显示向下取整（改为向上取整）。
+
+## 验证与当前状态
+
+- **静态核验**：
+  - Editor.log 17:35 重新编译，没有新报错，只有 LitJson 自带的警告。
+  - `PlayerConfig.asset` 的数值为 atk 5、def 3、maxHp 100，每级 +1/+1/+10。
+  - `EnemyConfig.asset` 的数值为 atk 50、def 1、maxHp 10。
+  - 两个配置的 YAML 文本在字段改为 float 后没有变化。
+- **运行证据**：
+  - 用户在 11-24 17:29:06 运行了 Tools → AstralEchoes → Dev Console → Verify in Play Mode，结果 **93 项通过、0 项失败**。覆盖范围：
+    - 扣血、回血、经过防御的伤害、死亡、复活。
+    - 整数和小数属性的修改。
+    - 上限 ±10 时按比例保持。
+    - 设置等级后按比例保持。
+    - 最后一次广播等于最终生命。
+    - 等级输入的 4 项修复。
+  - 报告开头记录的状态是 Lv.2、攻击 6、防御 4、生命 110/110，和 `PlayerConfig` 按等级计算的结果一致，说明玩家配置在改类型后正确读入了。
+  - 这次运行包含用户 17:28:33 之前的所有改动。之后只改了敌人血条的填充和玩家血量文字的取整，这两处不在自动检查的覆盖范围内。
+- **待验证（#33）**：
+  - 真实打怪拿经验、升级的路径，也就是本次 0 血问题所在的 `AddExp` 路径，包括连续升多级。
+  - 升级后 HUD 立即显示新数值，向上取整的显示。
+  - 敌人血条按比例连续减少。
+  - 退出重进后的读档。
+  - `EnemyConfig` 在运行时的数值。
+
+## 论文素材与证据入口
+
+- **观察者模式的通知时机**：数据全部改完后再广播一次，订阅者收到通知时读到的必须是最终状态。可以和[记录 47](47-bag-regression-and-remove-event-order.md) 的"先删除、存盘，再广播"对照。
+- **事件粒度的取舍**：每级通知还是整批通知，取决于订阅者关心的是每一步，还是最终结果。
+- **避免依赖执行顺序**：同一个事件的多个订阅者之间不应该有先后依赖，可以把相关计算集中到一处，这里是 `UpdateStats`。Unity 不保证组件 `Awake` 的执行顺序。
+- **数值类型的取舍**：改为 float 后，按比例换算更精确，但显示时需要决定取整规则。填充条用原始比例，文字向上取整。
+- 证据：提交 `505ebc6`、`40447ef`；本地自动检查报告 `Temp/DevConsoleReports/playmode-verification.txt`（不进仓库）；当次聊天记录。
