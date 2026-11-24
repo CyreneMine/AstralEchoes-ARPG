@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Globalization;
 using System.Reflection;
 using TMPro;
 using UnityEngine;
@@ -79,6 +80,8 @@ public class DevConsole : MonoBehaviour
     private int currentTab;
     private CharacterHealth boundHealth;
     private bool itemEventBound;
+    // 每个输入框上一次由控制台写入的值，用来判断实际数值是否变化。
+    private readonly Dictionary<TMP_InputField, string> lastSynced = new Dictionary<TMP_InputField, string>();
     // 危险操作需要 3 秒内再点一次确认。
     private string pendingConfirm;
     private float confirmUntil;
@@ -177,6 +180,8 @@ public class DevConsole : MonoBehaviour
             BindItemEvents();
             RebuildItemList();
             RefreshItemDetail();
+            // 每次打开都用实际数值覆盖输入框，丢掉上次没应用的输入。
+            lastSynced.Clear();
             RefreshDisplay();
         }
         else
@@ -257,7 +262,7 @@ public class DevConsole : MonoBehaviour
         string level = save != null ? $"Lv.{save.level}  经验 {save.exp}" : "等级未读取";
         statusText.text =
             $"{targetPlayer.name}    {level}    {(boundHealth.isDead ? "死亡" : "存活")}{MoneySummary()}\n" +
-            $"生命 {boundHealth.CurrentHp} / {boundHealth.MaxHp}    攻击 {stats.Atk}    防御 {stats.Def}";
+            $"生命 {Num(boundHealth.CurrentHp)} / {Num(boundHealth.MaxHp)}    攻击 {Num(stats.Atk)}    防御 {Num(stats.Def)}";
         SyncField(attackInput, stats.Atk);
         SyncField(defenseInput, stats.Def);
         SyncField(maxHealthInput, boundHealth.MaxHp);
@@ -275,11 +280,34 @@ public class DevConsole : MonoBehaviour
         return text;
     }
 
-    private static void SyncField(TMP_InputField field, int value)
+    private void SyncField(TMP_InputField field, int value) => SyncField(field, value.ToString());
+    private void SyncField(TMP_InputField field, float value) => SyncField(field, Num(value));
+
+    // 只在实际数值变化时才改写输入框。原来每次刷新都会把未聚焦的输入框改回当前值：
+    // 输入等级后按回车或去点"设置等级"，输入框先失去焦点，0.15 秒内就被改回旧等级，按钮读到的是旧值。
+    private void SyncField(TMP_InputField field, string text)
     {
-        if (field != null && !field.isFocused && field.text != value.ToString())
-            field.SetTextWithoutNotify(value.ToString());
+        if (field == null || field.isFocused)
+            return;
+        if (lastSynced.TryGetValue(field, out string last) && last == text)
+            return;
+        lastSynced[field] = text;
+        field.SetTextWithoutNotify(text);
     }
+
+    // 应用之后（包括被限制范围、数值没变的情况）立即把输入框改成实际生效的值。
+    private void ForceSync(TMP_InputField field, string text)
+    {
+        lastSynced.Remove(field);
+        SyncField(field, text);
+    }
+
+    // 属性和生命在用户代码里是 float：显示时最多保留两位小数，整数不带小数点；输入统一按 "." 作小数点解析。
+    private static string Num(float value) => value.ToString("0.##", CultureInfo.InvariantCulture);
+
+    private static bool TryReadFloat(string text, out float value) =>
+        float.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out value) &&
+        !float.IsNaN(value) && !float.IsInfinity(value);
 
     private bool ConfirmTwice(string key, string prompt)
     {
@@ -299,7 +327,7 @@ public class DevConsole : MonoBehaviour
     // ======================================================================
 
     // 直接改写生命值。归零时走玩家自己的 Dead()（死亡广播、动画、敌人停止），之后通知血条刷新。
-    private void SetConsoleHealth(int value)
+    private void SetConsoleHealth(float value)
     {
         CurrentHealthField.SetValue(boundHealth, Mathf.Clamp(value, 0, boundHealth.MaxHp));
         if (boundHealth.CurrentHp == 0 && !boundHealth.isDead)
@@ -315,19 +343,21 @@ public class DevConsole : MonoBehaviour
             Debug.LogWarning("DevConsole：找不到 CharacterHealth.OnHealthChange，血条不会随控制台刷新。");
             return;
         }
-        var handler = HealthChangedField.GetValue(boundHealth) as UnityAction<int, int>;
+        var handler = HealthChangedField.GetValue(boundHealth) as UnityAction<float, float>;
+        if (handler == null && HealthChangedField.FieldType != typeof(UnityAction<float, float>))
+            Debug.LogWarning($"DevConsole：OnHealthChange 的类型变成了 {HealthChangedField.FieldType}，控制台需要同步修改。");
         handler?.Invoke(boundHealth.CurrentHp, boundHealth.MaxHp);
     }
 
-    private bool ReadAmount(out int value)
+    private bool ReadAmount(out float value)
     {
-        if (int.TryParse(amountInput.text, out value) && value > 0 && value <= 1000000)
+        if (TryReadFloat(amountInput.text, out value) && value > 0 && value <= 1000000)
             return true;
-        Say("操作数值请输入 1～1000000 的整数。", true);
+        Say("操作数值请输入大于 0、不超过 1000000 的数，可以带小数。", true);
         return false;
     }
 
-    private void Damage(int value, bool useDefense = false)
+    private void Damage(float value, bool useDefense = false)
     {
         if (!Ready()) return;
         if (boundHealth.isDead) { Say("玩家已死亡，可使用“复活并回满”。", true); return; }
@@ -336,20 +366,20 @@ public class DevConsole : MonoBehaviour
         else
             SetConsoleHealth(boundHealth.CurrentHp - value);
         RefreshDisplay();
-        Say(useDefense ? $"已施加 {value} 点原始伤害，经过防御计算。" : $"已直接扣除 {value} 点生命。");
+        Say(useDefense ? $"已施加 {Num(value)} 点原始伤害，经过防御计算。" : $"已直接扣除 {Num(value)} 点生命。");
     }
 
-    private void HealBy(int value)
+    private void HealBy(float value)
     {
         if (!Ready()) return;
         if (boundHealth.isDead) { Say("玩家已死亡，请使用“复活并回满”。", true); return; }
-        SetConsoleHealth((int)System.Math.Min((long)boundHealth.MaxHp, (long)boundHealth.CurrentHp + value));
-        Say($"已恢复 {value} 点生命，最高不超过最大生命。");
+        SetConsoleHealth(Mathf.Min(boundHealth.MaxHp, boundHealth.CurrentHp + value));
+        Say($"已恢复 {Num(value)} 点生命，最高不超过最大生命。");
     }
 
-    public void DamageCustom() { if (ReadAmount(out int amount)) Damage(amount); }
-    public void HealCustom() { if (ReadAmount(out int amount)) HealBy(amount); }
-    public void TestDamage() { if (ReadAmount(out int amount)) Damage(amount, true); }
+    public void DamageCustom() { if (ReadAmount(out float amount)) Damage(amount); }
+    public void HealCustom() { if (ReadAmount(out float amount)) HealBy(amount); }
+    public void TestDamage() { if (ReadAmount(out float amount)) Damage(amount, true); }
 
     public void FullHealth()
     {
@@ -384,39 +414,43 @@ public class DevConsole : MonoBehaviour
     // ======================================================================
 
     // 只改写这名角色运行时的最终属性，不碰共享 SO；下次升级或"恢复初始值"时会按等级重新计算并覆盖。
-    private void ApplyConsoleAttributes(int attack, int defense, int maximumHealth)
+    private void ApplyConsoleAttributes(float attack, float defense, float maximumHealth)
     {
         CharacterStats stats = targetPlayer.Stats;
-        StatsAttackField.SetValue(stats, Mathf.Max(0, attack));
-        StatsDefenseField.SetValue(stats, Mathf.Max(0, defense));
-        StatsMaxHealthField.SetValue(stats, Mathf.Max(1, maximumHealth));
-        // 用户的接口：更新上限与防御，当前生命限制在新上限内并刷新血条。
+        // 字段是 float：传入的值必须是 float，装箱成 int 会让 FieldInfo.SetValue 抛 ArgumentException。
+        StatsAttackField.SetValue(stats, Mathf.Max(0f, attack));
+        StatsDefenseField.SetValue(stats, Mathf.Max(0f, defense));
+        StatsMaxHealthField.SetValue(stats, Mathf.Max(1f, maximumHealth));
+        // 用户的接口：更新上限与防御，当前生命按原比例换算到新上限，然后刷新血条（#31）。
         boundHealth.UpdateStats(stats.MaxHp, stats.Def);
+        ForceSync(attackInput, Num(stats.Atk));
+        ForceSync(defenseInput, Num(stats.Def));
+        ForceSync(maxHealthInput, Num(boundHealth.MaxHp));
         RefreshDisplay();
     }
 
     public void ApplyAttributes()
     {
         if (!Ready()) return;
-        if (!int.TryParse(attackInput.text, out int attack) || attack < 0 || attack > 1000000 ||
-            !int.TryParse(defenseInput.text, out int defense) || defense < 0 || defense > 1000000 ||
-            !int.TryParse(maxHealthInput.text, out int maximum) || maximum < 1 || maximum > 1000000)
+        if (!TryReadFloat(attackInput.text, out float attack) || attack < 0 || attack > 1000000 ||
+            !TryReadFloat(defenseInput.text, out float defense) || defense < 0 || defense > 1000000 ||
+            !TryReadFloat(maxHealthInput.text, out float maximum) || maximum < 1 || maximum > 1000000)
         {
-            Say("攻击/防御为 0～1000000；最大生命为 1～1000000。", true);
+            Say("攻击/防御为 0～1000000；最大生命为 1～1000000，都可以带小数。", true);
             return;
         }
         ApplyConsoleAttributes(attack, defense, maximum);
-        Say("运行时属性已应用；当前生命保留并限制在新上限内。升级或恢复初始值后按等级重新计算。");
+        Say("运行时属性已应用；当前生命按原比例换算到新上限。升级或恢复初始值后按等级重新计算。");
     }
 
-    private void Step(int attack, int defense, int maximum)
+    private void Step(float attack, float defense, float maximum)
     {
         if (!Ready()) return;
         CharacterStats stats = targetPlayer.Stats;
         ApplyConsoleAttributes(
-            Mathf.Clamp(stats.Atk + attack, 0, 1000000),
-            Mathf.Clamp(stats.Def + defense, 0, 1000000),
-            Mathf.Clamp(boundHealth.MaxHp + maximum, 1, 1000000));
+            Mathf.Clamp(stats.Atk + attack, 0f, 1000000f),
+            Mathf.Clamp(stats.Def + defense, 0f, 1000000f),
+            Mathf.Clamp(boundHealth.MaxHp + maximum, 1f, 1000000f));
         Say("运行时属性已调整。");
     }
 
@@ -441,7 +475,7 @@ public class DevConsole : MonoBehaviour
         if (!Ready()) return;
         if (!int.TryParse(levelInput.text, out int level))
         {
-            Say("等级请输入整数。", true);
+            Say("等级请输入整数（不超过 2147483647）。", true);
             return;
         }
         SetLevel(level);
@@ -462,9 +496,10 @@ public class DevConsole : MonoBehaviour
         save.exp = 0;
         PlayerMgr.Instance.PlayerLevelChanged();
         PlayerMgr.Instance.SavePlayerData();
+        ForceSync(levelInput, clamped.ToString());
         RefreshDisplay();
         string note = clamped != level ? $"（输入 {level} 超出 {config.initLv}～{config.maxLv}，已限制）" : "";
-        Say($"等级已设为 Lv.{clamped}，经验清零并写入存档{note}。当前生命保持不变。");
+        Say($"等级已设为 Lv.{clamped}，经验清零并写入存档{note}。当前生命按原比例换算到新上限。");
     }
 
     // ======================================================================
@@ -820,7 +855,7 @@ public class DevConsole : MonoBehaviour
         pages.Add(BuildSavePage(Page(w, "SavePage")));
 
         Box(w, "MessageBackground", 16, 624, WindowWidth - 32, 60, PanelColor);
-        messageText = Label(w, "Message", "选择左侧分页开始调试。数值输入后回车或移开焦点即生效。", 30, 630, WindowWidth - 60, 50, 16, new Color(0.55f, 0.87f, 0.9f));
+        messageText = Label(w, "Message", "选择左侧分页开始调试。", 30, 630, WindowWidth - 60, 50, 16, new Color(0.55f, 0.87f, 0.9f));
 
         SelectTab(HealthTab);
     }
@@ -836,7 +871,7 @@ public class DevConsole : MonoBehaviour
         Button(p, "Heal10", "回血 10", (bw + 10) * 2, 40, bw, 44, HealColor, () => HealBy(10));
         Button(p, "Heal25", "回血 25", (bw + 10) * 3, 40, bw, 44, HealColor, () => HealBy(25));
 
-        amountInput = Input(p, "AmountInput", "10", 0, 96, 140, 44, TMP_InputField.ContentType.IntegerNumber);
+        amountInput = Input(p, "AmountInput", "10", 0, 96, 140, 44, TMP_InputField.ContentType.DecimalNumber);
         Button(p, "DamageCustom", "按数值扣血", 150, 96, 278, 44, Danger, DamageCustom);
         Button(p, "HealCustom", "按数值回血", 438, 96, 278, 44, HealColor, HealCustom);
 
@@ -864,9 +899,11 @@ public class DevConsole : MonoBehaviour
 
         Section(p, "LevelTitle", "等级（写入存档，经验清零）", 280);
         levelInput = Input(p, "LevelInput", "1", 0, 320, 140, 44, TMP_InputField.ContentType.IntegerNumber);
+        // 等级会写存档并清空经验，所以只在回车或点按钮时应用，不像属性那样移开焦点就生效。
+        levelInput.onSubmit.AddListener(_ => ApplyLevel());
         Button(p, "ApplyLevel", "设置等级", 150, 320, 278, 44, Accent, ApplyLevel);
         Button(p, "ResetLevel", "重置为初始等级", 438, 320, 278, 44, Neutral, ResetLevel);
-        Hint(p, "属性改动在升级、设置等级或恢复初始值时会按等级重新计算并被覆盖。等级超出 initLv～maxLv 时自动限制。", 378);
+        Hint(p, "属性输入后回车或移开焦点即生效，升级、设置等级、恢复初始值时按等级重算并覆盖。等级按回车或点“设置等级”生效，超出 initLv～maxLv 自动限制。", 378);
         return p.gameObject;
     }
 
@@ -874,7 +911,7 @@ public class DevConsole : MonoBehaviour
     {
         Label(p, key + "Label", title, 0, y + 8, 120, 30, 19, Color.white);
         Button(p, key + "Down", "−", 130, y, 60, 44, Accent, down);
-        TMP_InputField field = Input(p, key + "Input", "0", 200, y, 200, 44, TMP_InputField.ContentType.IntegerNumber);
+        TMP_InputField field = Input(p, key + "Input", "0", 200, y, 200, 44, TMP_InputField.ContentType.DecimalNumber);
         Button(p, key + "Up", "+", 410, y, 60, 44, Accent, up);
         Label(p, key + "Step", step, 486, y + 10, 200, 26, 15, Muted);
         return field;
@@ -1014,7 +1051,7 @@ public class DevConsole : MonoBehaviour
         input.textComponent = text as TextMeshProUGUI;
         input.targetGraphic = go.GetComponent<Image>();
         input.contentType = contentType;
-        input.characterLimit = 8;
+        input.characterLimit = 10;
         input.text = value;
         input.caretColor = Color.white;
         input.customCaretColor = true;

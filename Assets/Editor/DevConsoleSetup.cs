@@ -166,7 +166,7 @@ public static class DevConsoleSetup
     private static int healthEventCount, stateEventCount, levelEventCount, itemEventCount;
     private static bool lastStateEvent;
     private static bool startCursorMode;
-    private static int startMax, startAttack, startDefense;
+    private static float startMax, startAttack, startDefense;
     private static PlayerObject vPlayer;
     private static CharacterHealth vHealth;
     private static DevConsole vConsole;
@@ -175,7 +175,12 @@ public static class DevConsoleSetup
     private static readonly string[] CaptureNames = { "Health", "Stats", "Items", "Save" };
 
     private static void OnLevelEvent() => levelEventCount++;
-    private static void OnHealthEvent(int current, int max) => healthEventCount++;
+    // 记下最后一次广播的参数：HUD 血条只靠这次广播刷新，所以它必须等于最终数值。
+    private static float lastEventHp, lastEventMax;
+    private static void OnHealthEvent(float current, float max) { healthEventCount++; lastEventHp = current; lastEventMax = max; }
+    // 属性和生命是 float，按小误差比较，避免浮点运算顺序不同造成的误判。
+    private static bool Same(float a, float b) => Mathf.Abs(a - b) < 0.001f;
+    private static float HealthDef() => (float)HealthDefField.GetValue(vHealth);
     private static void OnStateEvent(bool dead) { stateEventCount++; lastStateEvent = dead; }
     private static void OnItemEvent(int id, int count) => itemEventCount++;
 
@@ -308,8 +313,8 @@ public static class DevConsoleSetup
     {
         CheckLayout();
 
-        int max = vHealth.MaxHp;
-        int def = (int)HealthDefField.GetValue(vHealth);
+        float max = vHealth.MaxHp;
+        float def = HealthDef();
 
         // 3. 生命按钮
         int events = healthEventCount;
@@ -324,8 +329,14 @@ public static class DevConsoleSetup
         Click("FullHealth"); Check(vHealth.CurrentHp == max, "恢复满血", Hp());
         Check(healthEventCount > events, "回血后触发 OnHealthChange");
         Amount(14); Click("TestDamage");
-        int expected = max - Mathf.Max(14 - def, 0);
-        Check(vHealth.CurrentHp == expected, $"经过防御的伤害 14（防御 {def}）", Hp() + $"，期望 {expected}");
+        float expected = max - Mathf.Max(14 - def, 0);
+        Check(Same(vHealth.CurrentHp, expected), $"经过防御的伤害 14（防御 {def}）", Hp() + $"，期望 {expected}");
+        Click("FullHealth");
+        // 小数：生命改为 float 后，控制台可以输入小数
+        Field("AmountInput").SetTextWithoutNotify("2.5"); Click("DamageCustom");
+        Check(Same(vHealth.CurrentHp, max - 2.5f), "按数值扣血 2.5（小数）", Hp());
+        Check(Text("Status").text.Contains("生命 " + (max - 2.5f).ToString("0.##", System.Globalization.CultureInfo.InvariantCulture) + " /"),
+            "状态栏按小数显示生命", Text("Status").text);
         Click("FullHealth");
 
         // 4. 死亡
@@ -361,19 +372,27 @@ public static class DevConsoleSetup
         Field("DefenseInput").SetTextWithoutNotify("4");
         Field("MaxHealthInput").SetTextWithoutNotify("80");
         Click("ApplyAttributes");
-        int healthDef = (int)HealthDefField.GetValue(vHealth);
+        float healthDef = HealthDef();
         Check(vPlayer.Stats.Atk == 7 && vPlayer.Stats.Def == 4, "应用属性：CharacterStats 为 7/4", $"实际 {vPlayer.Stats.Atk}/{vPlayer.Stats.Def}");
-        Check(healthDef == 4 && vHealth.MaxHp == 80 && vHealth.CurrentHp == 80, "应用属性：生命组件防御 4、上限 80，当前生命压到 80", $"防御 {healthDef}，{Hp()}");
+        Check(healthDef == 4 && vHealth.MaxHp == 80 && vHealth.CurrentHp == 80, "应用属性：生命组件防御 4、上限 80，满血按比例仍为 80", $"防御 {healthDef}，{Hp()}");
         Check(PlayerMgr.Instance.GetAtkValue() == 7, "应用属性：玩家攻击力（GetAtkValue）为 7", $"实际 {PlayerMgr.Instance.GetAtkValue()}");
         Check(healthEventCount > events, "应用属性后触发 OnHealthChange");
         Amount(14); Click("TestDamage"); Check(vHealth.CurrentHp == 70, "新防御下伤害 14 → 生命 70", Hp());
         Amount(5); Click("HealCustom"); Check(vHealth.CurrentHp == 75, "回血 5 → 生命 75", Hp());
         Click("AttackUp"); Check(vPlayer.Stats.Atk == 8, "攻击 +1", $"实际 {vPlayer.Stats.Atk}");
         Click("AttackDown"); Check(vPlayer.Stats.Atk == 7, "攻击 −1", $"实际 {vPlayer.Stats.Atk}");
-        Click("DefenseUp"); Check(vPlayer.Stats.Def == 5 && (int)HealthDefField.GetValue(vHealth) == 5, "防御 +1（属性与生命组件同步）");
+        Click("DefenseUp"); Check(vPlayer.Stats.Def == 5 && HealthDef() == 5, "防御 +1（属性与生命组件同步）");
         Click("DefenseDown"); Check(vPlayer.Stats.Def == 4, "防御 −1", $"实际 {vPlayer.Stats.Def}");
-        Click("MaxHealthUp"); Check(vHealth.MaxHp == 90 && vHealth.CurrentHp == 75, "生命上限 +10（当前生命不变）", Hp());
-        Click("MaxHealthDown"); Check(vHealth.MaxHp == 80 && vHealth.CurrentHp == 75, "生命上限 −10", Hp());
+        // 上限变化时当前生命按比例保持（#31）：75/80 → 上限 90 时为 84.375，再回到 80 时为 75。
+        Click("MaxHealthUp"); Check(vHealth.MaxHp == 90 && Same(vHealth.CurrentHp, 84.375f), "生命上限 +10（75/80 按比例 → 84.375/90）", Hp());
+        Click("MaxHealthDown"); Check(vHealth.MaxHp == 80 && Same(vHealth.CurrentHp, 75), "生命上限 −10（按比例回到 75/80）", Hp());
+        Field("AttackInput").SetTextWithoutNotify("7.5");
+        Field("DefenseInput").SetTextWithoutNotify("4.25");
+        Click("ApplyAttributes");
+        Check(Same(vPlayer.Stats.Atk, 7.5f) && Same(vPlayer.Stats.Def, 4.25f) && Same(HealthDef(), 4.25f),
+            "应用小数属性：攻击 7.5、防御 4.25（属性与生命组件同步）", $"实际 {vPlayer.Stats.Atk}/{vPlayer.Stats.Def}，生命组件防御 {HealthDef()}");
+        Check(Field("AttackInput").text == "7.5" && Text("Status").text.Contains("攻击 7.5"), "小数属性在输入框和状态栏正确显示",
+            $"输入框「{Field("AttackInput").text}」，状态栏「{Text("Status").text}」");
 
         // 7. 恢复初始值
         Click("ResetAttributes");
@@ -457,21 +476,40 @@ public static class DevConsoleSetup
             Click("ResetLevel");
             Check(save.level == cfg.initLv && save.exp == 0, "重置为初始等级：等级回到 initLv 且经验清零", $"实际 Lv.{save.level}，经验 {save.exp}");
             Check(levelEventCount > levelEvents, "重置等级后广播 OnPlayerLevelChange");
-            Check(vPlayer.Stats.Atk == cfg.atk && vPlayer.Stats.Def == cfg.def && vHealth.MaxHp == cfg.maxHp,
+            Check(Same(vPlayer.Stats.Atk, cfg.atk) && Same(vPlayer.Stats.Def, cfg.def) && Same(vHealth.MaxHp, cfg.maxHp),
                 "重置等级后属性与生命上限回到初始等级", $"实际 攻击 {vPlayer.Stats.Atk}、防御 {vPlayer.Stats.Def}、{Hp()}");
             Check(vHealth.CurrentHp <= vHealth.MaxHp, "重置等级后当前生命不超过上限", Hp());
 
-            int target = Mathf.Min(cfg.initLv + 2, Mathf.Max(cfg.initLv, cfg.maxLv));
-            Field("LevelInput").SetTextWithoutNotify(target.ToString());
+            int maxLevel = Mathf.Max(cfg.initLv, cfg.maxLv);
+            int target = Mathf.Min(cfg.initLv + 2, maxLevel);
+            TMP_InputField levelField = Field("LevelInput");
+            // 等级变化时当前生命按比例保持（#31）：先扣 10 点得到非满血比例，设置等级后按新上限换算。
+            Amount(10); Click("DamageCustom");
+            float ratioBefore = vHealth.CurrentHp / vHealth.MaxHp;
+            // 模拟手动操作：输入等级 → 输入框失去焦点 → 控制台定时刷新一次 → 再点按钮。
+            levelField.text = target.ToString();
+            RefreshConsole();
+            Check(levelField.text == target.ToString(), "输入等级后控制台刷新不会把输入框改回旧等级", $"实际「{levelField.text}」，期望「{target}」");
             Click("ApplyLevel");
-            int expectedAtk = cfg.atk + cfg.atkPerLv * (target - cfg.initLv);
-            int expectedMax = cfg.maxHp + cfg.maxHpPerLv * (target - cfg.initLv);
-            Check(save.level == target && vPlayer.Stats.Atk == expectedAtk && vHealth.MaxHp == expectedMax,
+            float expectedAtk = cfg.atk + cfg.atkPerLv * (target - cfg.initLv);
+            float expectedMax = cfg.maxHp + cfg.maxHpPerLv * (target - cfg.initLv);
+            Check(save.level == target && Same(vPlayer.Stats.Atk, expectedAtk) && Same(vHealth.MaxHp, expectedMax),
                 $"设置等级 {target}：属性按等级重新计算", $"实际 Lv.{save.level}、攻击 {vPlayer.Stats.Atk}、上限 {vHealth.MaxHp}，期望攻击 {expectedAtk}、上限 {expectedMax}");
+            Check(Same(vHealth.CurrentHp, expectedMax * ratioBefore) && !vHealth.isDead,
+                $"设置等级 {target}：当前生命按原比例换算到新上限", $"{Hp()}，期望当前生命 {expectedMax * ratioBefore}");
+            Check(Same(lastEventHp, vHealth.CurrentHp) && Same(lastEventMax, vHealth.MaxHp),
+                "设置等级后最后一次 OnHealthChange 广播的是最终生命（HUD 不会停在中间值）", $"广播 {lastEventHp}/{lastEventMax}，{Hp()}");
 
-            Field("LevelInput").SetTextWithoutNotify((cfg.maxLv + 5).ToString());
+            int submitTarget = Mathf.Min(cfg.initLv + 1, maxLevel);
+            levelField.text = submitTarget.ToString();
+            RefreshConsole();
+            levelField.onSubmit.Invoke(levelField.text);
+            Check(save.level == submitTarget, $"等级输入框按回车即应用（Lv.{submitTarget}）", $"实际 Lv.{save.level}");
+
+            levelField.text = (cfg.maxLv + 5).ToString();
             Click("ApplyLevel");
-            Check(save.level == Mathf.Max(cfg.initLv, cfg.maxLv), "超出最高等级的输入被限制到 maxLv", $"实际 Lv.{save.level}");
+            Check(save.level == maxLevel, "超出最高等级的输入被限制到 maxLv", $"实际 Lv.{save.level}");
+            Check(levelField.text == maxLevel.ToString(), "被限制后输入框显示实际生效的等级", $"实际「{levelField.text}」");
         }
         finally { RestoreLevel(origLevel, origExp); }
         Check(save.level == origLevel && vPlayer.Stats.Atk == startAttack && vHealth.MaxHp == startMax, "等级检查后已恢复原等级和属性", $"实际 Lv.{save.level}、攻击 {vPlayer.Stats.Atk}、{Hp()}");
@@ -587,6 +625,9 @@ public static class DevConsoleSetup
     }
 
     private static TMP_InputField Field(string name) => Find(name).GetComponent<TMP_InputField>();
+    // 手动执行一次控制台的定时刷新（DevConsole.Update 每 0.15 秒调用一次）。
+    private static readonly MethodInfo RefreshDisplayMethod = typeof(DevConsole).GetMethod("RefreshDisplay", BindingFlags.Instance | BindingFlags.NonPublic);
+    private static void RefreshConsole() => RefreshDisplayMethod.Invoke(vConsole, null);
     private static TMP_Text Text(string name, Transform root = null) => Find(name, root).GetComponent<TMP_Text>();
     private static void Click(string name) => Find(name).GetComponent<Button>().onClick.Invoke();
 
