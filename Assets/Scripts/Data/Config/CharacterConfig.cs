@@ -13,9 +13,9 @@ public class CharacterConfig : ScriptableObject
     [System.Serializable]
     public class CharacterData
     {
-        public int id, atk, def, maxHp;
+        public int id;
         public int initLv,maxLv,initExpPerLv,atkPerLv,defPerLv,maxHpPerLv,expPerLv;
-        public float atkCooldown,atkRange;
+        public float atk, def, maxHp,atkCooldown,atkRange;
         public CharacterType type;
     }
 }

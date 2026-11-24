@@ -9,7 +9,6 @@
        //添加经验
        saveData.exp += exp;
        CheckLevelUp();
-       PlayerMgr.Instance.PlayerLevelChanged();
        PlayerMgr.Instance.SavePlayerData();
     }
 
@@ -28,8 +27,8 @@
         }
         saveData.exp -= lvUpNeedExp;
         saveData.level++;
+        PlayerMgr.Instance.PlayerLevelChanged();
         CheckLevelUp();
-        
     }
 
     private void initData()

@@ -24,7 +24,7 @@ public class CharacterObject : MonoBehaviour
         Stats.Recalculate(GetLevel());
         health.Init(Stats.MaxHp,Stats.Def);
     }
-    public virtual void TakeDamage(int damage)
+    public virtual void TakeDamage(float damage)
     {
         health.TakeDamage(damage);
     }

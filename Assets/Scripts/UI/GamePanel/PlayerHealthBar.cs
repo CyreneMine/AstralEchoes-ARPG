@@ -8,10 +8,10 @@ public class PlayerHealthBar : MonoBehaviour
     public Image healthBarFill;
     public TMP_Text txtHp;
 
-    public void UpdatePlayerHealthBar(int currentHp, int maxHp)
+    public void UpdatePlayerHealthBar(float currentHp, float maxHp)
     {
-        healthBarFill.fillAmount = (float)currentHp / (float)maxHp;
-        txtHp.text = currentHp + "/" + maxHp;
+        healthBarFill.fillAmount = currentHp / maxHp;
+        txtHp.text = Mathf.CeilToInt(currentHp) + "/" + Mathf.CeilToInt(maxHp);
     }
 
     public void Start()

@@ -5,9 +5,9 @@ public class HealthBarController : MonoBehaviour
 {
     public Image imgFill;
 
-    public void updateHealthBar(int hp,int maxHp)
+    public void updateHealthBar(float hp,float maxHp)
     {
-        float currentHp = ((float)hp / (float)maxHp);
+        float currentHp = (hp / maxHp);
         imgFill.fillAmount = currentHp;
     }
 }

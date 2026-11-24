@@ -1,10 +1,10 @@
 ﻿public class CharacterStats
 {
     private CharacterConfig.CharacterData config;
-    private int atk, def, maxHp;
-    public int Atk => atk;
-    public int Def => def;
-    public int MaxHp => maxHp;
+    private float atk, def, maxHp;
+    public float Atk => atk;
+    public float Def => def;
+    public float MaxHp => maxHp;
 
     public CharacterStats(CharacterConfig.CharacterData config)
     {

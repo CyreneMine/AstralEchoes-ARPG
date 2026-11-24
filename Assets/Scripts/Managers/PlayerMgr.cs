@@ -54,7 +54,7 @@ public class PlayerMgr :BaseManager<PlayerMgr>
         Cursor.visible = state;
         OnCursorChanged?.Invoke(state);
     }
-    public int GetAtkValue()
+    public float GetAtkValue()
     {
         return player.Stats.Atk;
     }

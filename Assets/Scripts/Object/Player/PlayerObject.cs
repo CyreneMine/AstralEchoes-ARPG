@@ -23,7 +23,8 @@ public class PlayerObject : CharacterObject
     private Vector3 dashDirection; 
     private float moveWeight;
     private bool isAttacking = false;
-
+    protected new PlayerHealth health =>base.health as PlayerHealth;
+    public new PlayerHealth Health => health;
     private void ChangeState(bool nowState)
     {
         animator.SetBool("IsDead", nowState);

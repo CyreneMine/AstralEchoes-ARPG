@@ -1,13 +1,11 @@
-using UnityEngine;
 
 public class PlayerHealth : CharacterHealth
 {
-    public override void TakeDamage(int damage)
+    public override void TakeDamage(float damage)
     {
         base.TakeDamage(damage);
         // UIManager.Instance.GetPanel<GamePanel>().UpdateHpBar(CurrentHp,MaxHp);
     }
-
     public override void Dead()
     {
         base.Dead();
