@@ -4,7 +4,7 @@
 
 协助工具：Claude Code。
 
-相关 Issue：#16（三选一临时 Buff）、#36（MonoMgr 与 TimerMgr）、#32（保存点，需要 Buff 的剩余时间）。设计调整见[记录 48](48-temporary-buff-design.md)末尾的“补充”。
+相关 Issue：#16（三选一临时 Buff）、#36（MonoMgr 与 TimerMgr，已关闭）、#32（保存点，需要 Buff 的剩余时间）、#37（下文的已知限制与待验证项）。设计调整见[记录 48](48-temporary-buff-design.md)末尾的“补充”。
 
 玩法代码由用户编写，包括 `MonoMgr`、`TimerMgr`、`BuffDatabase`（含 `BuffConfig`、`BuffType`）、`BuffMgr`、`ConfigMgr`、`CharacterStats`、`PlayerObject`、`PlayerMgr`。Claude Code 只负责审查，修改的只有 `DevConsole.cs`、`DevConsoleSetup.cs`；`BuffDatabase.asset` 里的 3 个测试 Buff 是按用户要求由 Claude Code 填写的。
 
@@ -69,7 +69,7 @@
 - 早上评估按钮入口时，Claude Code 说次数规则和原设计冲突、初始化时读取次数有问题、面板打开时还能点到 GamePanel。用户逐条反驳后核实，三条都不成立：全屏面板会在 `ShowMe` 里隐藏 GamePanel。这三条已撤回。
 - 建议 6“生效中的 Buff 和已选列表分开”被用户否定，设计改为到期回到候选池。
 
-### 提醒过、用户还没处理的
+### 提醒过、用户还没处理的（#37）
 
 - `AddBuff` 没有判断重复添加，重复调用会在 `timers.Add` 抛异常，而且这时列表和计时器已经改了一半。正常流程里生效中的 Buff 不会出现在候选里，加不加由用户决定。
 - `RemoveBuff` 如果不是由计时器到期调用，它不会取消对应的计时器。旧计时器之后到期时，会把重新添加的同一个 Buff 提前移除。现在只有到期回调会调用它，所以不会出问题。以后要单独提前移除时，在 `RemoveBuff` 里先调用 `RemoveTimer` 就行。
@@ -121,7 +121,7 @@
 - **用户实测（当次聊天报告“验证通过”）**：
   - 加 Buff 后打开背包等几秒再关，剩余时间只扣了背包关闭期间的时间。
   - 等满 20 秒，星锋自然到期。
-- **只有静态核验**：回调里增删计时器（TimerMgr 的两个循环和 `TryGetValue`）。
+- **只有静态核验**：回调里增删计时器（TimerMgr 的两个循环和 `TryGetValue`），在 #37 跟进。
 - **未实现**：剩余选择次数及其事件、随机抽 3 个、Buff 面板和 GamePanel 按钮、候选为 0 时的提示和关闭按钮（#16）；保存点存档和恢复 Buff（#32）；副本结束时调用 `ClearAll`（等副本流程）。
 
 ## 论文素材与证据入口
