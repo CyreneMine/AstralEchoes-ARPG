@@ -172,7 +172,22 @@ public static class DevConsoleSetup
     private static DevConsole vConsole;
     private static readonly FieldInfo HealthDefField = typeof(CharacterHealth).GetField("def", BindingFlags.Instance | BindingFlags.NonPublic);
     private static readonly FieldInfo EnemyReturningField = typeof(EnemyAI).GetField("isReturning", BindingFlags.Instance | BindingFlags.NonPublic);
-    private static readonly string[] CaptureNames = { "Health", "Stats", "Items", "Save" };
+    private static readonly string[] CaptureNames = { "Health", "Stats", "Items", "Save", "Buff" };
+
+    // ---- Buff 检查：只读 BuffMgr / TimerMgr / CharacterStats 的内部状态；
+    // 唯一的写入是把一个计时器的剩余时间改成 0.05 秒，让真实的到期流程（TimerMgr → RemoveBuff → 减回加成）在检查里跑一遍。
+    private static readonly FieldInfo BuffActiveField = typeof(BuffMgr).GetField("hasBuffs", BindingFlags.Instance | BindingFlags.NonPublic);
+    private static readonly FieldInfo BuffTimerIdsField = typeof(BuffMgr).GetField("timers", BindingFlags.Instance | BindingFlags.NonPublic);
+    private static readonly FieldInfo TimerMgrTimersField = typeof(TimerMgr).GetField("timers", BindingFlags.Instance | BindingFlags.NonPublic);
+    private static readonly FieldInfo StatsAtkPercentField = typeof(CharacterStats).GetField("atkBuffPercent", BindingFlags.Instance | BindingFlags.NonPublic);
+    private static readonly FieldInfo StatsDefPercentField = typeof(CharacterStats).GetField("defBuffPercent", BindingFlags.Instance | BindingFlags.NonPublic);
+    private static readonly FieldInfo StatsMaxHpPercentField = typeof(CharacterStats).GetField("maxHpBuffPercent", BindingFlags.Instance | BindingFlags.NonPublic);
+    // 计时阶段用来到期的那个 Buff，以及它所在属性的白值。为 null 表示跳过计时阶段。
+    private static BuffConfig buffProbe;
+    private static float buffProbeBase, buffRemainingMark, buffStageTime;
+    private static float buffSavedTimeScale = -1;
+    private static int buffProbeTimerId, buffPoolMark;
+    private static bool captureBuffAdded;
 
     private static void OnLevelEvent() => levelEventCount++;
     // 记下最后一次广播的参数：HUD 血条只靠这次广播刷新，所以它必须等于最终数值。
@@ -229,6 +244,13 @@ public static class DevConsoleSetup
                 if (vPlayer == null || vHealth == null || vHealth.MaxHp <= 0 || vConsole == null || vPlayer.Stats == null || Time.frameCount < 20)
                     return;
                 checkLines.Clear(); passCount = failCount = 0; healthEventCount = stateEventCount = levelEventCount = itemEventCount = 0;
+                buffProbe = null; captureBuffAdded = false; buffSavedTimeScale = -1;
+                // 同一次 Play 里手动加过 Buff 时先清空，否则后面的属性和等级检查会把 Buff 加成算进去。
+                if (MissingBuffFields().Length == 0 && ConfigMgr.Instance.buffDatabase != null && ActiveBuffs().Count > 0)
+                {
+                    Note($"开始时有 {ActiveBuffs().Count} 个生效中的 Buff，已调用 ClearAll 清空。");
+                    BuffMgr.Instance.ClearAll();
+                }
                 Note($"开始：Lv.{PlayerMgr.Instance.saveData.level}，攻击 {vPlayer.Stats.Atk}，防御 {vPlayer.Stats.Def}，{Hp()}");
                 if (vHealth.isDead || vHealth.CurrentHp != vHealth.MaxHp)
                     Note("开始时玩家不是满血存活状态，后续数值以控制台回满后的状态为准。");
@@ -266,24 +288,66 @@ public static class DevConsoleSetup
                 Check(PlayerMgr.Instance.CurrentIsCursor, "打开期间光标模式被退出后，控制台自动重新进入");
                 Check(!CameraInputEnabled(), "重新进入后镜头输入仍关闭");
                 RunValueChecks();
-                // 依次截取四个分页，截图时保持控制台打开
-                vConsole.SetOpen(true);
-                Directory.CreateDirectory(ReportDir);
-                captureIndex = 0;
+                if (buffProbe != null) BeginBuffPause();
+                else BeginCapture();
+            }
+            else if (stage == "BuffPause")
+            {
+                // timeScale 为 0 时 Time.deltaTime 为 0，TimerMgr 每帧减 0，剩余时间应保持不变。
+                if (Time.frameCount < stageFrame + 10) return;
+                float now = BuffMgr.Instance.GetBuffRemaining(buffProbe.id);
+                Check(Same(now, buffRemainingMark), $"timeScale = 0 时 {buffProbe.buffName} 的剩余时间不变（10 帧）", $"{buffRemainingMark} → {now}");
+                RestoreTimeScale();
+                buffRemainingMark = now;
+                buffStageTime = Time.realtimeSinceStartup;
                 stageFrame = Time.frameCount;
-                SessionState.SetString(StageKey, "Capture");
+                SessionState.SetString(StageKey, "BuffResume");
+            }
+            else if (stage == "BuffResume")
+            {
+                if (Time.frameCount < stageFrame + 5 || Time.realtimeSinceStartup < buffStageTime + 0.3f) return;
+                float now = BuffMgr.Instance.GetBuffRemaining(buffProbe.id);
+                Check(now < buffRemainingMark - 0.05f, "恢复 timeScale 后剩余时间继续减少", $"{buffRemainingMark} → {now}");
+                // 不等满 20 秒：把这个 Buff 的计时器改成 0.05 秒，之后由 TimerMgr 正常到期、调用回调。
+                Dictionary<int, int> ids = BuffTimerIds();
+                Dictionary<int, TimeData> timers = TimerMgrTimersField.GetValue(TimerMgr.Instance) as Dictionary<int, TimeData>;
+                if (ids == null || timers == null || !ids.TryGetValue(buffProbe.id, out buffProbeTimerId) || !timers.ContainsKey(buffProbeTimerId))
+                {
+                    Check(false, "到期检查：找到该 Buff 对应的计时器", "BuffMgr.timers 或 TimerMgr.timers 的类型变了，或者里面没有这个 Buff");
+                    FinishBuffStages();
+                    return;
+                }
+                timers[buffProbeTimerId].remaining = 0.05f;
+                buffPoolMark = BuffMgr.Instance.poolCount;
+                buffStageTime = Time.realtimeSinceStartup;
+                stageFrame = Time.frameCount;
+                SessionState.SetString(StageKey, "BuffExpire");
+            }
+            else if (stage == "BuffExpire")
+            {
+                if (Time.frameCount < stageFrame + 5 || Time.realtimeSinceStartup < buffStageTime + 0.3f) return;
+                RunBuffExpireChecks();
+                FinishBuffStages();
             }
             else if (stage == "Capture")
             {
                 if (Time.frameCount < stageFrame + 8) return;
                 if (captureIndex < CaptureNames.Length)
                 {
+                    // Buff 页截图时加上一个 Buff，画面里能看到生效中的状态；截完统一清空。
+                    if (captureIndex == DevConsole.BuffTab) ShowBuffForCapture();
                     vConsole.SelectTab(captureIndex);
                     // ScreenCapture 不会自动创建目录。
                     ScreenCapture.CaptureScreenshot($"{ReportDir}/DevConsole-{captureIndex}-{CaptureNames[captureIndex]}.png");
                     captureIndex++;
                     stageFrame = Time.frameCount;
                     return;
+                }
+                if (captureBuffAdded)
+                {
+                    Click("ClearBuffs");
+                    Check(ActiveBuffs().Count == 0, "截图后已清空截图用的 Buff", $"生效 {ActiveBuffs().Count} 个");
+                    captureBuffAdded = false;
                 }
                 vConsole.SelectTab(DevConsole.HealthTab);
                 vConsole.SetOpen(false);
@@ -298,6 +362,7 @@ public static class DevConsoleSetup
         }
         catch (Exception error)
         {
+            RestoreTimeScale();
             Unsubscribe();
             checkLines.Add("ERROR " + error);
             WriteReport("playmode-verification.txt", $"DevConsole Play Mode 检查中断：通过 {passCount}，失败 {failCount}\n\n" + string.Join("\n", checkLines) + "\n");
@@ -408,13 +473,17 @@ public static class DevConsoleSetup
         // 9. 道具（会写入道具存档，检查结束时恢复原数量）
         RunItemChecks();
 
-        // 10. 关闭
+        // 10. Buff（同一帧内能检查的部分；暂停、恢复、到期和 ClearAll 在之后的几个阶段里跨帧检查）
+        RunBuffChecks();
+
+        // 11. 关闭
         vConsole.SetOpen(false);
         Check(!vConsole.IsOpen, "关闭：控制台窗口关闭");
         Check(vPlayer.enabled && vPlayer.GetComponent<PlayerCombat>().enabled, "关闭：玩家移动和攻击组件恢复");
         Check(PlayerMgr.Instance.CurrentIsCursor == startCursorMode, "关闭：光标模式恢复到打开前", $"打开前 {startCursorMode}，现在 {PlayerMgr.Instance.CurrentIsCursor}");
         Check(CameraInputEnabled() == !startCursorMode, "关闭：镜头输入随光标模式恢复");
-        Note("未覆盖：实际按键（F1、Esc、Alt、WASD）和鼠标点击、打怪的实际伤害、清空任务存档、清空背包道具、与任务面板/背包面板/对话同时使用。");
+        Note("未覆盖：实际按键（F1、Esc、Alt、WASD）和鼠标点击、打怪的实际伤害、清空任务存档、清空背包道具、与任务面板/背包面板/对话同时使用；" +
+             "Buff 面板与 GamePanel 按钮、剩余选择次数和随机抽取（尚未实现）、打开背包时的真实暂停（这里直接把 timeScale 设为 0）。");
     }
 
     // 控制台的控件不应压住 HUD 上的按钮（例如右上角的背包按钮）。
@@ -445,7 +514,7 @@ public static class DevConsoleSetup
     private static void CheckLayout()
     {
         var window = vConsole.transform.Find("ConsoleWindow");
-        string[] pages = { "HealthPage", "StatsPage", "ItemPage", "SavePage" };
+        string[] pages = { "HealthPage", "StatsPage", "ItemPage", "SavePage", "BuffPage" };
         for (int i = 0; i < pages.Length; i++)
         {
             vConsole.SelectTab(i);
@@ -614,6 +683,229 @@ public static class DevConsoleSetup
         Check(mgr.GetItemCount(id) == orig && save.level == origLevel && save.exp == origExp, "道具检查后已恢复原持有数量与等级经验",
             $"持有 {mgr.GetItemCount(id)}（原 {orig}），Lv.{save.level} 经验 {save.exp}（原 Lv.{origLevel} 经验 {origExp}）");
         vConsole.SelectTab(DevConsole.HealthTab);
+    }
+
+    // ---- Buff 检查 ----
+
+    private static string MissingBuffFields()
+    {
+        List<string> missing = new List<string>();
+        if (BuffActiveField == null) missing.Add("BuffMgr.hasBuffs");
+        if (BuffTimerIdsField == null) missing.Add("BuffMgr.timers");
+        if (TimerMgrTimersField == null) missing.Add("TimerMgr.timers");
+        if (StatsAtkPercentField == null) missing.Add("CharacterStats.atkBuffPercent");
+        if (StatsDefPercentField == null) missing.Add("CharacterStats.defBuffPercent");
+        if (StatsMaxHpPercentField == null) missing.Add("CharacterStats.maxHpBuffPercent");
+        return string.Join("，", missing);
+    }
+
+    private static List<BuffConfig> BuffConfigs()
+    {
+        BuffDatabase db = ConfigMgr.Instance.buffDatabase;
+        return db != null && db.buffs != null ? db.buffs.Where(b => b != null).ToList() : new List<BuffConfig>();
+    }
+
+    private static List<BuffConfig> ActiveBuffs() => BuffActiveField.GetValue(BuffMgr.Instance) as List<BuffConfig> ?? new List<BuffConfig>();
+    private static bool BuffActive(int id) => ActiveBuffs().Any(b => b != null && b.id == id);
+    private static Dictionary<int, int> BuffTimerIds() => BuffTimerIdsField.GetValue(BuffMgr.Instance) as Dictionary<int, int>;
+
+    private static string BuffTypeName(BuffType type) =>
+        type == BuffType.atk ? "攻击" : type == BuffType.def ? "防御" : type == BuffType.maxHp ? "生命上限" : type.ToString();
+
+    private static float StatOf(BuffType type) =>
+        type == BuffType.atk ? vPlayer.Stats.Atk : type == BuffType.def ? vPlayer.Stats.Def : vPlayer.Stats.MaxHp;
+
+    private static float PercentOf(BuffType type)
+    {
+        FieldInfo field = type == BuffType.atk ? StatsAtkPercentField : type == BuffType.def ? StatsDefPercentField : StatsMaxHpPercentField;
+        return (float)field.GetValue(vPlayer.Stats);
+    }
+
+    // 同一帧内的部分：添加、属性与生命组件同步、按比例保持、重复添加被拦截、Buff 生效时升级、按等级和 Buff 重算。
+    // 结束时三个 Buff 仍在生效，留给之后的暂停 / 恢复 / 到期 / ClearAll 阶段。
+    private static void RunBuffChecks()
+    {
+        buffProbe = null;
+        List<BuffConfig> configs = BuffConfigs();
+        if (configs.Count == 0) { Note("BuffDatabase 为空或未加载，跳过 Buff 检查。"); return; }
+        string missing = MissingBuffFields();
+        Check(missing.Length == 0, "Buff：控制台读取的内部字段都存在", "找不到 " + missing);
+        if (missing.Length > 0) return;
+
+        vConsole.SelectTab(DevConsole.BuffTab);
+        Transform content = vConsole.transform.Find("ConsoleWindow/BuffPage/BuffList/Viewport/Content");
+        int rows = content.Cast<Transform>().Count(t => t.name.StartsWith("BuffRow_"));
+        Check(rows == configs.Count, $"Buff 列表：显示配置表中的全部 {configs.Count} 个 Buff", $"实际 {rows} 行");
+
+        BuffMgr mgr = BuffMgr.Instance;
+        Check(ActiveBuffs().Count == 0 && mgr.poolCount == configs.Count, "Buff：开始时没有生效中的 Buff，候选池为全部配置",
+            $"生效 {ActiveBuffs().Count} 个，候选池 {mgr.poolCount} 个");
+        int absentId = configs.Max(b => b.id) + 1000;
+        Check(mgr.GetBuffRemaining(absentId) == 0, "未生效的 Buff：GetBuffRemaining 返回 0", $"实际 {mgr.GetBuffRemaining(absentId)}");
+
+        BuffConfig atkBuff = configs.FirstOrDefault(b => b.buffType == BuffType.atk);
+        BuffConfig defBuff = configs.FirstOrDefault(b => b.buffType == BuffType.def);
+        BuffConfig hpBuff = configs.FirstOrDefault(b => b.buffType == BuffType.maxHp);
+
+        // 先扣 10 点得到非满血比例，用来检查生命上限变化时当前生命按比例保持。
+        Click("FullHealth");
+        Amount(10); Click("DamageCustom");
+        float baseAtk = vPlayer.Stats.Atk, baseDef = vPlayer.Stats.Def, baseMax = vHealth.MaxHp;
+        int pool = mgr.poolCount;
+
+        if (atkBuff == null) Note("配置里没有攻击类 Buff，跳过攻击加成检查。");
+        else
+        {
+            float expected = baseAtk * (1 + atkBuff.percent);
+            Click("BuffRow_" + atkBuff.id);
+            Check(Same(vPlayer.Stats.Atk, expected) && Same(PlayerMgr.Instance.GetAtkValue(), expected),
+                $"添加 {atkBuff.buffName}：攻击 {baseAtk} → {expected}（GetAtkValue 同步）", $"实际 {vPlayer.Stats.Atk}，GetAtkValue {PlayerMgr.Instance.GetAtkValue()}");
+            Check(BuffActive(atkBuff.id) && mgr.poolCount == pool - 1, "添加后进入生效列表，并从候选池移除", $"候选池 {pool} → {mgr.poolCount}");
+            pool = mgr.poolCount;
+            float remaining = mgr.GetBuffRemaining(atkBuff.id);
+            Check(remaining > 0 && remaining <= atkBuff.totalTime, $"添加后剩余时间在 0～{atkBuff.totalTime} 秒之间", $"实际 {remaining}");
+            RefreshConsole();
+            string sub = Text("Sub", content.Find("BuffRow_" + atkBuff.id)).text;
+            Check(sub.Contains("生效中"), "Buff 列表：该行显示生效中和剩余时间", $"实际「{sub}」");
+            int count = ActiveBuffs().Count;
+            Click("BuffRow_" + atkBuff.id);
+            Check(ActiveBuffs().Count == count && Same(vPlayer.Stats.Atk, expected), "重复点击生效中的 Buff：控制台拦截，状态不变",
+                $"生效 {ActiveBuffs().Count} 个，攻击 {vPlayer.Stats.Atk}");
+        }
+
+        if (defBuff == null) Note("配置里没有防御类 Buff，跳过防御加成检查。");
+        else
+        {
+            float expected = baseDef * (1 + defBuff.percent);
+            Click("BuffRow_" + defBuff.id);
+            Check(Same(vPlayer.Stats.Def, expected) && Same(HealthDef(), expected), $"添加 {defBuff.buffName}：防御 {baseDef} → {expected}（生命组件同步）",
+                $"实际 {vPlayer.Stats.Def}，生命组件 {HealthDef()}");
+        }
+
+        if (hpBuff == null) Note("配置里没有生命上限类 Buff，跳过生命上限加成检查。");
+        else
+        {
+            float expectedMax = baseMax * (1 + hpBuff.percent);
+            float ratio = vHealth.CurrentHp / vHealth.MaxHp;
+            Click("BuffRow_" + hpBuff.id);
+            Check(Same(vHealth.MaxHp, expectedMax) && Same(vHealth.CurrentHp, expectedMax * ratio),
+                $"添加 {hpBuff.buffName}：生命上限 {baseMax} → {expectedMax}，当前生命按比例保持", Hp() + $"，期望当前 {expectedMax * ratio}");
+            Check(Same(lastEventHp, vHealth.CurrentHp) && Same(lastEventMax, vHealth.MaxHp),
+                "加生命上限后最后一次 OnHealthChange 广播的是最终生命（HUD 同步）", $"广播 {lastEventHp}/{lastEventMax}，{Hp()}");
+        }
+
+        RefreshConsole();
+        string summary = Text("BuffCheck").text;
+        Check(summary.StartsWith("加成与"), "Buff 页：CharacterStats 的加成与 BuffMgr 生效列表一致", $"实际「{summary}」");
+
+        // 升级时 Recalculate 会从配置重新算白值，加成必须每次都乘进去，否则升级会用白值覆盖 Buff（#16）。
+        PlayerSaveData save = PlayerMgr.Instance.saveData;
+        CharacterConfig.CharacterData cfg = vPlayer.Config;
+        if (atkBuff != null && save.level < cfg.maxLv)
+        {
+            int origLevel = save.level, origExp = save.exp;
+            try
+            {
+                Field("LevelInput").text = (origLevel + 1).ToString();
+                Click("ApplyLevel");
+                float newBase = cfg.atk + cfg.atkPerLv * (origLevel + 1 - cfg.initLv);
+                Check(Same(vPlayer.Stats.Atk, newBase * (1 + atkBuff.percent)),
+                    $"Buff 生效时升到 Lv.{origLevel + 1}：攻击 = 新白值 {newBase} × (1 + {atkBuff.percent})", $"实际 {vPlayer.Stats.Atk}");
+            }
+            finally { RestoreLevel(origLevel, origExp); }
+            Check(Same(vPlayer.Stats.Atk, baseAtk * (1 + atkBuff.percent)), "恢复原等级后攻击回到原白值 × (1 + 加成)", $"实际 {vPlayer.Stats.Atk}");
+        }
+        else if (atkBuff != null) Note("当前已是最高等级，跳过“Buff 生效时升级”检查。");
+
+        Click("ResetAttributes");
+        bool kept = (atkBuff == null || Same(vPlayer.Stats.Atk, baseAtk * (1 + atkBuff.percent)))
+                    && (defBuff == null || Same(vPlayer.Stats.Def, baseDef * (1 + defBuff.percent)))
+                    && (hpBuff == null || Same(vHealth.MaxHp, baseMax * (1 + hpBuff.percent)));
+        Check(kept && Same(vHealth.CurrentHp, vHealth.MaxHp), "按等级和 Buff 重算：保留生效中的 Buff 加成，生命回满",
+            $"攻击 {vPlayer.Stats.Atk}，防御 {vPlayer.Stats.Def}，{Hp()}");
+
+        buffProbe = atkBuff ?? defBuff ?? hpBuff;
+        buffProbeBase = buffProbe == atkBuff ? baseAtk : buffProbe == defBuff ? baseDef : baseMax;
+        vConsole.SelectTab(DevConsole.HealthTab);
+    }
+
+    private static void BeginBuffPause()
+    {
+        buffRemainingMark = BuffMgr.Instance.GetBuffRemaining(buffProbe.id);
+        buffSavedTimeScale = Time.timeScale;
+        Time.timeScale = 0;
+        stageFrame = Time.frameCount;
+        SessionState.SetString(StageKey, "BuffPause");
+    }
+
+    private static void RestoreTimeScale()
+    {
+        if (buffSavedTimeScale < 0) return;
+        Time.timeScale = buffSavedTimeScale > 0 ? buffSavedTimeScale : 1;
+        buffSavedTimeScale = -1;
+    }
+
+    private static void RunBuffExpireChecks()
+    {
+        BuffMgr mgr = BuffMgr.Instance;
+        BuffType type = buffProbe.buffType;
+        Check(!BuffActive(buffProbe.id) && mgr.poolCount == buffPoolMark + 1, $"{buffProbe.buffName} 到期：移出生效列表并回到候选池",
+            $"仍在生效 {BuffActive(buffProbe.id)}，候选池 {buffPoolMark} → {mgr.poolCount}");
+        float remaining = mgr.GetBuffRemaining(buffProbe.id);
+        float timerRemaining = TimerMgr.Instance.GetRemainingByIndex(buffProbeTimerId);
+        Check(remaining == 0 && timerRemaining == -1, "到期后 GetBuffRemaining 为 0，计时器已从 TimerMgr 删除",
+            $"GetBuffRemaining {remaining}，GetRemainingByIndex {timerRemaining}");
+        float stillListed = ActiveBuffs().Where(b => b != null && b.buffType == type).Sum(b => b.percent);
+        float expected = buffProbeBase * (1 + stillListed);
+        Check(Same(StatOf(type), expected) && Same(PercentOf(type), stillListed), $"到期后{BuffTypeName(type)}减回加成：应为 {expected}",
+            $"实际 {StatOf(type)}，CharacterStats 加成 {PercentOf(type)}");
+        if (type == BuffType.atk)
+            Check(Same(PlayerMgr.Instance.GetAtkValue(), expected), "到期后 GetAtkValue 同步", $"实际 {PlayerMgr.Instance.GetAtkValue()}");
+
+        // ClearAll：取消剩下的计时、清零加成、恢复候选池；生命上限变回时当前生命按比例保持。
+        Dictionary<int, int> ids = BuffTimerIds();
+        List<int> cleared = ids != null ? ids.Values.ToList() : new List<int>();
+        float ratio = vHealth.CurrentHp / vHealth.MaxHp;
+        int total = BuffConfigs().Count;
+        Click("ClearBuffs");
+        Dictionary<int, int> idsAfter = BuffTimerIds();
+        Check(ActiveBuffs().Count == 0 && (idsAfter == null || idsAfter.Count == 0) && mgr.poolCount == total,
+            "ClearAll：生效列表和计时记录清空，候选池恢复为全部", $"生效 {ActiveBuffs().Count} 个，候选池 {mgr.poolCount}/{total}");
+        Check(cleared.All(t => TimerMgr.Instance.GetRemainingByIndex(t) == -1), $"ClearAll：{cleared.Count} 个计时器已从 TimerMgr 取消");
+        Check(Same(PercentOf(BuffType.atk), 0) && Same(PercentOf(BuffType.def), 0) && Same(PercentOf(BuffType.maxHp), 0),
+            "ClearAll：CharacterStats 的三项加成清零", $"{PercentOf(BuffType.atk)}/{PercentOf(BuffType.def)}/{PercentOf(BuffType.maxHp)}");
+        Check(Same(vPlayer.Stats.Atk, startAttack) && Same(vPlayer.Stats.Def, startDefense) && Same(HealthDef(), startDefense) && Same(vHealth.MaxHp, startMax),
+            "ClearAll：攻击、防御、生命上限回到白值（生命组件同步）",
+            $"攻击 {vPlayer.Stats.Atk}/{startAttack}，防御 {vPlayer.Stats.Def}/{startDefense}，生命组件防御 {HealthDef()}，上限 {vHealth.MaxHp}/{startMax}");
+        Check(Same(vHealth.CurrentHp, vHealth.MaxHp * ratio), "ClearAll：生命上限变回时当前生命按比例保持", Hp() + $"，期望当前 {vHealth.MaxHp * ratio}");
+    }
+
+    private static void FinishBuffStages()
+    {
+        RestoreTimeScale();
+        if (MissingBuffFields().Length == 0 && ActiveBuffs().Count > 0) Click("ClearBuffs");
+        if (!vHealth.isDead) Click("FullHealth");
+        buffProbe = null;
+        BeginCapture();
+    }
+
+    private static void BeginCapture()
+    {
+        // 依次截取各个分页，截图时保持控制台打开
+        vConsole.SetOpen(true);
+        Directory.CreateDirectory(ReportDir);
+        captureIndex = 0;
+        stageFrame = Time.frameCount;
+        SessionState.SetString(StageKey, "Capture");
+    }
+
+    private static void ShowBuffForCapture()
+    {
+        if (MissingBuffFields().Length > 0) return;
+        List<BuffConfig> configs = BuffConfigs();
+        if (configs.Count == 0 || BuffActive(configs[0].id)) return;
+        Click("BuffRow_" + configs[0].id);
+        captureBuffAdded = true;
     }
 
     private static Transform Find(string name, Transform root = null)

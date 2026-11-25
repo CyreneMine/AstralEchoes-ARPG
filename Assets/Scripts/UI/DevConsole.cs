@@ -25,8 +25,8 @@ public class DevConsole : MonoBehaviour
     private const float WindowTop = LauncherY + LauncherHeight + 8;
     private const float WindowWidth = 900, WindowHeight = 700;
     private const float PageX = 168, PageY = 144, PageWidth = 716, PageHeight = 470;
-    private static readonly string[] TabTitles = { "生命", "属性 · 等级", "道具", "存档" };
-    public const int HealthTab = 0, StatsTab = 1, ItemTab = 2, SaveTab = 3;
+    private static readonly string[] TabTitles = { "生命", "属性 · 等级", "道具", "存档", "Buff" };
+    public const int HealthTab = 0, StatsTab = 1, ItemTab = 2, SaveTab = 3, BuffTab = 4;
 
     private static readonly Color Background = new Color(0.045f, 0.065f, 0.11f, 0.98f);
     private static readonly Color PanelColor = new Color(0.09f, 0.13f, 0.20f);
@@ -41,6 +41,7 @@ public class DevConsole : MonoBehaviour
     private static readonly Color RowIdle = new Color(0.11f, 0.15f, 0.22f);
     private static readonly Color RowSelected = new Color(0.17f, 0.36f, 0.43f);
     private static readonly Color IconEmpty = new Color(0.18f, 0.24f, 0.34f);
+    private static readonly Color ErrorText = new Color(1f, 0.5f, 0.45f);
 
     // ---- 反射：调试读写集中在控制台中，角色与生命脚本使用原有接口 ----
     private static readonly FieldInfo CurrentHealthField = typeof(CharacterHealth).GetField("currentHp", BindingFlags.Instance | BindingFlags.NonPublic);
@@ -50,6 +51,11 @@ public class DevConsole : MonoBehaviour
     private static readonly FieldInfo StatsMaxHealthField = typeof(CharacterStats).GetField("maxHp", BindingFlags.Instance | BindingFlags.NonPublic);
     // 事件只能在 CharacterHealth 内部触发；控制台改血后通过它的编译器生成字段通知血条刷新。
     private static readonly FieldInfo HealthChangedField = typeof(CharacterHealth).GetField("OnHealthChange", BindingFlags.Instance | BindingFlags.NonPublic);
+    // Buff：生效列表在 BuffMgr 内部，加成百分比在 CharacterStats 内部；控制台只读，增删一律走 AddBuff / ClearAll。
+    private static readonly FieldInfo BuffActiveField = typeof(BuffMgr).GetField("hasBuffs", BindingFlags.Instance | BindingFlags.NonPublic);
+    private static readonly FieldInfo StatsAtkPercentField = typeof(CharacterStats).GetField("atkBuffPercent", BindingFlags.Instance | BindingFlags.NonPublic);
+    private static readonly FieldInfo StatsDefPercentField = typeof(CharacterStats).GetField("defBuffPercent", BindingFlags.Instance | BindingFlags.NonPublic);
+    private static readonly FieldInfo StatsMaxHpPercentField = typeof(CharacterStats).GetField("maxHpBuffPercent", BindingFlags.Instance | BindingFlags.NonPublic);
 
     // ---- 运行时生成的控件 ----
     private TMP_FontAsset font;
@@ -70,6 +76,18 @@ public class DevConsole : MonoBehaviour
         public TMP_Text sub;
     }
     private readonly List<ItemRow> itemRows = new List<ItemRow>();
+
+    private RectTransform buffListContent;
+    private TMP_Text buffPoolText, buffAtkText, buffDefText, buffMaxHpText, buffCheckText;
+
+    private class BuffRow
+    {
+        public int id;
+        public float totalTime;
+        public Image background;
+        public TMP_Text sub;
+    }
+    private readonly List<BuffRow> buffRows = new List<BuffRow>();
 
     // ---- 状态 ----
     private readonly List<Behaviour> pausedBehaviours = new List<Behaviour>();
@@ -180,6 +198,7 @@ public class DevConsole : MonoBehaviour
             BindItemEvents();
             RebuildItemList();
             RefreshItemDetail();
+            RebuildBuffList();
             // 每次打开都用实际数值覆盖输入框，丢掉上次没应用的输入。
             lastSynced.Clear();
             RefreshDisplay();
@@ -210,6 +229,8 @@ public class DevConsole : MonoBehaviour
             RebuildItemList();
             RefreshItemDetail();
         }
+        if (currentTab == BuffTab && isOpen)
+            RebuildBuffList();
     }
 
     private void Pause(Behaviour behaviour)
@@ -268,6 +289,9 @@ public class DevConsole : MonoBehaviour
         SyncField(maxHealthInput, boundHealth.MaxHp);
         if (save != null)
             SyncField(levelInput, save.level);
+        // Buff 的剩余时间每次刷新都在变，只在 Buff 页可见时更新。
+        if (currentTab == BuffTab)
+            RefreshBuffPage();
     }
 
     // 状态栏附带显示货币类道具（itemType == money）的持有数量。
@@ -413,7 +437,7 @@ public class DevConsole : MonoBehaviour
     // 属性与等级
     // ======================================================================
 
-    // 只改写这名角色运行时的最终属性，不碰共享 SO；下次升级或"恢复初始值"时会按等级重新计算并覆盖。
+    // 只改写这名角色运行时的最终属性，不碰共享 SO；下次升级、"恢复初始值"或 Buff 增减时会按公式重新计算并覆盖。
     private void ApplyConsoleAttributes(float attack, float defense, float maximumHealth)
     {
         CharacterStats stats = targetPlayer.Stats;
@@ -440,7 +464,7 @@ public class DevConsole : MonoBehaviour
             return;
         }
         ApplyConsoleAttributes(attack, defense, maximum);
-        Say("运行时属性已应用；当前生命按原比例换算到新上限。升级或恢复初始值后按等级重新计算。");
+        Say("运行时属性已应用；当前生命按原比例换算到新上限。升级、恢复初始值或 Buff 增减后按公式重新计算。");
     }
 
     private void Step(float attack, float defense, float maximum)
@@ -454,18 +478,18 @@ public class DevConsole : MonoBehaviour
         Say("运行时属性已调整。");
     }
 
+    // 走玩家自己的 UpdateStats：按配置、当前等级和生效中的 Buff 重算，再回满生命。
+    // 不再调用 Init：Init 会新建 CharacterStats，Buff 加成随之丢失，之后 Buff 到期减回时加成会变成负数。
     public void ResetAttributes()
     {
         if (!Ready()) return;
-        // Init 会直接清除死亡标记，绕过 Respawn 的复活广播，所以死亡时先复活。
+        // 回满生命不会清除死亡标记，死亡时先走 Respawn。
         if (boundHealth.isDead) { Say("玩家已死亡，请先使用“复活并回满”。", true); return; }
-        int id = targetPlayer.Config.id;
-        var type = targetPlayer.Config.type;
-        targetPlayer.Init(id, type);
+        targetPlayer.UpdateStats();
         targetPlayer.SetIsAttacking(false);
-        NotifyHealthChanged();
+        SetConsoleHealth(boundHealth.MaxHp);
         RefreshDisplay();
-        Say("已按配置表和当前等级重新计算属性，并回满生命。");
+        Say("已按配置表、当前等级和生效中的 Buff 重新计算属性，并回满生命。");
     }
 
     // 等级调试：直接写入玩家存档的等级（经验清零），再调用用户的 PlayerLevelChanged 广播，
@@ -773,6 +797,251 @@ public class DevConsole : MonoBehaviour
     }
 
     // ======================================================================
+    // Buff：调用 BuffMgr.AddBuff / ClearAll；生效列表与加成百分比通过反射只读
+    // ======================================================================
+
+    private static List<BuffConfig> AllBuffConfigs()
+    {
+        BuffDatabase database = ConfigMgr.Instance.buffDatabase;
+        List<BuffConfig> list = new List<BuffConfig>();
+        if (database != null && database.buffs != null)
+            foreach (BuffConfig config in database.buffs)
+                if (config != null)
+                    list.Add(config);
+        return list;
+    }
+
+    // BuffDatabase 没加载时 BuffMgr 的构造函数会报空引用，所以先判断，不去创建 BuffMgr。
+    private static bool BuffDatabaseLoaded() => ConfigMgr.Instance.buffDatabase != null;
+
+    private static List<BuffConfig> ActiveBuffs()
+    {
+        if (!BuffDatabaseLoaded() || BuffActiveField == null)
+            return null;
+        return BuffActiveField.GetValue(BuffMgr.Instance) as List<BuffConfig>;
+    }
+
+    private static bool IsBuffActive(List<BuffConfig> active, int id)
+    {
+        if (active == null) return false;
+        foreach (BuffConfig config in active)
+            if (config != null && config.id == id)
+                return true;
+        return false;
+    }
+
+    private static string BuffTypeName(BuffType type)
+    {
+        switch (type)
+        {
+            case BuffType.atk: return "攻击";
+            case BuffType.def: return "防御";
+            case BuffType.maxHp: return "生命上限";
+            default: return type.ToString();
+        }
+    }
+
+    private static string Percent(float value) => Num(value * 100) + "%";
+
+    private static FieldInfo PercentField(BuffType type)
+    {
+        switch (type)
+        {
+            case BuffType.atk: return StatsAtkPercentField;
+            case BuffType.def: return StatsDefPercentField;
+            case BuffType.maxHp: return StatsMaxHpPercentField;
+            default: return null;
+        }
+    }
+
+    // 白值按 CharacterStats.Recalculate 的公式单独计算一遍。用户改了公式而这里没改时，页面会提示不一致。
+    private float BaseStat(BuffType type)
+    {
+        CharacterConfig.CharacterData config = targetPlayer.Config;
+        int realLv = PlayerMgr.Instance.saveData.level - config.initLv;
+        switch (type)
+        {
+            case BuffType.atk: return config.atk + config.atkPerLv * realLv;
+            case BuffType.def: return config.def + config.defPerLv * realLv;
+            case BuffType.maxHp: return config.maxHp + config.maxHpPerLv * realLv;
+            default: return 0;
+        }
+    }
+
+    private float CurrentStat(BuffType type)
+    {
+        CharacterStats stats = targetPlayer.Stats;
+        switch (type)
+        {
+            case BuffType.atk: return stats.Atk;
+            case BuffType.def: return stats.Def;
+            case BuffType.maxHp: return stats.MaxHp;
+            default: return 0;
+        }
+    }
+
+    private void RebuildBuffList()
+    {
+        if (buffListContent == null) return;
+        // 先移出再销毁：Destroy 要到帧末才生效，避免同一帧里新旧两套同名行并存。
+        for (int i = buffListContent.childCount - 1; i >= 0; i--)
+        {
+            Transform child = buffListContent.GetChild(i);
+            child.gameObject.SetActive(false);
+            child.SetParent(null, false);
+            Destroy(child.gameObject);
+        }
+        buffRows.Clear();
+        List<BuffConfig> configs = AllBuffConfigs();
+        foreach (BuffConfig config in configs)
+            buffRows.Add(CreateBuffRow(config));
+        if (configs.Count == 0)
+        {
+            TMP_Text empty = Label(buffListContent, "Empty", BuffDatabaseLoaded() ? "BuffDatabase 为空" : "BuffDatabase 未加载", 0, 0, 320, 40, 16, Muted);
+            empty.gameObject.AddComponent<LayoutElement>().preferredHeight = 40;
+            empty.alignment = TextAlignmentOptions.Center;
+        }
+        RefreshBuffPage();
+    }
+
+    private BuffRow CreateBuffRow(BuffConfig config)
+    {
+        int id = config.id;
+        GameObject go = ButtonBase(buffListContent, "BuffRow_" + id, 0, 0, 340, 60, RowIdle, () => AddBuffFromConsole(id));
+        go.AddComponent<LayoutElement>().preferredHeight = 60;
+        Label(go.transform, "Name", $"#{id}  {config.buffName}  {BuffTypeName(config.buffType)} +{Percent(config.percent)}", 12, 6, 300, 26, 17, Color.white);
+        TMP_Text sub = Label(go.transform, "Sub", "", 12, 33, 300, 22, 14, Muted);
+        return new BuffRow { id = id, totalTime = config.totalTime, background = go.GetComponent<Image>(), sub = sub };
+    }
+
+    private void RefreshBuffPage()
+    {
+        if (buffPoolText == null) return;
+        buffPoolText.color = Color.white;
+        if (!BuffDatabaseLoaded())
+        {
+            buffPoolText.text = "BuffDatabase 未加载（Resources/GameData/Buff/BuffDatabase）。";
+            buffAtkText.text = buffDefText.text = buffMaxHpText.text = buffCheckText.text = "";
+            return;
+        }
+        List<BuffConfig> active = ActiveBuffs();
+        if (active == null)
+        {
+            buffPoolText.text = "找不到 BuffMgr.hasBuffs，控制台需要同步修改。";
+            buffPoolText.color = ErrorText;
+            buffAtkText.text = buffDefText.text = buffMaxHpText.text = buffCheckText.text = "";
+            return;
+        }
+        BuffMgr manager = BuffMgr.Instance;
+        int total = AllBuffConfigs().Count;
+        buffPoolText.text = $"候选池 {manager.poolCount} 个 · 生效中 {active.Count} 个 · 配置 {total} 个\n" +
+                            $"timeScale {Num(Time.timeScale)} · 为 0 时计时暂停";
+        foreach (BuffRow row in buffRows)
+        {
+            bool on = IsBuffActive(active, row.id);
+            string remaining = manager.GetBuffRemaining(row.id).ToString("0.0", CultureInfo.InvariantCulture);
+            row.sub.text = on ? $"{Num(row.totalTime)} 秒 · 生效中，剩余 {remaining} 秒" : $"{Num(row.totalTime)} 秒 · 未生效，点击添加";
+            row.sub.color = on ? AccentBright : Muted;
+            row.background.color = on ? RowSelected : RowIdle;
+        }
+
+        if (!BindPlayer())
+        {
+            buffAtkText.text = "等待玩家初始化…";
+            buffDefText.text = buffMaxHpText.text = buffCheckText.text = "";
+            return;
+        }
+        string problems = "";
+        if (manager.poolCount + active.Count != total)
+            problems += $"候选池 {manager.poolCount} + 生效中 {active.Count} ≠ 配置总数 {total}。\n";
+        buffAtkText.text = BuffStatLine(BuffType.atk, active, ref problems);
+        buffDefText.text = BuffStatLine(BuffType.def, active, ref problems);
+        buffMaxHpText.text = BuffStatLine(BuffType.maxHp, active, ref problems);
+        if (Mathf.Abs(boundHealth.MaxHp - targetPlayer.Stats.MaxHp) > 0.001f)
+            problems += $"生命组件上限 {Num(boundHealth.MaxHp)} 与 CharacterStats {Num(targetPlayer.Stats.MaxHp)} 不同步。\n";
+        buffCheckText.text = problems.Length == 0 ? "加成与 BuffMgr 的生效列表一致，实际值 = 白值 × (1 + 加成)。" : problems.TrimEnd();
+        buffCheckText.color = problems.Length == 0 ? AccentBright : ErrorText;
+    }
+
+    // 一行显示"白值 × (1 + CharacterStats 里的加成) = 公式值"，下一行显示实际值和 BuffMgr 生效列表的合计，两边对不上时记入 problems。
+    private string BuffStatLine(BuffType type, List<BuffConfig> active, ref string problems)
+    {
+        string name = BuffTypeName(type);
+        float basic = BaseStat(type);
+        float actual = CurrentStat(type);
+        float listed = 0;
+        foreach (BuffConfig config in active)
+            if (config != null && config.buffType == type)
+                listed += config.percent;
+        FieldInfo field = PercentField(type);
+        if (field == null)
+        {
+            problems += $"找不到 CharacterStats 的{name}加成字段，控制台需要同步修改。\n";
+            return $"{name}  白值 {Num(basic)} · 实际 {Num(actual)}";
+        }
+        float applied = (float)field.GetValue(targetPlayer.Stats);
+        float expected = basic * (1 + applied);
+        if (Mathf.Abs(applied - listed) > 0.0001f)
+            problems += $"{name}：生效列表合计 +{Percent(listed)}，CharacterStats 为 {Percent(applied)}。\n";
+        else if (Mathf.Abs(actual - expected) > 0.001f)
+            problems += $"{name}实际 {Num(actual)}，公式为 {Num(expected)}：可能被“应用属性”手动改过，点属性页的“按等级和 Buff 重算”。\n";
+        return $"{name}  {Num(basic)} × (1 + {Percent(applied)}) = {Num(expected)}\n实际 {Num(actual)} · 生效列表合计 +{Percent(listed)}";
+    }
+
+    public void AddBuffFromConsole(int id)
+    {
+        if (!Ready()) return;
+        BuffConfig config = ConfigMgr.Instance.GetBuffConfigById(id);
+        if (config == null) { Say($"BuffDatabase 中没有 ID {id}。", true); return; }
+        List<BuffConfig> active = ActiveBuffs();
+        if (active == null) { Say("找不到 BuffMgr.hasBuffs，控制台需要同步修改。", true); return; }
+        // 正常流程里生效中的 Buff 不会出现在候选里；AddBuff 本身没有重复判断，重复调用会在 timers.Add 抛异常。
+        if (IsBuffActive(active, id))
+        {
+            Say($"{config.buffName} 正在生效。AddBuff 没有重复添加的判断，重复调用会在 timers.Add 抛异常，控制台已拦截。", true);
+            return;
+        }
+        float before = CurrentStat(config.buffType);
+        try
+        {
+            BuffMgr.Instance.AddBuff(id);
+        }
+        catch (System.Exception error)
+        {
+            Say("AddBuff 抛出异常：" + error.Message, true);
+            Debug.LogException(error);
+            RefreshBuffPage();
+            return;
+        }
+        float after = CurrentStat(config.buffType);
+        RefreshDisplay();
+        RefreshBuffPage();
+        Say($"已调用 AddBuff({id})：{config.buffName}，{BuffTypeName(config.buffType)} {Num(before)} → {Num(after)}，{Num(config.totalTime)} 秒后到期。");
+    }
+
+    public void ClearBuffsFromConsole()
+    {
+        if (!Ready()) return;
+        if (!BuffDatabaseLoaded()) { Say("BuffDatabase 未加载。", true); return; }
+        List<BuffConfig> active = ActiveBuffs();
+        int count = active != null ? active.Count : 0;
+        try
+        {
+            BuffMgr.Instance.ClearAll();
+        }
+        catch (System.Exception error)
+        {
+            Say("ClearAll 抛出异常：" + error.Message, true);
+            Debug.LogException(error);
+            RefreshBuffPage();
+            return;
+        }
+        RefreshDisplay();
+        RefreshBuffPage();
+        Say($"已调用 ClearAll：取消 {count} 个 Buff 的计时，加成清零，候选池恢复为 {BuffMgr.Instance.poolCount} 个。");
+    }
+
+    // ======================================================================
     // 存档
     // ======================================================================
 
@@ -853,6 +1122,7 @@ public class DevConsole : MonoBehaviour
         pages.Add(BuildStatsPage(Page(w, "StatsPage")));
         pages.Add(BuildItemPage(Page(w, "ItemPage")));
         pages.Add(BuildSavePage(Page(w, "SavePage")));
+        pages.Add(BuildBuffPage(Page(w, "BuffPage")));
 
         Box(w, "MessageBackground", 16, 624, WindowWidth - 32, 60, PanelColor);
         messageText = Label(w, "Message", "选择左侧分页开始调试。", 30, 630, WindowWidth - 60, 50, 16, new Color(0.55f, 0.87f, 0.9f));
@@ -895,7 +1165,7 @@ public class DevConsole : MonoBehaviour
             field.onEndEdit.AddListener(_ => ApplyAttributes());
         float hw = (PageWidth - 10) / 2f;
         Button(p, "ApplyAttributes", "应用属性", 0, 208, hw, 44, Accent, ApplyAttributes);
-        Button(p, "ResetAttributes", "恢复 SO 初始值", hw + 10, 208, hw, 44, Neutral, ResetAttributes);
+        Button(p, "ResetAttributes", "按等级和 Buff 重算", hw + 10, 208, hw, 44, Neutral, ResetAttributes);
 
         Section(p, "LevelTitle", "等级（写入存档，经验清零）", 280);
         levelInput = Input(p, "LevelInput", "1", 0, 320, 140, 44, TMP_InputField.ContentType.IntegerNumber);
@@ -903,7 +1173,7 @@ public class DevConsole : MonoBehaviour
         levelInput.onSubmit.AddListener(_ => ApplyLevel());
         Button(p, "ApplyLevel", "设置等级", 150, 320, 278, 44, Accent, ApplyLevel);
         Button(p, "ResetLevel", "重置为初始等级", 438, 320, 278, 44, Neutral, ResetLevel);
-        Hint(p, "属性输入后回车或移开焦点即生效，升级、设置等级、恢复初始值时按等级重算并覆盖。等级按回车或点“设置等级”生效，超出 initLv～maxLv 自动限制。", 378);
+        Hint(p, "属性输入后回车或移开焦点即生效，升级、设置等级、恢复初始值、Buff 增减时按公式重算并覆盖。等级按回车或点“设置等级”生效，超出 initLv～maxLv 自动限制。", 378);
         return p.gameObject;
     }
 
@@ -964,6 +1234,26 @@ public class DevConsole : MonoBehaviour
         Hint(p, "保存空的 MissionData，并同步 MissionMgr 中的任务进度。", 96);
         Button(p, "ClearItems", "清空背包道具", 0, 140, PageWidth, 48, Danger, ClearAllItems);
         Hint(p, "对每条持有记录调用 PlayerItemMgr.RemoveItem 扣到 0，由管理器删除记录并存盘。", 196);
+        return p.gameObject;
+    }
+
+    private GameObject BuildBuffPage(Transform p)
+    {
+        // 左侧：配置表中的 Buff，点击一行调用 AddBuff
+        Label(p, "BuffListTitle", "配置中的 Buff（点击一行添加）", 0, 0, 360, 30, 18, AccentBright);
+        buffListContent = ScrollList(p, "BuffList", 0, 36, 360, PageHeight - 36);
+
+        // 右侧：候选池、三项属性的公式与实际值、一致性检查
+        const float rx = 376, rw = PageWidth - rx;
+        Box(p, "BuffSummary", rx, 0, rw, 300, PanelColor);
+        buffPoolText = Label(p, "BuffPool", "", rx + 14, 10, rw - 28, 48, 15, Color.white);
+        buffAtkText = Label(p, "BuffAtk", "", rx + 14, 64, rw - 28, 48, 16, Color.white);
+        buffDefText = Label(p, "BuffDef", "", rx + 14, 116, rw - 28, 48, 16, Color.white);
+        buffMaxHpText = Label(p, "BuffMaxHp", "", rx + 14, 168, rw - 28, 48, 16, Color.white);
+        buffCheckText = Label(p, "BuffCheck", "", rx + 14, 222, rw - 28, 70, 15, AccentBright);
+        Button(p, "ClearBuffs", "清空全部 Buff（ClearAll）", rx, 312, rw, 46, Danger, ClearBuffsFromConsole);
+        Label(p, "BuffHint", "点击左侧调用 BuffMgr.AddBuff，生效中的不会重复添加；清空调用 ClearAll。控制台打开时游戏不暂停，计时照常进行；背包、任务面板打开时 timeScale 为 0，计时暂停。",
+            rx, 368, rw, 100, 14, Muted);
         return p.gameObject;
     }
 
