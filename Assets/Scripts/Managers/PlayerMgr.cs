@@ -17,6 +17,8 @@ public class PlayerMgr :BaseManager<PlayerMgr>
     public PlayerObject player;
     public bool canInput = true;
     public InputSystem_Actions inputActions;
+    //对应增量属性(绿值)
+   
     //0为目前测试的单手剑
     public int currentWeaponType = 0;
     string playerJsonFileName => "Character/" + nameof(CharacterConfig.CharacterType.Player) + "/" + currentPlayerId;
@@ -27,10 +29,10 @@ public class PlayerMgr :BaseManager<PlayerMgr>
         inputActions.Enable();
         if (saveData.level <= 0)
         {
-            //TODO 说明是新档这里初始化
             saveData.level = ConfigMgr.Instance.GetCharacterData(CharacterConfig.CharacterType.Player, currentPlayerId).initLv;
         }
     }
+    
     /// <summary>
     /// 在玩家等级变化时调用
     /// </summary>

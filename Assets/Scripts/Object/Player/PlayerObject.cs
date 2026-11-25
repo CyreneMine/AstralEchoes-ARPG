@@ -48,6 +48,17 @@ public class PlayerObject : CharacterObject
         return PlayerMgr.Instance.saveData.level;
     }
 
+    public void ClearBuff()
+    {
+        Stats.ClearPlayerBuff();
+        UpdateStats();
+    }
+    public void AddBuff(BuffType type, float value)
+    {
+        Stats.AddBuff(type, value);
+        UpdateStats();
+    }
+    
     public void UpdateStats()
     {
         Stats.Recalculate(GetLevel());

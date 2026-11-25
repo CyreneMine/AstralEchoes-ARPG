@@ -9,6 +9,7 @@ public class ConfigMgr:BaseManager<ConfigMgr>
     public NpcConfig npcConfig;
     public ItemDatabase itemDatabase;
     public EnemyRewardDatabase enemyRewardDatabase;
+    public BuffDatabase buffDatabase;
     private ConfigMgr()
     {
         foreach (CharacterConfig.CharacterType value in Enum.GetValues(typeof(CharacterConfig.CharacterType)))
@@ -20,8 +21,25 @@ public class ConfigMgr:BaseManager<ConfigMgr>
         npcConfig = Resources.Load<NpcConfig>("GameData/Npc/NpcConfig");
         itemDatabase = Resources.Load<ItemDatabase>("GameData/Item/ItemDatabase");
         enemyRewardDatabase = Resources.Load<EnemyRewardDatabase>("GameData/Enemy/EnemyRewardDatabase");
+        buffDatabase = Resources.Load<BuffDatabase>("GameData/Buff/BuffDatabase");
     }
 
+    public BuffConfig GetBuffConfigById(int buffId)
+    {
+        foreach (BuffConfig config in buffDatabase.buffs)
+        {
+            if (config.id == buffId)
+            {
+                return config;
+            }
+        }
+        return null;
+    }
+
+    public List<BuffConfig> GetBuffConfigs()
+    {
+        return buffDatabase.buffs;
+    }
     public EnemyReward GetEnemyRewardById(int id)
     {
         EnemyReward e = null;
