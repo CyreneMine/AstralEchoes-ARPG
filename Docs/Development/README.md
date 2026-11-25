@@ -63,8 +63,9 @@
 | [45](records/45-item-cap-reward-and-mission-settlement.md) | 11-22 | 道具上限、奖励进背包与任务结算发奖 | 用户实测通过，关闭 #13 |
 | [46](records/46-devconsole-tabs-and-item-debug.md) | 11-22 | 控制台重构为分页界面并加入道具调试 | 自动检查 84/84 通过，开关按钮移位已复测，关闭 #30 |
 | [47](records/47-bag-regression-and-remove-event-order.md) | 11-22 | 背包回归与扣除事件的广播顺序 | 用户实测通过，关闭 #29 |
-| [48](records/48-temporary-buff-design.md) | 11-23 | 三选一临时 Buff 的设计讨论 | 设计定稿，未实施（#16、#31、#32） |
+| [48](records/48-temporary-buff-design.md) | 11-23 | 三选一临时 Buff 的设计讨论 | 设计定稿；11-25 补充入口改按钮、到期回到候选池等调整，核心实现见 50 |
 | [49](records/49-float-stats-and-hp-ratio.md) | 11-24 | 属性改 float 与生命上限按比例保持；打怪后生命变 0 的排查 | 自动检查 93/93 通过，关闭 #31；实机回归见 #33 |
+| [50](records/50-buff-core-timer-and-stats.md) | 11-25 | Buff 核心：MonoMgr / TimerMgr、BuffMgr 与属性加成 | 自动检查 123/123，暂停与自然到期用户实测通过；次数、抽取、面板未实现（#16） |
 
 ## 本机 Git 配置
 

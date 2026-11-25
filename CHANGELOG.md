@@ -2,6 +2,13 @@
 
 按日期倒序记录每次交付的内容、对应提交和验证范围，每条一两句话，细节放在链接的开发记录里。"待回归"表示还没有在 Play Mode 里重新验证。
 
+## 2026-11-25
+
+- **Buff 核心：配置、计时与属性加成**（`968b003`、`6b08720`）：用户完成，Claude Code 审查。`BuffDatabase`（SO）配置 Buff；`BuffMgr` 添加时计时、移出候选池，到期减回加成、回到候选池，`ClearAll` 全部清除；加成百分比存在 `CharacterStats`，按白值 × (1 + 加成) 重算，升级时保留 Buff。测试配置星锋、星盾、星息由 Claude Code 按用户要求填写。控制台自动检查 123/123，用户实测背包打开时暂停、20 秒自然到期。次数、抽取和面板未实现（#16）。[记录 50](Docs/Development/records/50-buff-core-timer-and-stats.md)
+- **MonoMgr 与 TimerMgr**（`edcc01c`）：用户提出并完成。MonoMgr 把 Update 转发给普通单例；TimerMgr 按 id 计时，受 timeScale 影响，先收集到期 id 再回调。[记录 50](Docs/Development/records/50-buff-core-timer-and-stats.md)、#36
+- **控制台 Buff 页**（`d8cb9e7`）：Claude Code 修改。点击添加 Buff、显示剩余时间和公式核对、清空；“恢复初始值”改为调用 `UpdateStats`，不再因 `Init` 丢掉加成；自动检查新增 30 项。[记录 50](Docs/Development/records/50-buff-core-timer-and-stats.md)
+- **Buff 设计调整**（只有文档）：用户决定入口改为 GamePanel 按钮、到期的 Buff 回到候选池、剩余次数随保存点保存。[记录 48 补充](Docs/Development/records/48-temporary-buff-design.md)
+
 ## 2026-11-24
 
 - **属性改 float，生命上限按比例保持**（`505ebc6`）：用户完成。攻击、防御、生命改为 float；`UpdateStats` 先算比例，再换上限、设当前生命，最后广播一次。排查"打怪后生命有时变 0"：原因是 `AddExp` 没升级也会广播，按比例设生命时用的是默认比例 0 或旧比例。用户改为在 `LevelUp` 里广播。敌人血条按比例填充，玩家血量文字向上取整。控制台自动检查 93/93 通过，关闭 #31；真实打怪升级、HUD、敌人血条和读档的实机回归见 #33。[记录 49](Docs/Development/records/49-float-stats-and-hp-ratio.md)
