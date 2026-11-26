@@ -188,6 +188,10 @@ public static class DevConsoleSetup
     private static float buffSavedTimeScale = -1;
     private static int buffProbeTimerId, buffPoolMark;
     private static bool captureBuffAdded;
+    // 三选一：onChoiceCountChange 可能是无参或带次数参数的事件，按实际类型订阅；无参时 lastChoiceEventValue 保持 int.MinValue。
+    private const int RollSamples = 200;
+    private static Delegate choiceHandler;
+    private static int choiceEventCount, lastChoiceEventValue = int.MinValue;
 
     private static void OnLevelEvent() => levelEventCount++;
     // 记下最后一次广播的参数：HUD 血条只靠这次广播刷新，所以它必须等于最终数值。
@@ -228,6 +232,7 @@ public static class DevConsoleSetup
         PlayerMgr.Instance.OnPlayerStateChange -= OnStateEvent;
         PlayerMgr.Instance.OnPlayerLevelChange -= OnLevelEvent;
         PlayerItemMgr.Instance.OnItemCountChanged -= OnItemEvent;
+        UnsubscribeChoiceEvent();
     }
 
     private static void VerifyTick()
@@ -245,10 +250,11 @@ public static class DevConsoleSetup
                     return;
                 checkLines.Clear(); passCount = failCount = 0; healthEventCount = stateEventCount = levelEventCount = itemEventCount = 0;
                 buffProbe = null; captureBuffAdded = false; buffSavedTimeScale = -1;
-                // 同一次 Play 里手动加过 Buff 时先清空，否则后面的属性和等级检查会把 Buff 加成算进去。
-                if (MissingBuffFields().Length == 0 && ConfigMgr.Instance.buffDatabase != null && ActiveBuffs().Count > 0)
+                // 同一次 Play 里手动加过 Buff 或选择次数时先清空，否则后面的属性、等级和三选一检查会把它们算进去。
+                if (MissingBuffFields().Length == 0 && ConfigMgr.Instance.buffDatabase != null &&
+                    (ActiveBuffs().Count > 0 || BuffMgr.Instance.ChoiceCount != 0 || BuffMgr.Instance.RandomBuffs.Count > 0))
                 {
-                    Note($"开始时有 {ActiveBuffs().Count} 个生效中的 Buff，已调用 ClearAll 清空。");
+                    Note($"开始时有 {ActiveBuffs().Count} 个生效中的 Buff、剩余选择次数 {BuffMgr.Instance.ChoiceCount}、候选 {BuffMgr.Instance.RandomBuffs.Count} 个，已调用 ClearAll 清空。");
                     BuffMgr.Instance.ClearAll();
                 }
                 Note($"开始：Lv.{PlayerMgr.Instance.saveData.level}，攻击 {vPlayer.Stats.Atk}，防御 {vPlayer.Stats.Def}，{Hp()}");
@@ -346,7 +352,9 @@ public static class DevConsoleSetup
                 if (captureBuffAdded)
                 {
                     Click("ClearBuffs");
-                    Check(ActiveBuffs().Count == 0, "截图后已清空截图用的 Buff", $"生效 {ActiveBuffs().Count} 个");
+                    Check(ActiveBuffs().Count == 0 && BuffMgr.Instance.ChoiceCount == 0 && BuffMgr.Instance.RandomBuffs.Count == 0,
+                        "截图后已清空截图用的 Buff、选择次数和候选",
+                        $"生效 {ActiveBuffs().Count} 个，次数 {BuffMgr.Instance.ChoiceCount}，候选 {BuffMgr.Instance.RandomBuffs.Count} 个");
                     captureBuffAdded = false;
                 }
                 vConsole.SelectTab(DevConsole.HealthTab);
@@ -473,17 +481,20 @@ public static class DevConsoleSetup
         // 9. 道具（会写入道具存档，检查结束时恢复原数量）
         RunItemChecks();
 
-        // 10. Buff（同一帧内能检查的部分；暂停、恢复、到期和 ClearAll 在之后的几个阶段里跨帧检查）
+        // 10. Buff 三选一：选择次数、随机抽取、选中、ClearAll 清零（结束时清空，回到没有 Buff 的状态）
+        RunBuffChoiceChecks();
+
+        // 11. Buff 加成（同一帧内能检查的部分；暂停、恢复、到期和 ClearAll 在之后的几个阶段里跨帧检查）
         RunBuffChecks();
 
-        // 11. 关闭
+        // 12. 关闭
         vConsole.SetOpen(false);
         Check(!vConsole.IsOpen, "关闭：控制台窗口关闭");
         Check(vPlayer.enabled && vPlayer.GetComponent<PlayerCombat>().enabled, "关闭：玩家移动和攻击组件恢复");
         Check(PlayerMgr.Instance.CurrentIsCursor == startCursorMode, "关闭：光标模式恢复到打开前", $"打开前 {startCursorMode}，现在 {PlayerMgr.Instance.CurrentIsCursor}");
         Check(CameraInputEnabled() == !startCursorMode, "关闭：镜头输入随光标模式恢复");
         Note("未覆盖：实际按键（F1、Esc、Alt、WASD）和鼠标点击、打怪的实际伤害、清空任务存档、清空背包道具、与任务面板/背包面板/对话同时使用；" +
-             "Buff 面板与 GamePanel 按钮、剩余选择次数和随机抽取（尚未实现）、打开背包时的真实暂停（这里直接把 timeScale 设为 0）。");
+             "BuffPanel / BuffOption 与 GamePanel Buff 按钮的实际点击、打开背包时的真实暂停（这里直接把 timeScale 设为 0）。");
     }
 
     // 控制台的控件不应压住 HUD 上的按钮（例如右上角的背包按钮）。
@@ -905,7 +916,195 @@ public static class DevConsoleSetup
         List<BuffConfig> configs = BuffConfigs();
         if (configs.Count == 0 || BuffActive(configs[0].id)) return;
         Click("BuffRow_" + configs[0].id);
+        // 再加两次选择次数并抽一次，截图里能看到三选一区域的候选。
+        Click("BuffChoiceAdd");
+        Click("BuffChoiceAdd");
+        Click("BuffRoll");
         captureBuffAdded = true;
+    }
+
+    // ---- 三选一检查 ----
+
+    private static void OnChoiceEventNoArg() { choiceEventCount++; lastChoiceEventValue = int.MinValue; }
+    private static void OnChoiceEventWithCount(int count) { choiceEventCount++; lastChoiceEventValue = count; }
+
+    // 按事件的实际类型订阅，BuffMgr 改用无参或带次数参数的写法时这里都能用。
+    private static bool SubscribeChoiceEvent()
+    {
+        UnsubscribeChoiceEvent();
+        EventInfo info = typeof(BuffMgr).GetEvent("onChoiceCountChange", BindingFlags.Instance | BindingFlags.Public);
+        if (info == null) return false;
+        Type type = info.EventHandlerType;
+        if (type == typeof(UnityEngine.Events.UnityAction)) choiceHandler = new UnityEngine.Events.UnityAction(OnChoiceEventNoArg);
+        else if (type == typeof(UnityEngine.Events.UnityAction<int>)) choiceHandler = new UnityEngine.Events.UnityAction<int>(OnChoiceEventWithCount);
+        else if (type == typeof(Action)) choiceHandler = new Action(OnChoiceEventNoArg);
+        else if (type == typeof(Action<int>)) choiceHandler = new Action<int>(OnChoiceEventWithCount);
+        else return false;
+        info.AddEventHandler(BuffMgr.Instance, choiceHandler);
+        return true;
+    }
+
+    private static void UnsubscribeChoiceEvent()
+    {
+        if (choiceHandler == null) return;
+        EventInfo info = typeof(BuffMgr).GetEvent("onChoiceCountChange", BindingFlags.Instance | BindingFlags.Public);
+        if (info != null && ConfigMgr.Instance.buffDatabase != null) info.RemoveEventHandler(BuffMgr.Instance, choiceHandler);
+        choiceHandler = null;
+    }
+
+    // 通过控制台按钮调用后检查事件。先订阅的对象（例如 GamePanel）在 Invoke 时抛异常，后面的订阅者收不到，
+    // 控制台会把异常写进提示栏，这里把它作为失败原因报告出来。
+    private static void CheckChoiceEvent(int before, int expected, string call)
+    {
+        if (choiceHandler == null) return;
+        string message = Text("Message").text;
+        if (message.Contains("抛出异常"))
+        {
+            Check(false, $"{call} 后触发 onChoiceCountChange", "调用时抛出异常：" + message);
+            return;
+        }
+        bool withCount = choiceHandler is UnityEngine.Events.UnityAction<int> || choiceHandler is Action<int>;
+        bool valueOk = !withCount || lastChoiceEventValue == expected;
+        Check(choiceEventCount == before + 1 && valueOk, $"{call} 后触发一次 onChoiceCountChange" + (withCount ? $"，参数为 {expected}" : ""),
+            $"触发 {choiceEventCount - before} 次，参数 {(withCount ? lastChoiceEventValue.ToString() : "无")}");
+    }
+
+    private static string Ids(List<BuffConfig> list) => "[" + string.Join(",", list.Select(b => b == null ? "null" : b.id.ToString())) + "]";
+
+    // 连续抽 RollSamples 次：每次数量为 min(3, 候选池)、互不重复、都不是生效中的 Buff；候选池里的每个 Buff 都至少抽到一次。
+    private static void RunRollStatistics(BuffMgr mgr)
+    {
+        int pool = mgr.poolCount, expected = Mathf.Min(3, pool), bad = 0;
+        string firstBad = "";
+        HashSet<int> seen = new HashSet<int>();
+        for (int i = 0; i < RollSamples; i++)
+        {
+            mgr.StartRandomBuff();
+            List<BuffConfig> picked = mgr.RandomBuffs;
+            bool ok = picked.Count == expected && picked.All(b => b != null && !BuffActive(b.id)) && picked.Select(b => b.id).Distinct().Count() == picked.Count;
+            if (!ok) { bad++; if (firstBad.Length == 0) firstBad = Ids(picked); }
+            foreach (BuffConfig b in picked)
+                if (b != null) seen.Add(b.id);
+        }
+        Check(bad == 0, $"抽取 {RollSamples} 次：每次 {expected} 个、互不重复、都来自候选池", $"{bad} 次不符合，第一次为 {firstBad}");
+        Check(seen.Count == pool, $"抽取 {RollSamples} 次：候选池里的 {pool} 个 Buff 都被抽到过", $"只抽到 {seen.Count} 个");
+    }
+
+    // 从没有 Buff、次数为 0 的状态开始，最后用 ClearAll 回到这个状态，留给后面的加成检查。
+    private static void RunBuffChoiceChecks()
+    {
+        List<BuffConfig> configs = BuffConfigs();
+        // 配置为空或字段缺失由 RunBuffChecks 报告。
+        if (configs.Count == 0 || MissingBuffFields().Length > 0) return;
+        vConsole.SelectTab(DevConsole.BuffTab);
+        BuffMgr mgr = BuffMgr.Instance;
+        choiceEventCount = 0; lastChoiceEventValue = int.MinValue;
+        Check(SubscribeChoiceEvent(), "三选一：订阅 BuffMgr.onChoiceCountChange", "找不到这个公开事件，或类型不是 UnityAction / UnityAction<int>");
+        try
+        {
+            Check(mgr.ChoiceCount == 0 && mgr.RandomBuffs.Count == 0 && ActiveBuffs().Count == 0, "三选一：开始时剩余选择次数为 0，没有候选和生效中的 Buff",
+                $"次数 {mgr.ChoiceCount}，候选 {Ids(mgr.RandomBuffs)}，生效 {ActiveBuffs().Count} 个");
+
+            // 次数为 0：可以抽，但选中被控制台拦截（游戏里此时 Buff 按钮隐藏，面板打不开）
+            Click("BuffRoll");
+            int expected = Mathf.Min(3, mgr.poolCount);
+            Check(mgr.RandomBuffs.Count == expected, $"抽一次候选：抽出 {expected} 个（候选池 {mgr.poolCount} 个）", $"实际 {Ids(mgr.RandomBuffs)}");
+            Click("BuffPick0");
+            Check(mgr.ChoiceCount == 0 && ActiveBuffs().Count == 0, "次数为 0 时点候选：控制台不调用 SelectBuff，状态不变",
+                $"次数 {mgr.ChoiceCount}，生效 {ActiveBuffs().Count} 个");
+
+            // 加次数
+            int events = choiceEventCount;
+            Click("BuffChoiceAdd");
+            Check(mgr.ChoiceCount == 1, "次数 +1（AddChoiceCount）：0 → 1", $"实际 {mgr.ChoiceCount}");
+            CheckChoiceEvent(events, 1, "AddChoiceCount");
+            Click("BuffChoiceAdd");
+            Check(mgr.ChoiceCount == 2, "再加一次：1 → 2", $"实际 {mgr.ChoiceCount}");
+
+            RunRollStatistics(mgr);
+
+            // 选中第 1 个候选
+            Click("BuffRoll");
+            RefreshConsole();
+            if (mgr.RandomBuffs.Count == 0 || mgr.RandomBuffs[0] == null)
+            {
+                Check(false, "选中检查：抽出了至少 1 个候选", $"候选 {Ids(mgr.RandomBuffs)}");
+                return;
+            }
+            BuffConfig pick = mgr.RandomBuffs[0];
+            string shown = Text("PickName", Find("BuffPick0")).text;
+            Check(shown == pick.buffName, "候选按钮显示本次候选的名称", $"显示「{shown}」，候选为 {pick.buffName}");
+            int pool = mgr.poolCount;
+            float percentBefore = PercentOf(pick.buffType);
+            events = choiceEventCount;
+            Click("BuffPick0");
+            Check(BuffActive(pick.id) && mgr.ChoiceCount == 1 && mgr.poolCount == pool - 1,
+                $"选中第 1 个（{pick.buffName}，SelectBuff）：生效，次数 2 → 1，候选池 {pool} → {pool - 1}",
+                $"生效 {BuffActive(pick.id)}，次数 {mgr.ChoiceCount}，候选池 {mgr.poolCount}");
+            CheckChoiceEvent(events, 1, "SelectBuff");
+            Check(Same(PercentOf(pick.buffType), percentBefore + pick.percent), $"选中后{BuffTypeName(pick.buffType)}加成增加 {pick.percent}",
+                $"{percentBefore} → {PercentOf(pick.buffType)}");
+            Check(mgr.RandomBuffs.All(b => b != null && !BuffActive(b.id)), "选中后的候选里没有生效中的 Buff", $"候选 {Ids(mgr.RandomBuffs)}");
+            Note($"选中后候选 {Ids(mgr.RandomBuffs)}：选中后是否重新抽取、抽几个由 BuffMgr.SelectBuff 决定，这里不做要求。");
+
+            // 不在本次候选里的 id：直接调用 SelectBuff，应该什么都不做
+            int count = mgr.ChoiceCount, activeCount = ActiveBuffs().Count;
+            if (!mgr.RandomBuffs.Contains(pick))
+            {
+                events = choiceEventCount;
+                mgr.SelectBuff(pick.id);
+                Check(mgr.ChoiceCount == count && ActiveBuffs().Count == activeCount && choiceEventCount == events,
+                    $"SelectBuff 传入不在候选里的 id（已生效的 {pick.buffName}）：不扣次数、不重复添加、不发事件",
+                    $"次数 {count} → {mgr.ChoiceCount}，生效 {activeCount} → {ActiveBuffs().Count}");
+            }
+            int absentId = configs.Max(b => b.id) + 1000;
+            events = choiceEventCount;
+            mgr.SelectBuff(absentId);
+            Check(mgr.ChoiceCount == count && ActiveBuffs().Count == activeCount && choiceEventCount == events,
+                $"SelectBuff 传入配置表外的 id {absentId}：不扣次数、状态不变", $"次数 {count} → {mgr.ChoiceCount}，生效 {activeCount} → {ActiveBuffs().Count}");
+
+            // 左侧列表直接 AddBuff：不扣次数；已经直接添加的候选再点选中会被控制台拦截
+            BuffConfig direct = mgr.RandomBuffs.FirstOrDefault(b => b != null);
+            if (direct == null) Note("选中后没有候选，跳过“直接添加不扣次数”检查。");
+            else
+            {
+                int slot = mgr.RandomBuffs.IndexOf(direct);
+                Click("BuffRow_" + direct.id);
+                Check(BuffActive(direct.id) && mgr.ChoiceCount == count, $"左侧列表直接添加 {direct.buffName}（AddBuff）：生效，不扣选择次数",
+                    $"生效 {BuffActive(direct.id)}，次数 {count} → {mgr.ChoiceCount}");
+                activeCount = ActiveBuffs().Count;
+                Click("BuffPick" + slot);
+                Check(mgr.ChoiceCount == count && ActiveBuffs().Count == activeCount, "已直接添加的候选再点选中：控制台拦截，不扣次数、不重复添加",
+                    $"次数 {count} → {mgr.ChoiceCount}，生效 {activeCount} → {ActiveBuffs().Count}");
+            }
+
+            // 候选池为空：全部 Buff 生效后再抽，应该抽出 0 个，次数保留
+            foreach (BuffConfig b in configs)
+                if (!BuffActive(b.id)) Click("BuffRow_" + b.id);
+            count = mgr.ChoiceCount;
+            Check(mgr.poolCount == 0, "全部 Buff 生效后候选池为空", $"候选池 {mgr.poolCount} 个");
+            Click("BuffRoll");
+            Check(mgr.RandomBuffs.Count == 0 && mgr.ChoiceCount == count, "候选池为空时抽取：0 个候选，次数保留",
+                $"候选 {Ids(mgr.RandomBuffs)}，次数 {count} → {mgr.ChoiceCount}");
+            RefreshConsole();
+            string emptySub = Text("PickSub", Find("BuffPick0")).text;
+            Check(emptySub == "候选池为空", "候选按钮显示候选池为空", $"实际「{emptySub}」");
+
+            // ClearAll：次数清零、候选清空，并发出次数事件
+            events = choiceEventCount;
+            Click("ClearBuffs");
+            Check(mgr.ChoiceCount == 0 && mgr.RandomBuffs.Count == 0 && ActiveBuffs().Count == 0 && mgr.poolCount == configs.Count,
+                "ClearAll：次数清零、候选清空、生效列表清空、候选池恢复为全部",
+                $"次数 {mgr.ChoiceCount}，候选 {Ids(mgr.RandomBuffs)}，生效 {ActiveBuffs().Count} 个，候选池 {mgr.poolCount}/{configs.Count}");
+            CheckChoiceEvent(events, 0, "ClearAll");
+        }
+        finally
+        {
+            UnsubscribeChoiceEvent();
+            if (ActiveBuffs().Count > 0 || mgr.ChoiceCount != 0 || mgr.RandomBuffs.Count > 0)
+                Click("ClearBuffs");
+            vConsole.SelectTab(DevConsole.HealthTab);
+        }
     }
 
     private static Transform Find(string name, Transform root = null)

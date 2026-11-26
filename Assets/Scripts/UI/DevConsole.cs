@@ -89,6 +89,16 @@ public class DevConsole : MonoBehaviour
     }
     private readonly List<BuffRow> buffRows = new List<BuffRow>();
 
+    // 三选一区域：显示 BuffMgr.RandomBuffs 的前 3 个候选，点击调用 SelectBuff。
+    private const int PickSlotCount = 3;
+    private TMP_Text buffChoiceInfoText;
+    private class BuffPickSlot
+    {
+        public Image background;
+        public TMP_Text title, sub;
+    }
+    private readonly List<BuffPickSlot> buffPickSlots = new List<BuffPickSlot>();
+
     // ---- 状态 ----
     private readonly List<Behaviour> pausedBehaviours = new List<Behaviour>();
     // 打开前的光标模式；控制台通过用户的 PlayerMgr.SetCursorState 显示光标，镜头由 CameraCursorLock 自动锁定。
@@ -797,7 +807,9 @@ public class DevConsole : MonoBehaviour
     }
 
     // ======================================================================
-    // Buff：调用 BuffMgr.AddBuff / ClearAll；生效列表与加成百分比通过反射只读
+    // Buff：调用 BuffMgr 的 AddBuff / ClearAll / AddChoiceCount / StartRandomBuff / SelectBuff；
+    // 生效列表与加成百分比通过反射只读。次数和候选每次刷新时直接读取，不订阅 onChoiceCountChange，
+    // 事件是否按时触发由 Play Mode 自动检查负责。
     // ======================================================================
 
     private static List<BuffConfig> AllBuffConfigs()
@@ -922,6 +934,7 @@ public class DevConsole : MonoBehaviour
         {
             buffPoolText.text = "BuffDatabase 未加载（Resources/GameData/Buff/BuffDatabase）。";
             buffAtkText.text = buffDefText.text = buffMaxHpText.text = buffCheckText.text = "";
+            ClearChoiceArea("BuffDatabase 未加载");
             return;
         }
         List<BuffConfig> active = ActiveBuffs();
@@ -930,6 +943,7 @@ public class DevConsole : MonoBehaviour
             buffPoolText.text = "找不到 BuffMgr.hasBuffs，控制台需要同步修改。";
             buffPoolText.color = ErrorText;
             buffAtkText.text = buffDefText.text = buffMaxHpText.text = buffCheckText.text = "";
+            ClearChoiceArea("找不到 BuffMgr.hasBuffs");
             return;
         }
         BuffMgr manager = BuffMgr.Instance;
@@ -944,6 +958,7 @@ public class DevConsole : MonoBehaviour
             row.sub.color = on ? AccentBright : Muted;
             row.background.color = on ? RowSelected : RowIdle;
         }
+        RefreshChoiceArea(manager, active);
 
         if (!BindPlayer())
         {
@@ -954,6 +969,10 @@ public class DevConsole : MonoBehaviour
         string problems = "";
         if (manager.poolCount + active.Count != total)
             problems += $"候选池 {manager.poolCount} + 生效中 {active.Count} ≠ 配置总数 {total}。\n";
+        if (manager.ChoiceCount < 0)
+            problems += $"剩余选择次数为 {manager.ChoiceCount}，不应小于 0。\n";
+        if (HasDuplicate(manager.RandomBuffs))
+            problems += "本次候选里有重复的 Buff。\n";
         buffAtkText.text = BuffStatLine(BuffType.atk, active, ref problems);
         buffDefText.text = BuffStatLine(BuffType.def, active, ref problems);
         buffMaxHpText.text = BuffStatLine(BuffType.maxHp, active, ref problems);
@@ -1016,7 +1035,164 @@ public class DevConsole : MonoBehaviour
         float after = CurrentStat(config.buffType);
         RefreshDisplay();
         RefreshBuffPage();
-        Say($"已调用 AddBuff({id})：{config.buffName}，{BuffTypeName(config.buffType)} {Num(before)} → {Num(after)}，{Num(config.totalTime)} 秒后到期。");
+        // 直接 AddBuff 不经过三选一：不扣次数，也不会把它从本次候选里拿掉。
+        string tail = BuffMgr.Instance.RandomBuffs.Contains(config) ? "它也在本次候选里，三选一区不会再让选它。" : "不扣选择次数。";
+        Say($"已调用 AddBuff({id})：{config.buffName}，{BuffTypeName(config.buffType)} {Num(before)} → {Num(after)}，{Num(config.totalTime)} 秒后到期。{tail}");
+    }
+
+    private static bool HasDuplicate(List<BuffConfig> list)
+    {
+        if (list == null) return false;
+        HashSet<int> seen = new HashSet<int>();
+        foreach (BuffConfig config in list)
+            if (config != null && !seen.Add(config.id))
+                return true;
+        return false;
+    }
+
+    private void ClearChoiceArea(string reason)
+    {
+        if (buffChoiceInfoText == null) return;
+        buffChoiceInfoText.text = reason;
+        buffChoiceInfoText.color = ErrorText;
+        foreach (BuffPickSlot slot in buffPickSlots)
+        {
+            slot.title.text = "—";
+            slot.sub.text = "";
+            slot.background.color = IconEmpty;
+        }
+    }
+
+    // 候选按钮的颜色：可以选的高亮；次数为 0 时变暗（游戏里此时按钮隐藏，面板打不开）；空位更暗。
+    private void RefreshChoiceArea(BuffMgr manager, List<BuffConfig> active)
+    {
+        if (buffChoiceInfoText == null) return;
+        List<BuffConfig> candidates = manager.RandomBuffs;
+        int count = manager.ChoiceCount;
+        buffChoiceInfoText.text = $"剩余选择次数 {count} · 候选 {candidates.Count} 个 · 候选池 {manager.poolCount} 个";
+        buffChoiceInfoText.color = count < 0 ? ErrorText : Color.white;
+        for (int i = 0; i < buffPickSlots.Count; i++)
+        {
+            BuffPickSlot slot = buffPickSlots[i];
+            if (i >= candidates.Count || candidates[i] == null)
+            {
+                slot.title.text = "—";
+                slot.sub.text = candidates.Count > 0 ? "空位" : manager.poolCount == 0 ? "候选池为空" : "先抽一次";
+                slot.sub.color = Muted;
+                slot.background.color = IconEmpty;
+                continue;
+            }
+            BuffConfig config = candidates[i];
+            bool on = IsBuffActive(active, config.id);
+            slot.title.text = config.buffName;
+            slot.sub.text = on ? "已生效，不能选" : $"{BuffTypeName(config.buffType)} +{Percent(config.percent)}";
+            slot.sub.color = on ? ErrorText : count > 0 ? AccentBright : Muted;
+            slot.background.color = on || count <= 0 ? RowIdle : RowSelected;
+        }
+    }
+
+    // 订阅 onChoiceCountChange 的对象在 Invoke 时出错，异常会从 BuffMgr 的方法里抛出来；
+    // 这时次数通常已经改完，所以提示里同时给出调用前后的次数，方便判断是谁出的错。
+    private void SayBuffCallError(string call, int countBefore, System.Exception error)
+    {
+        Say($"{call} 抛出异常（剩余选择次数 {countBefore} → {BuffMgr.Instance.ChoiceCount}，可能来自订阅 onChoiceCountChange 的对象）：{error.Message}", true);
+        Debug.LogException(error);
+        RefreshDisplay();
+        RefreshBuffPage();
+    }
+
+    public void AddChoiceFromConsole()
+    {
+        if (!BuffDatabaseLoaded()) { Say("BuffDatabase 未加载。", true); return; }
+        BuffMgr manager = BuffMgr.Instance;
+        int before = manager.ChoiceCount;
+        try
+        {
+            manager.AddChoiceCount();
+        }
+        catch (System.Exception error)
+        {
+            SayBuffCallError("AddChoiceCount", before, error);
+            return;
+        }
+        RefreshBuffPage();
+        Say($"已调用 AddChoiceCount：剩余选择次数 {before} → {manager.ChoiceCount}。");
+    }
+
+    public void RollCandidatesFromConsole()
+    {
+        if (!BuffDatabaseLoaded()) { Say("BuffDatabase 未加载。", true); return; }
+        BuffMgr manager = BuffMgr.Instance;
+        try
+        {
+            manager.StartRandomBuff();
+        }
+        catch (System.Exception error)
+        {
+            Say("StartRandomBuff 抛出异常：" + error.Message, true);
+            Debug.LogException(error);
+            RefreshBuffPage();
+            return;
+        }
+        RefreshBuffPage();
+        List<BuffConfig> candidates = manager.RandomBuffs;
+        if (candidates.Count == 0)
+        {
+            Say("已调用 StartRandomBuff：候选池为空（全部 Buff 都在生效），抽出 0 个。游戏里这里计划用浮动文字提示。");
+            return;
+        }
+        List<string> names = new List<string>();
+        foreach (BuffConfig config in candidates)
+            names.Add(config != null ? config.buffName : "null");
+        Say($"已调用 StartRandomBuff：从候选池 {manager.poolCount} 个中抽出 {candidates.Count} 个：{string.Join("、", names)}。");
+    }
+
+    public void SelectCandidateFromConsole(int slot)
+    {
+        if (!Ready()) return;
+        if (!BuffDatabaseLoaded()) { Say("BuffDatabase 未加载。", true); return; }
+        BuffMgr manager = BuffMgr.Instance;
+        List<BuffConfig> candidates = manager.RandomBuffs;
+        // 和游戏里的入口一致：次数为 0 时 GamePanel 的 Buff 按钮隐藏，面板打不开，控制台也不调用 SelectBuff。
+        if (manager.ChoiceCount <= 0)
+        {
+            Say("剩余选择次数为 0：游戏里此时 Buff 按钮隐藏、面板打不开，控制台同样不调用 SelectBuff。先点“次数 +1”。", true);
+            return;
+        }
+        if (slot >= candidates.Count || candidates[slot] == null)
+        {
+            Say(candidates.Count == 0 ? "当前没有候选，先点“抽一次候选”。" : $"第 {slot + 1} 个位置没有候选，本次只抽出 {candidates.Count} 个。", true);
+            return;
+        }
+        BuffConfig config = candidates[slot];
+        List<BuffConfig> active = ActiveBuffs();
+        if (active == null) { Say("找不到 BuffMgr.hasBuffs，控制台需要同步修改。", true); return; }
+        // 只有先用左侧列表直接 AddBuff 了某个候选才会走到这里；正常流程里候选只能经 SelectBuff 生效。
+        if (IsBuffActive(active, config.id))
+        {
+            Say($"{config.buffName} 已通过左侧列表直接添加。再调 SelectBuff 会重复 AddBuff，在 timers.Add 抛异常，控制台已拦截。重新抽一次即可。", true);
+            return;
+        }
+        int before = manager.ChoiceCount;
+        float statBefore = CurrentStat(config.buffType);
+        try
+        {
+            manager.SelectBuff(config.id);
+        }
+        catch (System.Exception error)
+        {
+            SayBuffCallError($"SelectBuff({config.id})", before, error);
+            return;
+        }
+        RefreshDisplay();
+        RefreshBuffPage();
+        if (!IsBuffActive(ActiveBuffs(), config.id))
+        {
+            Say($"SelectBuff({config.id}) 之后 {config.buffName} 没有生效，剩余选择次数 {before} → {manager.ChoiceCount}。", true);
+            return;
+        }
+        Say($"已调用 SelectBuff({config.id})：{config.buffName} 生效，{BuffTypeName(config.buffType)} {Num(statBefore)} → {Num(CurrentStat(config.buffType))}；" +
+            $"剩余选择次数 {before} → {manager.ChoiceCount}，现在候选 {manager.RandomBuffs.Count} 个。");
     }
 
     public void ClearBuffsFromConsole()
@@ -1025,20 +1201,20 @@ public class DevConsole : MonoBehaviour
         if (!BuffDatabaseLoaded()) { Say("BuffDatabase 未加载。", true); return; }
         List<BuffConfig> active = ActiveBuffs();
         int count = active != null ? active.Count : 0;
+        int choicesBefore = BuffMgr.Instance.ChoiceCount;
         try
         {
             BuffMgr.Instance.ClearAll();
         }
         catch (System.Exception error)
         {
-            Say("ClearAll 抛出异常：" + error.Message, true);
-            Debug.LogException(error);
-            RefreshBuffPage();
+            SayBuffCallError("ClearAll", choicesBefore, error);
             return;
         }
         RefreshDisplay();
         RefreshBuffPage();
-        Say($"已调用 ClearAll：取消 {count} 个 Buff 的计时，加成清零，候选池恢复为 {BuffMgr.Instance.poolCount} 个。");
+        Say($"已调用 ClearAll：取消 {count} 个 Buff 的计时，加成清零，剩余选择次数 {choicesBefore} → {BuffMgr.Instance.ChoiceCount}，" +
+            $"候选 {BuffMgr.Instance.RandomBuffs.Count} 个，候选池恢复为 {BuffMgr.Instance.poolCount} 个。");
     }
 
     // ======================================================================
@@ -1239,9 +1415,29 @@ public class DevConsole : MonoBehaviour
 
     private GameObject BuildBuffPage(Transform p)
     {
-        // 左侧：配置表中的 Buff，点击一行调用 AddBuff
+        // 左上：配置表中的 Buff，点击一行直接调用 AddBuff（列表高度正好放下 3 行，更多时滚动）
         Label(p, "BuffListTitle", "配置中的 Buff（点击一行添加）", 0, 0, 360, 30, 18, AccentBright);
-        buffListContent = ScrollList(p, "BuffList", 0, 36, 360, PageHeight - 36);
+        buffListContent = ScrollList(p, "BuffList", 0, 36, 360, 212);
+
+        // 左下：三选一流程，依次是加次数、抽候选、选中
+        Label(p, "BuffChoiceTitle", "三选一（SelectBuff）", 0, 258, 360, 28, 18, AccentBright);
+        buffChoiceInfoText = Label(p, "BuffChoiceInfo", "", 0, 288, 360, 22, 15, Color.white);
+        buffPickSlots.Clear();
+        const float slotGap = 8;
+        float slotWidth = (360 - slotGap * (PickSlotCount - 1)) / PickSlotCount;
+        for (int i = 0; i < PickSlotCount; i++)
+        {
+            int slot = i;
+            GameObject go = ButtonBase(p, "BuffPick" + i, i * (slotWidth + slotGap), 316, slotWidth, 58, IconEmpty, () => SelectCandidateFromConsole(slot));
+            TMP_Text title = Label(go.transform, "PickName", "—", 6, 6, slotWidth - 12, 24, 17, Color.white);
+            title.alignment = TextAlignmentOptions.Center;
+            TMP_Text sub = Label(go.transform, "PickSub", "", 6, 32, slotWidth - 12, 20, 14, Muted);
+            sub.alignment = TextAlignmentOptions.Center;
+            buffPickSlots.Add(new BuffPickSlot { background = go.GetComponent<Image>(), title = title, sub = sub });
+        }
+        Button(p, "BuffChoiceAdd", "次数 +1", 0, 384, 175, 40, Accent, AddChoiceFromConsole);
+        Button(p, "BuffRoll", "抽一次候选", 185, 384, 175, 40, Neutral, RollCandidatesFromConsole);
+        Label(p, "BuffChoiceHint", "点候选调用 SelectBuff；次数为 0 时和游戏里一样不让选。抽取调用 StartRandomBuff。", 0, 430, 360, 40, 14, Muted);
 
         // 右侧：候选池、三项属性的公式与实际值、一致性检查
         const float rx = 376, rw = PageWidth - rx;
@@ -1252,7 +1448,7 @@ public class DevConsole : MonoBehaviour
         buffMaxHpText = Label(p, "BuffMaxHp", "", rx + 14, 168, rw - 28, 48, 16, Color.white);
         buffCheckText = Label(p, "BuffCheck", "", rx + 14, 222, rw - 28, 70, 15, AccentBright);
         Button(p, "ClearBuffs", "清空全部 Buff（ClearAll）", rx, 312, rw, 46, Danger, ClearBuffsFromConsole);
-        Label(p, "BuffHint", "点击左侧调用 BuffMgr.AddBuff，生效中的不会重复添加；清空调用 ClearAll。控制台打开时游戏不暂停，计时照常进行；背包、任务面板打开时 timeScale 为 0，计时暂停。",
+        Label(p, "BuffHint", "列表直接调用 AddBuff，不扣次数；ClearAll 同时清零选择次数和候选。控制台打开时计时照常进行；背包、任务面板打开时 timeScale 为 0，计时暂停。",
             rx, 368, rw, 100, 14, Muted);
         return p.gameObject;
     }
