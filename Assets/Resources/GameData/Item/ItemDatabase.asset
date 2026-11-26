@@ -31,3 +31,33 @@ MonoBehaviour:
     itemIcon: {fileID: 21300000, guid: 7ed04d3907bbd914492a345b36aef68b, type: 3}
     maxCount: 99
     itemType: 2
+  - itemID: 3
+    itemName: "\u5927\u74F6\u661F\u5C51\u836F\u5242"
+    itemDesc: "\u6D53\u7F29\u4E86\u66F4\u591A\u661F\u5C51\u7684\u836F\u5242\uFF0C\u74F6\u9888\u7F20\u7740\u4E00\u5708\u91D1\u7B8D\u3002\u4F7F\u7528\u540E\u53EF\u4EE5\u56DE\u590D50%\u751F\u547D\u503C\u3002"
+    itemIcon: {fileID: 21300000, guid: 0c8e0a3adc0a4e25aa98a56949cdf37e, type: 3}
+    maxCount: 20
+    itemType: 2
+  - itemID: 4
+    itemName: "\u56DE\u54CD\u6B8B\u7247"
+    itemDesc: "\u56DE\u54CD\u6D88\u6563\u540E\u7559\u4E0B\u7684\u6676\u7247\u3002\u8D34\u8FD1\u8033\u8FB9\uFF0C\u80FD\u542C\u89C1\u4E00\u5C0F\u6BB5\u8FC7\u53BB\u7684\u58F0\u97F3\u3002"
+    itemIcon: {fileID: 21300000, guid: 08848815d5014a43bf5b0ad5d2e571b3, type: 3}
+    maxCount: 99
+    itemType: 4
+  - itemID: 5
+    itemName: "\u523B\u540D\u94A5\u5319"
+    itemDesc: "\u4E00\u628A\u65E7\u9EC4\u94DC\u94A5\u5319\uFF0C\u67C4\u4E0A\u523B\u7740\u4F60\u7684\u540D\u5B57\u3002\u9192\u6765\u65F6\u5B83\u5C31\u6525\u5728\u4F60\u624B\u91CC\uFF0C\u53EF\u8FD9\u4E2A\u540D\u5B57\u8BFB\u8D77\u6765\u4F9D\u7136\u964C\u751F\u3002"
+    itemIcon: {fileID: 21300000, guid: 543ebe7bbda34240b4440e036cc87f3c, type: 3}
+    maxCount: 1
+    itemType: 3
+  - itemID: 6
+    itemName: "\u7EF4\u4FEE\u7EDE\u7D22"
+    itemDesc: "\u5B88\u6865\u4EBA\u7528\u6765\u68C0\u4FEE\u65E7\u6865\u548C\u5854\u949F\u7684\u7EDE\u7D22\uFF0C\u94C1\u94A9\u88AB\u78E8\u5F97\u53D1\u4EAE\u3002"
+    itemIcon: {fileID: 21300000, guid: 6e205edf1c4342f4b09a8c9953f9ef89, type: 3}
+    maxCount: 1
+    itemType: 3
+  - itemID: 7
+    itemName: "\u661F\u56FE\u6B8B\u9875"
+    itemDesc: "\u4ECE\u89C2\u661F\u5854\u91CC\u6563\u843D\u51FA\u6765\u7684\u661F\u56FE\uFF0C\u53EA\u5269\u51E0\u9053\u8FDE\u7EBF\uFF0C\u548C\u4E00\u9897\u88AB\u53CD\u590D\u63CF\u8FC7\u7684\u56DB\u8292\u661F\u3002"
+    itemIcon: {fileID: 21300000, guid: 25097b5a80c249e99af04c73da8704bd, type: 3}
+    maxCount: 1
+    itemType: 3
