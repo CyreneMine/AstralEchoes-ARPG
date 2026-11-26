@@ -67,6 +67,9 @@
 | [49](records/49-float-stats-and-hp-ratio.md) | 11-24 | 属性改 float 与生命上限按比例保持；打怪后生命变 0 的排查 | 自动检查 93/93 通过，关闭 #31；实机回归见 #33 |
 | [50](records/50-buff-core-timer-and-stats.md) | 11-25 | Buff 核心：MonoMgr / TimerMgr、BuffMgr 与属性加成 | 自动检查 123/123，暂停与自然到期用户实测通过；次数、抽取、面板未实现（#16） |
 | [51](records/51-pre-public-repo-cleanup.md) | 11-26 | 公开前整理仓库：面向面试官的 README、模拟面试记录移出 | 只有文档；Mermaid 图在 GitHub 上的显示待确认 |
+| [52](records/52-buff-choice-random-and-panel.md) | 11-26 | Buff 三选一：随机抽取、选择次数、面板 UI 与控制台 | 自动检查 146/146（新增三选一 23 项）；面板 4 个流程用户实测通过 |
+| [53](records/53-ai-generated-assets-and-item-config.md) | 11-26 | 生图素材的范围与提示词、Buff 与道具图标导入、道具表新增 ID 3～7、场景布局统一 | 静态核验和编辑器导入日志；新道具的背包显示未测 |
+| [54](records/54-ai-2d-asset-generation.md) | 11-26 | 2D 素材批量生成、预览与选稿 | 61 张本地候选，核验图像与生成记录 |
 
 ## 本机 Git 配置
 

@@ -4,6 +4,13 @@
 
 ## 2026-11-26
 
+- **Buff 三选一：随机抽取与选择次数**（`79bc439`）：用户完成，Claude Code 审查。`StartRandomBuff` 按重抽法从候选池抽 min(3, 候选池) 个；`AddChoiceCount` / `SelectBuff` 管理剩余选择次数，`AddBuff` 不再扣次数；`onChoiceCountChange` 带次数参数；`ClearAll` 同时清零次数和候选。次数为 0 由 UI 入口把关。控制台自动检查 146/146 通过。[记录 52](Docs/Development/records/52-buff-choice-random-and-panel.md)
+- **Buff 三选一面板**（`79bc439`、`ab7e11e`）：预制体和 9 张界面图片由 Claude Code 按用户给的参考图生成（`Assets/Editor/BuffPanelSetup.cs`）；`BuffPanel`、`BuffOption` 脚本和 GamePanel 的 Buff 按钮由用户完成，Claude Code 审查。审查中修复了 GamePanel 没有退订次数事件（实测报过 `MissingReferenceException`）、新建时没有读取当前次数、候选池为空时打开面板会让 GamePanel 丢失。按用户决定，“你已经足够强了”的提示改用以后的通用浮动文字。用户实测 4 个流程通过。[记录 52](Docs/Development/records/52-buff-choice-random-and-panel.md)
+- **面板淡入淡出期间禁止点击**（`5703c28`）：用户自己加的，`BasePanel` 淡入淡出期间设置 `CanvasGroup.interactable = false`。没有专门测试。[记录 52](Docs/Development/records/52-buff-choice-random-and-panel.md)
+- **控制台三选一区**（`d2988af`）：Claude Code 修改。Buff 页可以加次数、抽候选、点候选调用 `SelectBuff`；自动检查新增三选一 23 项，共 146 项全部通过。[记录 52](Docs/Development/records/52-buff-choice-random-and-panel.md)
+- **道具表新增 5 个道具**（`2c00b4d`）：ID 3～7 为大瓶星屑药剂、回响残片、刻名钥匙、维修绞索、星图残页，名称、类型、上限和描述由 Claude Code 按用户要求编写，并绑定新图标。只有静态核验和编辑器导入日志，背包显示未测。[记录 53](Docs/Development/records/53-ai-generated-assets-and-item-config.md)
+- **生图素材导入**（图标不入库）：Claude Code 编写提示词清单并逐批给出筛选建议，Codex 生成 61 张候选。选中的 Buff 图标 3 张、道具图标 5 张由 Claude Code 处理后导入本地 `Resources/Icon`，在 ASSET_RESTORE 登记来源；主视觉、特效贴图、概念图和守桥人立绘只保存在本地素材目录。[记录 53](Docs/Development/records/53-ai-generated-assets-and-item-config.md)、[记录 54](Docs/Development/records/54-ai-2d-asset-generation.md)
+- **剧情设定补充**（只有文档）：用户确定守桥人为年龄不明的男性老者；区域概念图之间的空间关系对不上，按 Claude Code 的建议统一为"村口 → 旧桥 → 桥尾台阶 → 塔前庭院 → 观星塔"，写入剧情设计文档。[记录 53](Docs/Development/records/53-ai-generated-assets-and-item-config.md)
 - **公开前整理仓库**（只有文档）：用户准备投简历，打算把仓库公开，让 Claude Code 先整理。README 改为面向面试官的首页，新增可演示内容、架构图、一次击杀的数据流、代码导读、AI 分工表和素材说明，原有的功能状态表、环境和运行步骤保留；模拟面试记录 `Docs/Interview` 移到私有的面试准备仓库。没有改代码；仓库可见性由用户自己修改。[记录 51](Docs/Development/records/51-pre-public-repo-cleanup.md)
 
 ## 2026-11-25
