@@ -1,10 +1,10 @@
 # Buff 三选一：随机抽取、选择次数、面板 UI 与控制台
 
-日期：2026-11-26。工程版本：基于 `b7b2f57`，写这份记录时还没有提交。
+日期：2026-11-26。工程版本：基于 `b7b2f57`，提交为 `79bc439`（Buff 三选一代码、面板脚本，用户编写）、`5703c28`（BasePanel 淡入淡出期间禁止交互，用户编写）、`d2988af`（控制台三选一区，Claude Code）、`ab7e11e`（面板生成工具，Claude Code）、`e85b0d7`（文档）。
 
 协助工具：Claude Code。
 
-相关 Issue：#16（三选一临时 Buff）、#32（保存点，选择次数要随保存点保存）、#37（Buff 的已知限制）。核心部分见[记录 50](50-buff-core-timer-and-stats.md)。
+相关 Issue：#16（三选一临时 Buff）、#32（保存点，选择次数要随保存点保存）、#37（Buff 的已知限制）、#27（淡出期间重开面板）、#40（打开面板时重新抽取）。核心部分见[记录 50](50-buff-core-timer-and-stats.md)。
 
 分工：
 - 用户编写、Claude Code 只审查：`BuffMgr` 的随机抽取、选择次数、`SelectBuff` 和次数事件；`GamePanel` 的 Buff 按钮；`BuffPanel`、`BuffOption` 脚本；`BasePanel` 淡入淡出期间禁止点击（用户自己加的）。
@@ -144,7 +144,7 @@
 
 ### 提醒过、用户还没处理的
 
-- **打开面板时抽取**：`BuffPanel.Init` 每次打开都会抽一次，关掉再打开就等于免费刷新一次，而刷新这次不做。可以改成只在 `RandomBuffs` 为空时才抽。
+- **打开面板时抽取**（#40）：`BuffPanel.Init` 每次打开都会抽一次，关掉再打开就等于免费刷新一次，而刷新这次不做。可以改成只在 `RandomBuffs` 为空时才抽。
 - **`RandomBuffs` 的类型**：可以改成 `IReadOnlyList`，可改可不改。
 
 ## 实际采纳与用户调整
@@ -217,5 +217,5 @@
 - **淡入淡出期间禁止点击**：用 `CanvasGroup.interactable` 挡住淡入淡出期间的重复操作，同时说明它挡不住代码里连续调用“先隐藏、再显示”的情况。
 - **证据**：
   - 当次聊天记录；
-  - `BuffMgr.cs`、`DevConsole.cs`、`DevConsoleSetup.cs`、`BuffPanelSetup.cs` 的提交（还没提交）；
+  - 提交 `79bc439`、`5703c28`、`d2988af`、`ab7e11e`；
   - 本地自动检查报告 `Temp/DevConsoleReports/playmode-verification.txt` 和截图 `DevConsole-4-Buff.png`，本地预览图在 `Temp/BuffPanelReports/`，都不进仓库。
