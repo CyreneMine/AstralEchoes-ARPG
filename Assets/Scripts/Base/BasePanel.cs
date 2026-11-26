@@ -26,16 +26,20 @@ public abstract class BasePanel : MonoBehaviour
         UpdateDoSomething();
         if (isShow && canvasGroup.alpha < 1)
         {
+            canvasGroup.interactable = false;
             canvasGroup.alpha += fadeSpeed * Time.unscaledDeltaTime;
             if (canvasGroup.alpha >= 1)
             {
+                canvasGroup.interactable = true;
                 canvasGroup.alpha = 1;
             }
         }else if (!isShow && canvasGroup.alpha > 0)
         {
+            canvasGroup.interactable = false;
             canvasGroup.alpha -= fadeSpeed * Time.unscaledDeltaTime;
             if (canvasGroup.alpha <= 0)
             {
+                canvasGroup.interactable = true;
                 canvasGroup.alpha = 0;
                 callback?.Invoke();
             }
