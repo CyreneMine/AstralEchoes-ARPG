@@ -6,6 +6,7 @@ public class EnemyObject : CharacterObject
     [SerializeField] private int enemyId;
     public int EnemyId => enemyId;
     public HealthBarController hpController;
+    public EnemyAI ai;
     protected override void Awake()
     {
         base.Awake();
@@ -22,5 +23,12 @@ public class EnemyObject : CharacterObject
     {
         base.TakeDamage(damage);
         UpdateHealthBar();
+    }
+
+    public void Spawn(Vector3 pos,Transform[] patrolPoints)
+    {
+        health.Respawn();
+        UpdateHealthBar();
+        ai.ResetAI(pos, patrolPoints);
     }
 }

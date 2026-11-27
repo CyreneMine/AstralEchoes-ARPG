@@ -4,6 +4,7 @@ using UnityEngine.Events;
 
 public class CharacterHealth : MonoBehaviour
 {
+    public event UnityAction OnDeath;
     public event UnityAction<float,float> OnHealthChange; 
     [SerializeField] private float currentHp;
     private float maxHp, def;
@@ -45,6 +46,7 @@ public class CharacterHealth : MonoBehaviour
     public virtual void Dead()
     {
         isDead = true;
+        OnDeath?.Invoke();
     }
     protected virtual float CalculateDamage(float damage)
     {
