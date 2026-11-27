@@ -3,12 +3,15 @@ using UnityEngine;
 
 public class EnemyCombat : MonoBehaviour
 {
-    
     private Animator animator;
     private CharacterConfig.CharacterData config;
     private CharacterHealth health;
     private EnemyObject enemyObject;
     private float lastTime;
+    private bool isAttacking;
+    public bool IsAttacking => isAttacking&&Time.time <attackStartTime+maxAttackTime;
+    private float attackStartTime;
+    [SerializeField]private float maxAttackTime = 3f;
     private void Awake()
     {
         enemyObject = GetComponent<EnemyObject>();
@@ -25,6 +28,8 @@ public class EnemyCombat : MonoBehaviour
             if (animator !=null)
             {
                 animator.SetTrigger("fire");
+                isAttacking = true;
+                attackStartTime = Time.time;
                 lastTime = Time.time;
             }
         }
@@ -40,5 +45,10 @@ public class EnemyCombat : MonoBehaviour
                 return;
             collider.GetComponent<CharacterHealth>().TakeDamage(config.atk);
         }
+    }
+
+    public void OnAttackEnd()
+    {
+        isAttacking = false;
     }
 }

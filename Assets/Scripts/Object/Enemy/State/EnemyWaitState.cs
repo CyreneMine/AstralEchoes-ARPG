@@ -15,7 +15,7 @@ public class EnemyWaitState : EnemyState
     {
         if (owner.CanLookPlayer())
         {
-            owner.ChangeState(owner.ChaseState);
+            owner.StartChase();
             return;
         }
         if (waitUntil < Time.time)

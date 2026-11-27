@@ -10,9 +10,10 @@ public class EnemyPatrolState : EnemyState
     }
     public override void Update()
     {
+        
         if (owner.CanLookPlayer())
         {
-            owner.ChangeState(owner.ChaseState);
+            owner.StartChase();
             return;
         }
             

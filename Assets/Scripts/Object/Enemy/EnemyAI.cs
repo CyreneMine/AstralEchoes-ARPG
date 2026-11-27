@@ -4,7 +4,7 @@ using UnityEngine.AI;
 public class EnemyAI : MonoBehaviour
 {
     public float WaitTime => waitTime;
-    
+
     public EnemyAIConfig Config => config;
     public EnemyCombat Combat => combat;
     public NavMeshAgent Agent => agent;
@@ -12,6 +12,9 @@ public class EnemyAI : MonoBehaviour
     public EnemyPatrolState PatrolState => patrolState;
     public EnemyReturnState ReturnState => returnState;
     public EnemyWaitState WaitState => waitState;
+
+    public EnemyAttackState AttackState => attackState;
+
     public Transform[] patrolPoints;
     private NavMeshAgent agent;
     private StateMachine stateMachine;
@@ -20,27 +23,36 @@ public class EnemyAI : MonoBehaviour
     private EnemyPatrolState patrolState;
     private EnemyReturnState returnState;
     private EnemyWaitState waitState;
+    private EnemyAttackState attackState;
     [SerializeField] private float waitTime = 2f;
     private int currentIndex = 0;
     private EnemyAIConfig config;
     private EnemyCombat combat;
     private CharacterHealth health;
-   
-
+    private Animator animator;
+    private Vector3 chaseStartPos;
+    public Vector3 ChaseStartPos => chaseStartPos;
     private void Awake()
     {
+        animator = GetComponent<Animator>();
         stateMachine = new StateMachine();
         chaseState = new EnemyChaseState(this);
         deadState = new EnemyDeadState(this);
         patrolState = new EnemyPatrolState(this);
         waitState = new EnemyWaitState(this);
         returnState = new EnemyReturnState(this);
+        attackState = new EnemyAttackState(this);
         config = Resources.Load<EnemyAIConfig>("GameData/Enemy/EnemyAIConfig");
         combat = GetComponent<EnemyCombat>();
         agent = GetComponent<NavMeshAgent>();
         health = GetComponent<CharacterHealth>();
     }
 
+    public void StartChase()
+    {
+        chaseStartPos = transform.position;
+        ChangeState(ChaseState);
+    }
     public void ChangeState(IState state)
     {
         stateMachine.ChangeState(state);
@@ -49,7 +61,7 @@ public class EnemyAI : MonoBehaviour
     private void OnPlayerStateChange(bool arg0)
     {
         //TODO 后续攻击状态也直接返回
-        if (stateMachine.CurrentState == chaseState)
+        if (stateMachine.CurrentState == chaseState || stateMachine.CurrentState == attackState)
             ChangeState(returnState);
     }
 
@@ -75,9 +87,11 @@ public class EnemyAI : MonoBehaviour
     {
         ChangeState(deadState);
     }
+
     private void Update()
     {
         stateMachine.Update();
+        animator.SetFloat("velocity",agent.velocity.magnitude);
     }
 
     public bool PlayerIsDead()
@@ -96,7 +110,7 @@ public class EnemyAI : MonoBehaviour
         Transform playerTransform = PlayerMgr.Instance.player.transform;
         return Vector3.Distance(playerTransform.position, transform.position) < config.attackRange;
     }
-    
+
     public void MoveToCurrentPatrolPoint()
     {
         if (patrolPoints.Length <= 0 || patrolPoints == null)
@@ -106,6 +120,7 @@ public class EnemyAI : MonoBehaviour
             return;
         agent.SetDestination(point.position);
     }
+
     public void NextPatrolIndex()
     {
         currentIndex++;
@@ -118,7 +133,7 @@ public class EnemyAI : MonoBehaviour
         return !agent.pathPending && agent.remainingDistance <= agent.stoppingDistance;
     }
 
-    public void ResetAI(Vector3 spawnPos,Transform[] patrolPoint)
+    public void ResetAI(Vector3 spawnPos, Transform[] patrolPoint)
     {
         agent.Warp(spawnPos);
         this.patrolPoints = patrolPoint;

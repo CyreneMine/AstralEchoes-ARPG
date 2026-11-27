@@ -10,18 +10,16 @@ public class EnemyChaseState : EnemyState
     }
 
     private Vector3 targetPos;
-    private Vector3 startPos;
 
     public override void Enter()
     {
-        startPos = owner.transform.position;
     }
 
     public override void Update()
     {
         targetPos = PlayerMgr.Instance.player.transform.position;
         owner.Agent.SetDestination(targetPos);
-        float totalDistance = Vector3.Distance(owner.transform.position, startPos);
+        float totalDistance = Vector3.Distance(owner.transform.position, owner.ChaseStartPos);
         float targetDistance = Vector3.Distance(owner.transform.position, targetPos);
         if (targetDistance > owner.Config.loseRange || totalDistance > owner.Config.maxRange || owner.PlayerIsDead())
         {
@@ -29,7 +27,7 @@ public class EnemyChaseState : EnemyState
             return;
         }
         if (owner.CanAttackPlayer())
-            owner.Combat.TryAttack();
+            owner.ChangeState(owner.AttackState);
     }
 
     public override void Exit()
