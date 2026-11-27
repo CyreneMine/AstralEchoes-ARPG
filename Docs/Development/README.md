@@ -73,6 +73,7 @@
 | [55](records/55-reward-slot-icon.md) | 11-27 | 任务面板奖励格显示道具图标：去掉 `SetNativeSize`，固定显示框加等比缩放 | 编译通过，用户实测确认没问题（#41 已关闭） |
 | [56](records/56-enemy-fsm-state-pattern.md) | 11-27 | 敌人 AI 改为状态模式：五个状态、Enter 和 Exit 的分工、玩家死亡时只让追击中的怪物脱战、死亡事件放在基类 | 用户实测巡逻、脱战返回、死亡流程正常；复用入口未测（#26） |
 | [57](records/57-enemy-model-pmx-to-fbx.md) | 11-27 | 敌人人形模型转换：千人律者 PMX 转 Unity FBX（骨骼清理与标准命名、材质节点重建、剥离冗余 Alpha 通道） | Blender 回导与渲染核验通过，Unity 已生成 meta；Humanoid 映射、Scene 显示与预制体接入待验证（#43） |
+| [58](records/58-enemy-attack-state-and-ranges.md) | 11-28 | 敌人攻击状态：出招挥完再切换（收招事件 + 超时兜底）、停止距离 / 出招距离 / 命中范围三个数的顺序、配置表改按 id 查找 | 攻击状态四项用户实测通过；超时兜底和按 id 查找后的奖励、任务计数未测；出招距离按敌人配置见 #44 |
 
 ## 本机 Git 配置
 

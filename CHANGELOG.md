@@ -2,6 +2,13 @@
 
 按日期倒序记录每次交付的内容、对应提交和验证范围，每条一两句话，细节放在链接的开发记录里。"待回归"表示还没有在 Play Mode 里重新验证。
 
+## 2026-11-28
+
+- **敌人攻击状态（#42 第二步）**（`8d075ec`）：用户完成，Claude Code 讲解和审查。追击进入出招距离后切到攻击状态：停下导航、出招前转向玩家；出招期间不切状态、不转向，收招动画事件 `OnAttackEnd` 清掉 `IsAttacking`，3 秒超时兜底。脱战起点改为只在巡逻、等待发现玩家时记录，攻击回追击不再重置；Animator 的 `velocity` 参数改在 `EnemyAI.Update` 每帧同步。用户实测四项通过：出招时走开会挥完再追、前摇后退打空、站着不动每 2 秒出招且先转向、出招中不跟着转。[记录 58](Docs/Development/records/58-enemy-attack-state-and-ranges.md)
+- **攻击距离的三个数**（`e97fdee`，预制体为本地文件）：按用户的方案排成停止距离 1.3 < 出招距离 1.4 ≤ 命中半径 1.4（`EnemyAIConfig.attackRange` 原为 2）。Claude Code 推算玩家站着不动时实际能被打中的距离约 1.62 米，并指出出招距离是全局一份、命中半径按敌人配置，新开 #44，用户计划次日修改。[记录 58](Docs/Development/records/58-enemy-attack-state-and-ranges.md)
+- **配置按 id 查找与任务目标名**（`eaf29fe`、`e97fdee`）：用户完成。`GetCharacterData` 原来按下标取，敌人表两项 id 都是 0 却"刚好对上"；改为按 id 匹配，角色配置新增 `name`。敌人表新增千人律者（id 1）及奖励，任务 0 的战斗目标改为千人律者；任务面板显示敌人名，对话目标改为按 id 查 NPC。改为按 id 后奖励和任务计数没有单独复测。[记录 58](Docs/Development/records/58-enemy-attack-state-and-ranges.md)
+- **敌人 Animator 与场景**（`4508e5b`）：用户修改。敌人 Animator 改为待机、跑步、攻击三个状态（僵尸动作，动作文件为本地素材）；GMScene 放入两只千人律者（第二只关闭 AI 当木桩），停用原来的胶囊敌人，玩家 CharacterController 的场景覆盖改为高 1.46、半径 0.26。千人律者预制体、FBX 和僵尸动作不入库，已登记 ASSET_RESTORE。[记录 58](Docs/Development/records/58-enemy-attack-state-and-ranges.md)
+
 ## 2026-11-27
 
 - **敌人人形模型转换（本地素材，仅文档入库）**：Antigravity 通过 Blender 5.2 + `mmd_tools` 将模之屋素材 `千人律者1.0.pmx` 转换为 Unity 可用 FBX，输出到 `Assets/Resources/Prefab/千人律者/`（含 4 张贴图与 `使用规则.txt`，已登记 ASSET_RESTORE）。处理了双套腿骨与辅助骨清理（合并 `下半身` 到 `Hips`，保留 63 根骨骼并改为 Unity 标准人形骨名）、材质重建为 Principled BSDF，并剥离全不透明贴图的冗余 Alpha 通道。仅完成 Blender 回导与正面渲染核验、Unity 生成 `.meta`；Humanoid 映射、Scene 显示与预制体接入待验证（#43）。[记录 57](Docs/Development/records/57-enemy-model-pmx-to-fbx.md)
