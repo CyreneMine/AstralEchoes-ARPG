@@ -80,7 +80,7 @@ flowchart TD
 |---|---|
 | `Object/Player/PlayerObject.cs` | 移动与冲刺：速度标量、1D 混合树、MoveWeight 曲线、冲刺期间禁止转向；订阅等级和死亡事件 |
 | `Object/Player/PlayerCombat.cs` | 普攻：动画事件触发球形检测，伤害读取 `CharacterStats` |
-| `Object/Enemy/EnemyAI.cs` | NavMesh 巡逻、追击、脱战返回、攻击冷却；玩家死亡和复活时脱战 |
+| `FSM/StateMachine.cs`、`Object/Enemy/EnemyAI.cs`、`Object/Enemy/State/` | 状态模式：通用状态机按"退出 → 切换 → 进入"切换；敌人的巡逻、等待、追击、返回、死亡各一个类，`EnemyAI` 保存共享数据，处理玩家死亡和自身死亡事件 |
 | `Base/CharacterStats.cs`、`Object/Common/CharacterHealth.cs` | 按等级计算属性，Buff 按"白值 ×（1 + 加成）"计算；生命上限变化时按比例保持当前生命 |
 | `Managers/MissionMgr.cs`、`Managers/DialogueMgr.cs` | 任务阶段推进与存档；按 NPC 和任务阶段选择对白；交付时先标记完成再发奖 |
 | `Managers/PlayerItemMgr.cs`、`Managers/RewardMgr.cs` | 道具增删查、存档和数量变化事件；怪物掉落与任务奖励统一结算 |
@@ -94,6 +94,7 @@ flowchart TD
 - 属性改为 float 后"打怪后生命有时变 0"的排查，以及升级广播的时机（[记录 49](Docs/Development/records/49-float-stats-and-hp-ratio.md)）
 - TimerMgr 在回调中增删计时器的处理，以及 Buff 计时是否受暂停影响（[记录 50](Docs/Development/records/50-buff-core-timer-and-stats.md)）
 - UIManager 为什么统一从预制件创建面板，不在场景里预放 UI（[记录 35](Docs/Development/records/35-uimanager-prefab-only.md)）
+- 敌人 AI 从 bool 组合改为状态模式，以及玩家死亡时为什么只让追击中的怪物脱战（[记录 56](Docs/Development/records/56-enemy-fsm-state-pattern.md)）
 
 ## 功能状态
 
@@ -103,9 +104,9 @@ flowchart TD
 |---|---|---|
 | 移动与冲刺 | 有运行证据 | 1D 速度混合、MoveWeight 冲刺衔接；冲刺后转入奔跑（仿原神操作）；11-18 用户实测通过 |
 | 普攻与命中 | 有运行证据 | 球形命中判定；11-05 的编辑器日志记录了双方互相命中 |
-| 受击与死亡 | 原型 · 有运行证据 | 最小死亡流程：死亡时锁定操作、播放死亡动画、怪物脱战，控制台复活（11-15）；怪物脱战部分待复测，死亡界面未做 |
+| 受击与死亡 | 原型 · 有运行证据 | 最小死亡流程：死亡时锁定操作、播放死亡动画、怪物脱战，控制台复活（11-15）；11-27 起只有追击中的怪物脱战，用户实测通过；死亡界面未做 |
 | 技能 | 未开始 | |
-| 敌人 AI | 有运行证据 · 待回归 | NavMesh 巡逻、追击、脱战返回、攻击和死亡；巡逻边界和脱战流程待专项回归 |
+| 敌人 AI | 有运行证据 | 状态模式（巡逻、等待、追击、返回、死亡）；NavMesh 巡逻、追击、脱战返回、攻击和死亡，11-27 用户实测通过；单独的攻击状态待加（#42） |
 | 属性、等级与经验 | 原型 · 有运行证据 · 待回归 | CharacterStats 按等级计算属性，11-24 起属性为 float，生命上限变化时按比例保持当前生命，控制台自动检查通过；真实打怪升级和读档待回归（#33）；满级未测 |
 | 道具与奖励 | 原型 | 道具表、怪物奖励表、统一发奖方法。玩家持有道具管理器已完成增删查与存盘，背包显示持有道具、随数量变化刷新、点击显示详情，道具有数量上限；怪物掉落和任务奖励都能进背包。使用消耗品未做 |
 | NPC 对话 | 有运行证据 | 按任务阶段选对白、对话期间关闭输入、完成后对白；11-18 用户实测通过 |

@@ -71,6 +71,7 @@
 | [53](records/53-ai-generated-assets-and-item-config.md) | 11-26 | 生图素材的范围与提示词、Buff 与道具图标导入、道具表新增 ID 3～7、场景布局统一 | 静态核验和编辑器导入日志；新道具的背包显示未测（#39） |
 | [54](records/54-ai-2d-asset-generation.md) | 11-26 | 2D 素材批量生成、预览与选稿 | 61 张本地候选，核验图像与生成记录 |
 | [55](records/55-reward-slot-icon.md) | 11-27 | 任务面板奖励格显示道具图标：去掉 `SetNativeSize`，固定显示框加等比缩放 | 编译通过，用户实测确认没问题（#41 已关闭） |
+| [56](records/56-enemy-fsm-state-pattern.md) | 11-27 | 敌人 AI 改为状态模式：五个状态、Enter 和 Exit 的分工、玩家死亡时只让追击中的怪物脱战、死亡事件放在基类 | 用户实测巡逻、脱战返回、死亡流程正常；复用入口未测（#26） |
 
 ## 本机 Git 配置
 
