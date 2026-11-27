@@ -1158,6 +1158,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: EnemyAI
       objectReference: {fileID: 0}
+    - target: {fileID: 4635115794728913980, guid: 0d0b28005492b914989176f4beaec0ea, type: 3}
+      propertyPath: m_StoppingDistance
+      value: 1.4
+      objectReference: {fileID: 0}
     - target: {fileID: 6180761052833397913, guid: 0d0b28005492b914989176f4beaec0ea, type: 3}
       propertyPath: m_Camera
       value: 
