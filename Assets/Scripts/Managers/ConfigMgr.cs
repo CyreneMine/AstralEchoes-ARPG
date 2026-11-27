@@ -2,21 +2,23 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class ConfigMgr:BaseManager<ConfigMgr>
+public class ConfigMgr : BaseManager<ConfigMgr>
 {
-    public Dictionary<CharacterConfig.CharacterType,CharacterConfig> characterConfigs = new Dictionary<CharacterConfig.CharacterType, CharacterConfig>();
+    public Dictionary<CharacterConfig.CharacterType, CharacterConfig> characterConfigs = new Dictionary<CharacterConfig.CharacterType, CharacterConfig>();
     public MissionConfig missionConfig;
     public NpcConfig npcConfig;
     public ItemDatabase itemDatabase;
     public EnemyRewardDatabase enemyRewardDatabase;
     public BuffDatabase buffDatabase;
+
     private ConfigMgr()
     {
         foreach (CharacterConfig.CharacterType value in Enum.GetValues(typeof(CharacterConfig.CharacterType)))
         {
-            CharacterConfig config = Resources.Load<CharacterConfig>("GameData/Character/"+value+"Config");
+            CharacterConfig config = Resources.Load<CharacterConfig>("GameData/Character/" + value + "Config");
             characterConfigs.Add(value, config);
         }
+
         missionConfig = Resources.Load<MissionConfig>("GameData/Mission/MissionConfig");
         npcConfig = Resources.Load<NpcConfig>("GameData/Npc/NpcConfig");
         itemDatabase = Resources.Load<ItemDatabase>("GameData/Item/ItemDatabase");
@@ -33,6 +35,7 @@ public class ConfigMgr:BaseManager<ConfigMgr>
                 return config;
             }
         }
+
         return null;
     }
 
@@ -40,6 +43,7 @@ public class ConfigMgr:BaseManager<ConfigMgr>
     {
         return buffDatabase.buffs;
     }
+
     public EnemyReward GetEnemyRewardById(int id)
     {
         EnemyReward e = null;
@@ -51,8 +55,10 @@ public class ConfigMgr:BaseManager<ConfigMgr>
                 break;
             }
         }
+
         return e;
     }
+
     public ItemConfig GetItemConfigByID(int itemId)
     {
         ItemConfig data = null;
@@ -64,8 +70,10 @@ public class ConfigMgr:BaseManager<ConfigMgr>
                 break;
             }
         }
+
         return data;
     }
+
     public NpcData GetNpcConfig(int npcId)
     {
         foreach (NpcData data in npcConfig.npcConfigs)
@@ -75,26 +83,31 @@ public class ConfigMgr:BaseManager<ConfigMgr>
                 return data;
             }
         }
+
         return null;
     }
-    public CharacterConfig.CharacterData GetCharacterData(CharacterConfig.CharacterType type,int id)
+
+    public CharacterConfig.CharacterData GetCharacterData(CharacterConfig.CharacterType type, int id)
     {
         if (characterConfigs.ContainsKey(type))
         {
-            return characterConfigs[type].characterDatas[id];
+            foreach (CharacterConfig.CharacterData data in characterConfigs[type].characterDatas)
+            {
+                if (data.id == id)
+                {
+                    return data;
+                }
+            }
         }
-        else
-        {
-            Debug.Log("数据源为空");
-            return null;
-        }
+        Debug.Log("数据源为空");
+        return null;
     }
 
     public MissionData GetMissionData(int missionId)
     {
         foreach (MissionData data in missionConfig.missionDatas)
         {
-            if (data.missionId ==missionId)
+            if (data.missionId == missionId)
             {
                 return data;
             }
