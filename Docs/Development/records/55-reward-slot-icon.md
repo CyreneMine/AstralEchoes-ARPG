@@ -68,3 +68,8 @@
 - 可以用来说明界面中配置驱动的图标怎么处理尺寸：固定显示框加等比缩放，和 `SetNativeSize()` 各自适合什么场景。
 - 代码：[RewardSlot.cs](../../../Assets/Scripts/UI/GamePanel/RewardSlot.cs)、[MissionItem.cs](../../../Assets/Scripts/UI/GamePanel/MissionItem.cs)、[BagSlot.cs](../../../Assets/Scripts/UI/GamePanel/BagSlot.cs)。
 - 预制体是本地资源，恢复方法和引用要求见 [ASSET_RESTORE](../../ASSET_RESTORE.md)。
+
+## 补充：实机验证（2026-11-27）
+
+- 推送后用户实测，反馈“实测没问题”，#41 按用户实测确认关闭。
+- 证据来源只有用户的实测反馈，没有截图或日志；用户没有逐项说明测了 #41 里的哪几项。

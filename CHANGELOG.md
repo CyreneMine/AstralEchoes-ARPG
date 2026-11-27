@@ -4,7 +4,7 @@
 
 ## 2026-11-27
 
-- **任务奖励格显示道具图标**（`1800b4a`）：用户完成，Claude Code 审查。`RewardSlot` 有图标时只显示图标，没有图标时关闭 Image、显示名称；删掉了会把图标撑到原图大小（512×512）的 `SetNativeSize()`。本地 `RewardSlot` 预制体由 Claude Code 调整：Icon 固定 60×60、Simple + Preserve Aspect，NameText 移到和 Icon 同级。编译通过，Play Mode 未确认（#41）。[记录 55](Docs/Development/records/55-reward-slot-icon.md)
+- **任务奖励格显示道具图标**（`1800b4a`）：用户完成，Claude Code 审查。`RewardSlot` 有图标时只显示图标，没有图标时关闭 Image、显示名称；删掉了会把图标撑到原图大小（512×512）的 `SetNativeSize()`。本地 `RewardSlot` 预制体由 Claude Code 调整：Icon 固定 60×60、Simple + Preserve Aspect，NameText 移到和 Icon 同级。编译通过；推送后用户实测确认没问题，关闭 #41。[记录 55](Docs/Development/records/55-reward-slot-icon.md)
 
 ## 2026-11-26
 

@@ -70,7 +70,7 @@
 | [52](records/52-buff-choice-random-and-panel.md) | 11-26 | Buff 三选一：随机抽取、选择次数、面板 UI 与控制台 | 自动检查 146/146（新增三选一 23 项）；面板 4 个流程用户实测通过 |
 | [53](records/53-ai-generated-assets-and-item-config.md) | 11-26 | 生图素材的范围与提示词、Buff 与道具图标导入、道具表新增 ID 3～7、场景布局统一 | 静态核验和编辑器导入日志；新道具的背包显示未测（#39） |
 | [54](records/54-ai-2d-asset-generation.md) | 11-26 | 2D 素材批量生成、预览与选稿 | 61 张本地候选，核验图像与生成记录 |
-| [55](records/55-reward-slot-icon.md) | 11-27 | 任务面板奖励格显示道具图标：去掉 `SetNativeSize`，固定显示框加等比缩放 | 静态核验和编译通过，Play Mode 未确认（#41） |
+| [55](records/55-reward-slot-icon.md) | 11-27 | 任务面板奖励格显示道具图标：去掉 `SetNativeSize`，固定显示框加等比缩放 | 编译通过，用户实测确认没问题（#41 已关闭） |
 
 ## 本机 Git 配置
 
