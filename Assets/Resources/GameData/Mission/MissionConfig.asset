@@ -26,3 +26,5 @@ MonoBehaviour:
     itemRewards:
     - itemId: 0
       count: 100
+    - itemId: 2
+      count: 5
