@@ -14,9 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CharacterConfig
   characterDatas:
   - id: 0
-    atk: 50
-    def: 1
-    maxHp: 10
+    name: "\u6D4B\u8BD5\u654C\u4EBA"
     initLv: 0
     maxLv: 0
     initExpPerLv: 0
@@ -24,6 +22,24 @@ MonoBehaviour:
     defPerLv: 0
     maxHpPerLv: 0
     expPerLv: 0
+    atk: 50
+    def: 1
+    maxHp: 10
     atkCooldown: 2
     atkRange: 1.5
+    type: 1
+  - id: 1
+    name: "\u5343\u4EBA\u5F8B\u8005"
+    initLv: 0
+    maxLv: 0
+    initExpPerLv: 0
+    atkPerLv: 0
+    defPerLv: 0
+    maxHpPerLv: 0
+    expPerLv: 0
+    atk: 50
+    def: 1
+    maxHp: 10
+    atkCooldown: 2
+    atkRange: 1.6
     type: 1

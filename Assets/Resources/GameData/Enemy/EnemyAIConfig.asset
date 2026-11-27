@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f4be5d915a3b46638ac41fc28265a7c4, type: 3}
   m_Name: EnemyAIConfig
   m_EditorClassIdentifier: Assembly-CSharp::EnemyAIConfig
-  attackRange: 2
+  attackRange: 1.4
   detectRange: 5
   loseRange: 8
   maxRange: 15

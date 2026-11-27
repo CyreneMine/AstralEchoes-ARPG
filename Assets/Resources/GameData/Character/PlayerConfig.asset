@@ -14,9 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CharacterConfig
   characterDatas:
   - id: 0
-    atk: 5
-    def: 3
-    maxHp: 100
+    name: Cyrene
     initLv: 1
     maxLv: 20
     initExpPerLv: 100
@@ -24,6 +22,9 @@ MonoBehaviour:
     defPerLv: 1
     maxHpPerLv: 10
     expPerLv: 50
+    atk: 5
+    def: 3
+    maxHp: 100
     atkCooldown: 0
     atkRange: 0
     type: 0

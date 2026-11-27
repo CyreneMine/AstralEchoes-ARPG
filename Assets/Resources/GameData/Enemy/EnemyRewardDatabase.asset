@@ -17,3 +17,7 @@ MonoBehaviour:
     rewards:
     - itemId: 0
       count: 50
+  - EnemyId: 1
+    rewards:
+    - itemId: 0
+      count: 50

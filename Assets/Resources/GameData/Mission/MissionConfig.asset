@@ -19,7 +19,7 @@ MonoBehaviour:
     stages:
     - missionType: 0
       targetCount: 1
-      targetId: 0
+      targetId: 1
     - missionType: 1
       targetCount: 1
       targetId: 0
