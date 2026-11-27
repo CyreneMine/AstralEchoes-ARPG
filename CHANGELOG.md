@@ -4,6 +4,7 @@
 
 ## 2026-11-27
 
+- **敌人人形模型转换（本地素材，仅文档入库）**：Antigravity 通过 Blender 5.2 + `mmd_tools` 将模之屋素材 `千人律者1.0.pmx` 转换为 Unity 可用 FBX，输出到 `Assets/Resources/Prefab/千人律者/`（含 4 张贴图与 `使用规则.txt`，已登记 ASSET_RESTORE）。处理了双套腿骨与辅助骨清理（合并 `下半身` 到 `Hips`，保留 63 根骨骼并改为 Unity 标准人形骨名）、材质重建为 Principled BSDF，并剥离全不透明贴图的冗余 Alpha 通道。仅完成 Blender 回导与正面渲染核验、Unity 生成 `.meta`；Humanoid 映射、Scene 显示与预制体接入待验证（#43）。[记录 57](Docs/Development/records/57-enemy-model-pmx-to-fbx.md)
 - **敌人 AI 改为状态模式的状态机**（`ed3be12`）：用户完成，Claude Code 讲解和审查。新增通用的 `IState` / `StateMachine`；巡逻、等待、追击、返回、死亡各一个状态类，原来的 bool 组合删除。玩家死亡或复活时改为只让追击中的怪物返回（用户决定，原来是所有怪物）；`CharacterHealth` 新增 `OnDeath`，怪物由它进入死亡状态。用户实测巡逻、两种脱战和返回、死亡流程正常。复用入口 `EnemyObject.Spawn` / `EnemyAI.ResetAI` 已写、未接入（#26）；攻击状态是 #42 第二步。[记录 56](Docs/Development/records/56-enemy-fsm-state-pattern.md)
 - **场景与配置**（`567d5c9`、`25b17bf`）：用户修改。GMScene 中敌人的 NavMeshAgent 停止距离改为 1.4；任务 0 的奖励新增星屑药剂 ×5。[记录 56](Docs/Development/records/56-enemy-fsm-state-pattern.md)
 - **任务奖励格显示道具图标**（`1800b4a`）：用户完成，Claude Code 审查。`RewardSlot` 有图标时只显示图标，没有图标时关闭 Image、显示名称；删掉了会把图标撑到原图大小（512×512）的 `SetNativeSize()`。本地 `RewardSlot` 预制体由 Claude Code 调整：Icon 固定 60×60、Simple + Preserve Aspect，NameText 移到和 Icon 同级。编译通过；推送后用户实测确认没问题，关闭 #41。[记录 55](Docs/Development/records/55-reward-slot-icon.md)
