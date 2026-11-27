@@ -2,6 +2,10 @@
 
 按日期倒序记录每次交付的内容、对应提交和验证范围，每条一两句话，细节放在链接的开发记录里。"待回归"表示还没有在 Play Mode 里重新验证。
 
+## 2026-11-27
+
+- **任务奖励格显示道具图标**（`1800b4a`）：用户完成，Claude Code 审查。`RewardSlot` 有图标时只显示图标，没有图标时关闭 Image、显示名称；删掉了会把图标撑到原图大小（512×512）的 `SetNativeSize()`。本地 `RewardSlot` 预制体由 Claude Code 调整：Icon 固定 60×60、Simple + Preserve Aspect，NameText 移到和 Icon 同级。编译通过，Play Mode 未确认（#41）。[记录 55](Docs/Development/records/55-reward-slot-icon.md)
+
 ## 2026-11-26
 
 - **Buff 三选一：随机抽取与选择次数**（`79bc439`）：用户完成，Claude Code 审查。`StartRandomBuff` 按重抽法从候选池抽 min(3, 候选池) 个；`AddChoiceCount` / `SelectBuff` 管理剩余选择次数，`AddBuff` 不再扣次数；`onChoiceCountChange` 带次数参数；`ClearAll` 同时清零次数和候选。次数为 0 由 UI 入口把关。控制台自动检查 146/146 通过。[记录 52](Docs/Development/records/52-buff-choice-random-and-panel.md)
