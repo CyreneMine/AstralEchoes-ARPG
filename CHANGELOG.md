@@ -2,6 +2,13 @@
 
 按日期倒序记录每次交付的内容、对应提交和验证范围，每条一两句话，细节放在链接的开发记录里。"待回归"表示还没有在 Play Mode 里重新验证。
 
+## 2026-11-29
+
+- **玩家改为状态模式的状态机（#45 第一步）**（`1edd0d6`）：用户完成，Claude Code 讲解和审查。新增 `PlayerController`（状态机、移动参数、统一读输入、每帧一次 `Move`）和移动、闪避、攻击、死亡四个状态，`PlayerObject` 只保留属性、等级与 Buff。冲刺改为按 0.2 秒计时结束，冲刺速度带入移动状态后平滑降速（用户决定）；攻击在 `AttackEnd` 之后可以接下一段或闪避，回到 Blend Tree 时切回移动；光标模式不出刀改在读输入时判断；死亡、复活由 `OnPlayerStateChange` 切换状态，死亡时清零速度。用户实测 #45 验收全部通过（当次聊天报告）。冲刺后顿一下留到 #46。[记录 59](Docs/Development/records/59-player-fsm-state-pattern.md)
+- **玩家 Animator 合并为一层**（`68dc0a6`）：连段按键立即切换、每段播完回待机、`AttackEnd` 放到每段判定帧之后由用户调整；按用户要求，Claude Code 把 Attack 层原样搬进 Base Layer（Null 对应 Blend Tree），三段攻击的 `Attack` 标签由用户添加。出刀时死亡现在能直接播倒地动作。GMScene 的玩家挂上 `PlayerController`。[记录 59](Docs/Development/records/59-player-fsm-state-pattern.md)
+- **控制台适配玩家状态机**（`6e2e93b`）：Claude Code 修改。恢复初始值不再调用已删除的 `SetIsAttacking`；自动检查的怪物脱战项还在读敌人改为状态机前的 `isReturning`，第一次运行在第 36 项中断，改为读敌人状态机，并新增玩家状态机死亡、复活两项。自动检查 148/148 通过。[记录 59](Docs/Development/records/59-player-fsm-state-pattern.md)
+- **动画事件清理（本地 `.meta`，不入库）**：用户删除冲刺动作上的 `StartQuick` / `EndQuick`；按用户要求，Claude Code 删除 `Resources/Animation` 下 19 个动作副本上素材自带的 `SwitchSocket`（接收方是素材包的武器挂点脚本，项目里没有用到），素材包原版未动。已更新 ASSET_RESTORE。[记录 59](Docs/Development/records/59-player-fsm-state-pattern.md)
+
 ## 2026-11-28
 
 - **敌人攻击状态（#42 第二步）**（`8d075ec`）：用户完成，Claude Code 讲解和审查。追击进入出招距离后切到攻击状态：停下导航、出招前转向玩家；出招期间不切状态、不转向，收招动画事件 `OnAttackEnd` 清掉 `IsAttacking`，3 秒超时兜底。脱战起点改为只在巡逻、等待发现玩家时记录，攻击回追击不再重置；Animator 的 `velocity` 参数改在 `EnemyAI.Update` 每帧同步。用户实测四项通过：出招时走开会挥完再追、前摇后退打空、站着不动每 2 秒出招且先转向、出招中不跟着转。[记录 58](Docs/Development/records/58-enemy-attack-state-and-ranges.md)
