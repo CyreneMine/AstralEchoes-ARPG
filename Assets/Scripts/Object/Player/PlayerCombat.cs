@@ -10,17 +10,7 @@ public class PlayerCombat : MonoBehaviour
     {
         animator = GetComponent<Animator>();
     }
-
-    private void Update()
-    {
-        if (!PlayerMgr.Instance.canInput || PlayerMgr.Instance.CurrentIsCursor||PlayerMgr.Instance.player.Health.isDead)
-            return;
-        if (PlayerMgr.Instance.inputActions.Player.Attack.WasPressedThisFrame())
-        {
-            Attack();
-        }
-    }
-
+    
     public void OnAttackCheck()
     {
         switch (PlayerMgr.Instance.currentWeaponType)
@@ -37,14 +27,7 @@ public class PlayerCombat : MonoBehaviour
     }
     public void Attack()
     {
-        PlayerMgr.Instance.player.SetIsAttacking(true);
         animator.SetTrigger("Atk");
         animator.SetBool("Attacking",true);
-    }
-
-    public void AttackEnd()
-    {
-        PlayerMgr.Instance.player.SetIsAttacking(false);
-        animator.SetBool("Attacking",false);
     }
 }
