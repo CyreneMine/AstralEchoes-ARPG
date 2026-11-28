@@ -4,6 +4,7 @@
 
 ## 2026-11-29
 
+- **冲刺接跑步（#46 第一项）**（`81e4a53`、`8434d45`）：用户完成，Claude Code 分析和审查。冲刺动作上 `MoveWeight` 全程为 0，冲刺结束后到动画回待机之前角色会停住；改为移动不再乘 `MoveWeight`（参数删除），冲刺回 Blend Tree 加 `Velocity > 0.1` 的过渡，进入冲刺的过渡从 0.25 秒缩短到 0.05 秒。同时删除 `PlayerObject` 和移动状态里不再使用的字段。用户实测冲刺直接接跑步、连续冲刺正常（当次聊天报告）。[记录 60](Docs/Development/records/60-dash-to-run-without-moveweight.md)
 - **玩家改为状态模式的状态机（#45 第一步）**（`1edd0d6`）：用户完成，Claude Code 讲解和审查。新增 `PlayerController`（状态机、移动参数、统一读输入、每帧一次 `Move`）和移动、闪避、攻击、死亡四个状态，`PlayerObject` 只保留属性、等级与 Buff。冲刺改为按 0.2 秒计时结束，冲刺速度带入移动状态后平滑降速（用户决定）；攻击在 `AttackEnd` 之后可以接下一段或闪避，回到 Blend Tree 时切回移动；光标模式不出刀改在读输入时判断；死亡、复活由 `OnPlayerStateChange` 切换状态，死亡时清零速度。用户实测 #45 验收全部通过（当次聊天报告）。冲刺后顿一下留到 #46。[记录 59](Docs/Development/records/59-player-fsm-state-pattern.md)
 - **玩家 Animator 合并为一层**（`68dc0a6`）：连段按键立即切换、每段播完回待机、`AttackEnd` 放到每段判定帧之后由用户调整；按用户要求，Claude Code 把 Attack 层原样搬进 Base Layer（Null 对应 Blend Tree），三段攻击的 `Attack` 标签由用户添加。出刀时死亡现在能直接播倒地动作。GMScene 的玩家挂上 `PlayerController`。[记录 59](Docs/Development/records/59-player-fsm-state-pattern.md)
 - **控制台适配玩家状态机**（`6e2e93b`）：Claude Code 修改。恢复初始值不再调用已删除的 `SetIsAttacking`；自动检查的怪物脱战项还在读敌人改为状态机前的 `isReturning`，第一次运行在第 36 项中断，改为读敌人状态机，并新增玩家状态机死亡、复活两项。自动检查 148/148 通过。[记录 59](Docs/Development/records/59-player-fsm-state-pattern.md)

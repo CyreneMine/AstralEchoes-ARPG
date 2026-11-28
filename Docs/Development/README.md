@@ -75,6 +75,7 @@
 | [57](records/57-enemy-model-pmx-to-fbx.md) | 11-27 | 敌人人形模型转换：千人律者 PMX 转 Unity FBX（骨骼清理与标准命名、材质节点重建、剥离冗余 Alpha 通道） | Blender 回导与渲染核验通过，Unity 已生成 meta；Humanoid 映射、Scene 显示与预制体接入待验证（#43） |
 | [58](records/58-enemy-attack-state-and-ranges.md) | 11-28 | 敌人攻击状态：出招挥完再切换（收招事件 + 超时兜底）、停止距离 / 出招距离 / 命中范围三个数的顺序、配置表改按 id 查找 | 攻击状态四项用户实测通过；超时兜底和按 id 查找后的奖励、任务计数未测；出招距离按敌人配置见 #44 |
 | [59](records/59-player-fsm-state-pattern.md) | 11-29 | 玩家改为状态模式：拆出控制组件、转换动作、冲刺用计时代替动画事件并保留冲刺速度、攻击的取消窗口与退出判断、Animator 合并为一层、控制台适配 | #45 验收用户实测全部通过，控制台自动检查 148/148；冲刺后顿一下、受击和闪避无敌见 #46 |
+| [60](records/60-dash-to-run-without-moveweight.md) | 11-29 | 冲刺接跑步：冲刺后停顿的原因（MoveWeight 曲线为 0、进入冲刺的过渡比冲刺还长）、去掉 MoveWeight 改用 Velocity 条件 | 用户实测冲刺直接接跑步、连续冲刺正常；冲刺收尾按攻击的延迟留在 #46 |
 
 ## 本机 Git 配置
 
