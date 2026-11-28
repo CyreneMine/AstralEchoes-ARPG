@@ -171,7 +171,11 @@ public static class DevConsoleSetup
     private static CharacterHealth vHealth;
     private static DevConsole vConsole;
     private static readonly FieldInfo HealthDefField = typeof(CharacterHealth).GetField("def", BindingFlags.Instance | BindingFlags.NonPublic);
-    private static readonly FieldInfo EnemyReturningField = typeof(EnemyAI).GetField("isReturning", BindingFlags.Instance | BindingFlags.NonPublic);
+    // 敌人（#42）和玩家（#45）改为状态机后，原来的 isReturning 等标记已不存在；状态机是私有字段，这里用反射读当前状态。
+    private static readonly FieldInfo EnemyStateMachineField = typeof(EnemyAI).GetField("stateMachine", BindingFlags.Instance | BindingFlags.NonPublic);
+    private static readonly FieldInfo PlayerStateMachineField = typeof(PlayerController).GetField("stateMachine", BindingFlags.Instance | BindingFlags.NonPublic);
+    private static IState CurrentStateOf(FieldInfo field, object owner) => field == null || owner == null ? null : (field.GetValue(owner) as StateMachine)?.CurrentState;
+    private static string StateName(IState state) => state == null ? "null" : state.GetType().Name;
     private static readonly string[] CaptureNames = { "Health", "Stats", "Items", "Save", "Buff" };
 
     // ---- Buff 检查：只读 BuffMgr / TimerMgr / CharacterStats 的内部状态；
@@ -413,17 +417,44 @@ public static class DevConsoleSetup
         Click("FullHealth");
 
         // 4. 死亡
+        // 只检查启用中的 EnemyAI：被禁用的组件（例如场景里的静止木桩）不会在 OnEnable 订阅，本来就不参与脱战。
+        EnemyAI[] allEnemies = UnityEngine.Object.FindObjectsByType<EnemyAI>(FindObjectsSortMode.None);
+        EnemyAI[] enemies = allEnemies.Where(e => e.isActiveAndEnabled).ToArray();
+        // 玩家死亡时，正在追击或出招的敌人切到返回状态，巡逻、等待、返回中的敌人保持原状态（EnemyAI.OnPlayerStateChange）。
+        Dictionary<EnemyAI, IState> enemyStatesBefore = enemies.ToDictionary(e => e, e => CurrentStateOf(EnemyStateMachineField, e));
+        PlayerController playerController = vPlayer.GetComponent<PlayerController>();
         int states = stateEventCount;
         Click("KillPlayer");
         Check(vHealth.CurrentHp == 0 && vHealth.isDead, "杀死玩家：生命归零且 isDead", Hp());
         Check(stateEventCount > states && lastStateEvent, "杀死玩家：发出死亡广播 OnPlayerStateChange(true)");
-        Check(vPlayer.animator != null && vPlayer.animator.GetBool("IsDead"), "杀死玩家：Animator 的 IsDead 为 true");
-        // 只检查启用中的 EnemyAI：被禁用的组件（例如场景里的静止木桩）不会在 OnEnable 订阅，本来就不参与脱战。
-        var allEnemies = UnityEngine.Object.FindObjectsByType<EnemyAI>(FindObjectsSortMode.None);
-        var enemies = allEnemies.Where(e => e.isActiveAndEnabled).ToArray();
+        // 直接取玩家物体上的 Animator，不依赖 PlayerObject 上的旧 animator 字段（#45 重构后可能删除）。
+        Animator playerAnimator = vPlayer.GetComponent<Animator>();
+        Check(playerAnimator != null && playerAnimator.GetBool("IsDead"), "杀死玩家：Animator 的 IsDead 为 true");
+        if (playerController == null || PlayerStateMachineField == null) Note("玩家物体上没有 PlayerController，或找不到它的状态机字段，跳过玩家状态机检查。");
+        else
+        {
+            IState playerState = CurrentStateOf(PlayerStateMachineField, playerController);
+            Check(playerState == playerController.PlayerDeadState, "杀死玩家：玩家状态机切到死亡状态", $"实际 {StateName(playerState)}");
+        }
         if (allEnemies.Length > enemies.Length) Note($"场景中有 {allEnemies.Length - enemies.Length} 个 EnemyAI 组件处于禁用状态，不参与脱战检查。");
         if (enemies.Length == 0) Note("场景中没有启用的 EnemyAI，跳过怪物脱战检查。");
-        else Check(enemies.All(e => (bool)EnemyReturningField.GetValue(e)), $"杀死玩家：{enemies.Length} 个启用中的 EnemyAI 都进入返回状态（脱战）");
+        else if (EnemyStateMachineField == null) Note("找不到 EnemyAI 的状态机字段，跳过怪物脱战检查。");
+        else
+        {
+            int engaged = 0;
+            List<string> wrong = new List<string>();
+            foreach (EnemyAI enemy in enemies)
+            {
+                IState before = enemyStatesBefore[enemy];
+                bool wasEngaged = before == enemy.ChaseState || before == enemy.AttackState;
+                if (wasEngaged) engaged++;
+                IState expectedState = wasEngaged ? enemy.ReturnState : before;
+                IState now = CurrentStateOf(EnemyStateMachineField, enemy);
+                if (now != expectedState) wrong.Add($"{enemy.name}：{StateName(before)} → {StateName(now)}，期望 {StateName(expectedState)}");
+            }
+            if (engaged == 0) Note($"杀死玩家时没有正在追击或出招的敌人，只检查 {enemies.Length} 个敌人保持原状态。");
+            Check(wrong.Count == 0, $"杀死玩家：{engaged} 个追击或出招中的敌人进入返回状态，其余 {enemies.Length - engaged} 个保持原状态", string.Join("；", wrong));
+        }
         Click("Damage10"); Check(vHealth.CurrentHp == 0, "死亡时扣血被拒绝", Hp());
         Click("Heal10"); Check(vHealth.CurrentHp == 0 && vHealth.isDead, "死亡时回血被拒绝", Hp());
         Click("ResetAttributes"); Check(vHealth.isDead && vHealth.CurrentHp == 0, "死亡时恢复初始值被拒绝", Hp());
@@ -433,7 +464,12 @@ public static class DevConsoleSetup
         Click("RevivePlayer");
         Check(vHealth.CurrentHp == max && !vHealth.isDead, "复活：回满且存活", Hp());
         Check(stateEventCount > states && !lastStateEvent, "复活：发出复活广播 OnPlayerStateChange(false)");
-        Check(vPlayer.animator != null && !vPlayer.animator.GetBool("IsDead"), "复活：Animator 的 IsDead 为 false");
+        Check(playerAnimator != null && !playerAnimator.GetBool("IsDead"), "复活：Animator 的 IsDead 为 false");
+        if (playerController != null && PlayerStateMachineField != null)
+        {
+            IState playerState = CurrentStateOf(PlayerStateMachineField, playerController);
+            Check(playerState == playerController.PlayerMovementState, "复活：玩家状态机回到移动状态", $"实际 {StateName(playerState)}");
+        }
         Click("Damage10");
         states = stateEventCount;
         Click("RevivePlayer");

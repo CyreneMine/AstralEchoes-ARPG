@@ -496,7 +496,7 @@ public class DevConsole : MonoBehaviour
         // 回满生命不会清除死亡标记，死亡时先走 Respawn。
         if (boundHealth.isDead) { Say("玩家已死亡，请先使用“复活并回满”。", true); return; }
         targetPlayer.UpdateStats();
-        targetPlayer.SetIsAttacking(false);
+        // 攻击中的标记已由玩家状态机管理（#45），这里不再清除。
         SetConsoleHealth(boundHealth.MaxHp);
         RefreshDisplay();
         Say("已按配置表、当前等级和生效中的 Buff 重新计算属性，并回满生命。");
