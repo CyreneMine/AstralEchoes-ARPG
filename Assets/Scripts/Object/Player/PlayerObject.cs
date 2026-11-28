@@ -2,10 +2,6 @@ using UnityEngine;
 
 public class PlayerObject : CharacterObject
 {
-    public Animator animator;
-    public CharacterController controller;
-    private Vector3 dashDirection;
-    private float moveWeight;
     protected new PlayerHealth health => base.health as PlayerHealth;
     public new PlayerHealth Health => health;
 
@@ -13,10 +9,6 @@ public class PlayerObject : CharacterObject
     {
         base.Awake();
         PlayerMgr.Instance.InitPlayer(this);
-        if (animator == null)
-            animator = GetComponent<Animator>();
-        if (controller == null)
-            controller = GetComponent<CharacterController>();
         //TODO 测试写死 后续动态更新
         Init(0, CharacterConfig.CharacterType.Player);
         PlayerMgr.Instance.OnPlayerLevelChange += UpdateStats;

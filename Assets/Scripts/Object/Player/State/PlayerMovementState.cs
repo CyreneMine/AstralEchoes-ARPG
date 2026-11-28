@@ -5,7 +5,6 @@ public class PlayerMovementState : PlayerState
     public PlayerMovementState(PlayerController owner) : base(owner)
     {
     }
-    private float moveWeight;
     public override void Enter()
     {
         owner.inputActionsPlayer = PlayerMgr.Instance.inputActions.Player;
@@ -35,8 +34,7 @@ public class PlayerMovementState : PlayerState
         float changeSpeed = owner.HasInputMove ? owner.Acceleration : owner.Deceleration;
         float targetSpeed = owner.GetTargetSpeed();
         owner.currentSpeed = Mathf.MoveTowards(owner.currentSpeed, targetSpeed, changeSpeed * Time.deltaTime);
-        moveWeight = owner.Animator.GetFloat("MoveWeight");
-        Vector3 horizontalVelocity = owner.transform.forward * owner.currentSpeed*moveWeight;
+        Vector3 horizontalVelocity = owner.transform.forward * owner.currentSpeed;
         owner.SetHorizontalVelocity(horizontalVelocity);
     }
 
