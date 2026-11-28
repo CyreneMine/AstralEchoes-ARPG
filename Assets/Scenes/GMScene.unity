@@ -1338,6 +1338,24 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerHealth
   currentHp: 0
   isDead: 0
+--- !u!114 &1486027842
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1486027832}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5ff2d0b9d94842b3bd789e0335c26574, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerController
+  walkSpeed: 2.5
+  runSpeed: 5
+  acceleration: 30
+  deceleration: 45
+  gravity: -9.81
+  currentSpeed: 0
 --- !u!1 &1547570109
 GameObject:
   m_ObjectHideFlags: 0
@@ -5486,6 +5504,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 6809631327606502633, guid: 62119d23ec92ae24aa54de45ebd57230, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1486027837}
+    - targetCorrespondingSourceObject: {fileID: 6809631327606502633, guid: 62119d23ec92ae24aa54de45ebd57230, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1486027842}
   m_SourcePrefab: {fileID: 100100000, guid: 62119d23ec92ae24aa54de45ebd57230, type: 3}
 --- !u!1001 &3339335998330790536
 PrefabInstance:
